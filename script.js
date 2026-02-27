@@ -1,625 +1,539 @@
-(function () {
-  // ========== STATE ==========
-  let currentInput = "0";
-  let previousOperand = null;
-  let operator = null;
-  let shouldResetScreen = false;
+// ========== STATE ==========
+let currentOrder = [];
+let allSales = [];
+let darkMode = localStorage.getItem("darkMode") === "true";
+let cartOpen = false;
+let customInputVal = "0";
+let currentStaff = "Cashier 1";
+let currentCategory = "all";
 
-  let cashAmount = null;
-  let currentOrder = [];
-  let allSales = [];
+// Calculator state
+let calcInput = "0";
+let calcPrev = null;
+let calcOp = null;
+let calcReset = false;
 
-  // ========== CUSTOM ITEMS STATE ==========
-  let customItems = [];
+// Menu Items
+// Menu Items with custom images
+const menuItems = [
+  {
+    id: 1,
+    name: "Single Set",
+    price: 7.0,
+    image: "single.png", // Your image file name
+    color: "#FEF3C7",
+    category: "churros",
+  },
+  {
+    id: 2,
+    name: "Family Box",
+    price: 35.0,
+    image: "family.png", // Your image file name
+    color: "#FDE68A",
+    category: "churros",
+  },
+  {
+    id: 3,
+    name: "Seasonal Set",
+    price: 8.0,
+    image: "seasonal.png", // Your image file name
+    color: "#FBCFE8",
+    category: "churros",
+  },
+  {
+    id: 4,
+    name: "Keychain",
+    price: 5.0,
+    image: "keychain.png", // Your image file name
+    color: "#E5E7EB",
+    category: "merch",
+  },
+  {
+    id: 5,
+    name: "Choco Dip",
+    price: 2.0,
+    image: "choco-dip.png", // Your image file name
+    color: "#D1D5DB",
+    category: "dips",
+  },
+  {
+    id: 6,
+    name: "Caramel Dip",
+    price: 2.0,
+    image: "caramel-dip.png", // Your image file name
+    color: "#FEF3C7",
+    category: "dips",
+  },
+];
 
-  let currentStaff = "Cashier 1";
-  let darkMode = localStorage.getItem("darkMode") === "true";
-
-  // Load saved sales
+// ========== INITIALIZATION ==========
+window.onload = () => {
   try {
     const saved = localStorage.getItem("churrosSales");
-    if (saved) {
-      allSales = JSON.parse(saved);
-    }
+    if (saved) allSales = JSON.parse(saved);
   } catch (e) {
     console.log("No saved data");
   }
 
-  // Load custom items from localStorage
-  try {
-    const savedItems = localStorage.getItem("customItems");
-    if (savedItems) {
-      customItems = JSON.parse(savedItems);
-    }
-  } catch (e) {
-    console.log("No custom items saved");
-  }
+  if (darkMode) document.body.classList.add("dark-mode");
 
-  // ========== DOM ELEMENTS ==========
-  const resultEl = document.getElementById("result");
-  const orderListEl = document.getElementById("order-list");
-  const orderTotalEl = document.getElementById("order-total-amount");
-  const paidAmountEl = document.getElementById("paid-amount");
-  const changeAmountEl = document.getElementById("change-amount");
-  const todayTotalEl = document.getElementById("today-total");
-  const totalSalesEl = document.getElementById("total-sales");
-  const totalItemsEl = document.getElementById("total-items");
-  const saleRemarks = document.getElementById("saleRemarks");
-  const currentStaffEl = document.getElementById("currentStaff");
-  const staffNameInput = document.getElementById("staffName");
+  renderMenu();
+  updateOrderList();
+  updateReports();
+  updateCalcDisplay();
 
-  // ========== DOM ELEMENTS for Custom Items ==========
-  const newItemName = document.getElementById("newItemName");
-  const newItemPrice = document.getElementById("newItemPrice");
-  const addNewItemBtn = document.getElementById("addNewItemBtn");
-  const customItemsList = document.getElementById("customItemsList");
-
-  // ========== DARK MODE ==========
-  function applyDarkMode() {
-    if (darkMode) {
-      document.body.classList.add("dark-mode");
-      document.getElementById("darkModeToggle").textContent = "☀️ Light Mode";
-    } else {
-      document.body.classList.remove("dark-mode");
-      document.getElementById("darkModeToggle").textContent = "🌙 Dark Mode";
-    }
-    localStorage.setItem("darkMode", darkMode);
-  }
-
-  document.getElementById("darkModeToggle").addEventListener("click", () => {
-    darkMode = !darkMode;
-    applyDarkMode();
+  document.getElementById("staffName").addEventListener("input", (e) => {
+    currentStaff = e.target.value || "Cashier 1";
   });
 
-  applyDarkMode();
-
-  // ========== STAFF LOGIN ==========
-  document.getElementById("staffLogin").addEventListener("click", () => {
-    const name = staffNameInput.value.trim();
-    if (name) {
-      currentStaff = name;
-      currentStaffEl.textContent = `👤 Current: ${currentStaff}`;
-    }
+  // Category filters
+  document.querySelectorAll(".cat-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      document
+        .querySelectorAll(".cat-btn")
+        .forEach((b) => b.classList.remove("active"));
+      e.target.classList.add("active");
+      currentCategory = e.target.dataset.category;
+      renderMenu();
+    });
   });
+};
 
-  // ========== DISPLAY FUNCTIONS ==========
-  function updateDisplay() {
-    resultEl.innerText = currentInput;
-  }
-
-  function updatePaymentDisplay() {
-    const total = parseFloat(orderTotalEl.textContent.replace("RM ", "")) || 0;
-    const paid = cashAmount || 0;
-    const change = paid - total;
-
-    paidAmountEl.textContent = `RM ${paid.toFixed(2)}`;
-    changeAmountEl.textContent = `RM ${Math.max(0, change).toFixed(2)}`;
-
-    if (change < 0) {
-      changeAmountEl.style.color = "#e1100b";
-    } else {
-      changeAmountEl.style.color = "#821e0e";
-    }
-  }
-
-  function updateOrderDisplay() {
-    if (currentOrder.length === 0) {
-      orderListEl.innerHTML =
-        '<div style="text-align:center; padding:10px; color:#666;">No items in order</div>';
-      orderTotalEl.textContent = "RM 0.00";
-    } else {
-      let html = "";
-      let total = 0;
-
-      const grouped = {};
-      currentOrder.forEach((item) => {
-        const key = `${item.name}_${item.price}`;
-        if (!grouped[key]) {
-          grouped[key] = { ...item, qty: 1 };
-        } else {
-          grouped[key].qty++;
-        }
-      });
-
-      Object.values(grouped).forEach((item) => {
-        const itemTotal = item.price * item.qty;
-        total += itemTotal;
-        html += `<div class="order-item">
-                    <span><strong>${item.qty}x</strong> ${item.name}</span>
-                    <span>RM ${itemTotal.toFixed(2)}</span>
-                </div>`;
-      });
-
-      orderListEl.innerHTML = html;
-      orderTotalEl.textContent = `RM ${total.toFixed(2)}`;
-    }
-    updatePaymentDisplay();
-  }
-
-  function updateDashboard() {
-    const today = new Date().toDateString();
-    let todayTotal = 0;
-    let totalItems = 0;
-
-    allSales.forEach((sale) => {
-      if (new Date(sale.date).toDateString() === today) {
-        todayTotal += sale.total;
-      }
-      totalItems += sale.items ? sale.items.length : 0;
-    });
-
-    todayTotalEl.textContent = `RM${todayTotal.toFixed(2)}`;
-    totalSalesEl.textContent = allSales.length;
-    totalItemsEl.textContent = totalItems;
-  }
-
-  // ========== CALCULATOR FUNCTIONS ==========
-  function appendNumber(num) {
-    if (shouldResetScreen) {
-      currentInput = "";
-      shouldResetScreen = false;
-    }
-
-    if (num === "." && currentInput.includes(".")) return;
-
-    if (currentInput === "0" && num !== ".") {
-      currentInput = num;
-    } else {
-      currentInput += num;
-    }
-
-    cashAmount = parseFloat(currentInput) || 0;
-    updateDisplay();
-    updatePaymentDisplay();
-  }
-
-  function setCashAmount(amount) {
-    cashAmount = amount;
-    currentInput = amount.toString();
-    shouldResetScreen = false;
-
-    updateDisplay();
-    updatePaymentDisplay();
-  }
-
-  function chooseOperation(op) {
-    const currentValue = parseFloat(currentInput);
-    if (isNaN(currentValue)) return;
-
-    if (previousOperand === null) {
-      previousOperand = currentValue;
-    } else if (operator) {
-      calculate();
-    }
-
-    operator = op;
-    shouldResetScreen = true;
-  }
-
-  function calculate() {
-    if (previousOperand === null || operator === null) return;
-
-    const currentValue = parseFloat(currentInput);
-    if (isNaN(currentValue)) return;
-
-    let result;
-    switch (operator) {
-      case "+":
-        result = previousOperand + currentValue;
-        break;
-      case "-":
-        result = previousOperand - currentValue;
-        break;
-      case "*":
-        result = previousOperand * currentValue;
-        break;
-      case "/":
-        if (currentValue === 0) {
-          alert("Cannot divide by zero");
-          return;
-        }
-        result = previousOperand / currentValue;
-        break;
-      default:
-        return;
-    }
-
-    currentInput = result.toString();
-    cashAmount = parseFloat(currentInput);
-    previousOperand = null;
-    operator = null;
-    shouldResetScreen = true;
-    updateDisplay();
-    updatePaymentDisplay();
-  }
-
-  function clearCalculator() {
-    currentInput = "0";
-    previousOperand = null;
-    operator = null;
-    shouldResetScreen = false;
-    cashAmount = null;
-    updateDisplay();
-    updatePaymentDisplay();
-  }
-
-  // ========== ORDER FUNCTIONS ==========
-  function addToOrder(name, price) {
-    currentOrder.push({ name, price, timestamp: new Date() });
-    updateOrderDisplay();
-  }
-
-  function voidLastItem() {
-    if (currentOrder.length > 0) {
-      currentOrder.pop();
-      updateOrderDisplay();
-    }
-  }
-
-  function clearOrder() {
-    if (confirm("Clear current order?")) {
-      currentOrder = [];
-      cashAmount = null;
-      clearCalculator();
-      updateOrderDisplay();
-    }
-  }
-
-  // ========== CUSTOM ITEMS FUNCTIONS ==========
-  function renderCustomItems() {
-    if (!customItemsList) return;
-
-    if (customItems.length === 0) {
-      customItemsList.innerHTML =
-        '<div style="color: #666; padding: 10px; text-align: center;">No custom items yet. Add one above!</div>';
-      return;
-    }
-
-    let html = "";
-    customItems.forEach((item, index) => {
-      html += `
-        <div class="custom-item-tag" data-item-index="${index}">
-          <span>${item.name} (RM${item.price.toFixed(2)})</span>
-          <button class="delete-item" data-delete-index="${index}">✕</button>
-        </div>
-      `;
-    });
-
-    customItemsList.innerHTML = html;
-
-    // Add click events to custom item tags
-    document.querySelectorAll(".custom-item-tag").forEach((tag) => {
-      tag.addEventListener("click", (e) => {
-        // Don't trigger if clicking delete button
-        if (e.target.classList.contains("delete-item")) return;
-
-        const index = tag.dataset.itemIndex;
-        if (index !== undefined) {
-          const item = customItems[index];
-          addToOrder(item.name, item.price);
-        }
-      });
-    });
-
-    // Add click events to delete buttons
-    document.querySelectorAll(".delete-item").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const index = btn.dataset.deleteIndex;
-        if (index !== undefined) {
-          deleteCustomItem(index);
-        }
-      });
-    });
-  }
-
-  function addNewCustomItem() {
-    const name = newItemName.value.trim();
-    const price = parseFloat(newItemPrice.value);
-
-    if (!name) {
-      alert("Please enter an item name");
-      return;
-    }
-
-    if (isNaN(price) || price <= 0) {
-      alert("Please enter a valid price");
-      return;
-    }
-
-    customItems.push({
-      name: name,
-      price: price,
-      id: Date.now() + Math.random(),
-    });
-
-    // Save to localStorage
-    localStorage.setItem("customItems", JSON.stringify(customItems));
-
-    // Clear inputs
-    newItemName.value = "";
-    newItemPrice.value = "";
-
-    // Refresh display
-    renderCustomItems();
-  }
-
-  function deleteCustomItem(index) {
-    if (confirm("Delete this item?")) {
-      customItems.splice(index, 1);
-      localStorage.setItem("customItems", JSON.stringify(customItems));
-      renderCustomItems();
-    }
-  }
-
-  // ========== RECEIPT FUNCTION ==========
-  function showReceipt(sale) {
-    const modal = document.getElementById("receiptModal");
-    document.getElementById("receiptDateTime").textContent =
-      new Date().toLocaleString();
-    document.getElementById("receiptStaff").textContent =
-      `Staff: ${sale.staff || currentStaff}`;
-
-    let itemsHtml = "";
-    let total = 0;
-    sale.items.forEach((item) => {
-      itemsHtml += `<div class="receipt-item">
-            <span>${item.name}</span>
-            <span>RM ${item.price.toFixed(2)}</span>
-          </div>`;
-      total += item.price;
-    });
-
-    document.getElementById("receiptItems").innerHTML = itemsHtml;
-    document.getElementById("receiptTotal").innerHTML =
-      `Total: RM ${total.toFixed(2)}`;
-    document.getElementById("receiptPaid").textContent =
-      `RM ${(sale.paid || 0).toFixed(2)}`;
-    document.getElementById("receiptChange").textContent =
-      `RM ${Math.max(0, (sale.paid || 0) - total).toFixed(2)}`;
-    document.getElementById("receiptRemarks").textContent =
-      sale.remarks || "No remarks";
-
-    modal.style.display = "flex";
-  }
-
-  // ========== DAILY REPORT ==========
-  function showDailyReport() {
-    const modal = document.getElementById("reportModal");
-    const today = new Date().toDateString();
-    const todaySales = allSales.filter(
-      (s) => new Date(s.date).toDateString() === today,
-    );
-
-    let totalRevenue = 0;
-    let totalItems = 0;
-    let singles = 0;
-    let families = 0;
-
-    todaySales.forEach((sale) => {
-      totalRevenue += sale.total;
-      totalItems += sale.items.length;
-      sale.items.forEach((item) => {
-        if (item.name.includes("Single")) singles++;
-        if (item.name.includes("Family")) families++;
-      });
-    });
-
-    document.getElementById("reportDate").innerHTML =
-      `<strong>${today}</strong>`;
-    document.getElementById("reportStats").innerHTML = `
-      <div>Total Sales: ${todaySales.length}</div>
-      <div>Total Revenue: RM ${totalRevenue.toFixed(2)}</div>
-      <div>Total Items: ${totalItems}</div>
-      <div>Singles Sold: ${singles}</div>
-      <div>Families Sold: ${families}</div>
-      <div>Average Order: RM ${
-        todaySales.length ? (totalRevenue / todaySales.length).toFixed(2) : 0
-      }</div>
+// ========== UI RENDERERS ==========
+function renderMenu() {
+  const grid = document.getElementById("menuGrid");
+  grid.innerHTML = "";
+  
+  const filtered = currentCategory === "all" 
+    ? menuItems 
+    : menuItems.filter(item => item.category === currentCategory);
+  
+  filtered.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+    card.onclick = () => addItem(item.name, item.price);
+    card.innerHTML = `
+      <div class="product-img" style="background: ${item.color}; display: flex; align-items: center; justify-content: center;">
+        <img src="${item.image}" alt="${item.name}" class="menu-item-image" 
+             onerror="this.style.display='none'; this.parentElement.innerHTML='📦';" />
+      </div>
+      <div class="product-info">
+        <h3>${item.name}</h3>
+        <p>RM ${item.price.toFixed(2)}</p>
+      </div>
     `;
+    grid.appendChild(card);
+  });
 
-    let salesList = '<h3 style="margin-top:20px;">Transactions:</h3>';
-    todaySales.forEach((sale, i) => {
-      salesList += `<div style="border-top:1px solid #ccc; padding:10px;">
-        <div>${new Date(sale.date).toLocaleTimeString()}</div>
-        <div>Items: ${sale.items.length} | Total: RM ${sale.total.toFixed(2)}</div>
-        <div style="font-size:0.9rem; color:#666;">${sale.remarks || "No remarks"}</div>
-      </div>`;
+  // Custom Item Card (only show in "all" or "churros" category)
+  if (currentCategory === "all" || currentCategory === "churros") {
+    const customCard = document.createElement("div");
+    customCard.className = "product-card custom-item-card";
+    customCard.onclick = () => openModal('customItemModal');
+    customCard.innerHTML = `
+      <div class="product-img" style="display: flex; align-items: center; justify-content: center;">
+        <span style="font-size: 2.5rem;">➕</span>
+      </div>
+      <div class="product-info" style="text-align: center;">
+        <h3>Custom<br>Amount</h3>
+      </div>
+    `;
+    grid.appendChild(customCard);
+  }
+}
+
+function updateOrderList() {
+  const listEl = document.getElementById("order-list");
+  const totalEl = document.getElementById("order-total-amount");
+  const sheetTotalEl = document.getElementById("cartTotalSummary");
+  const countEl = document.getElementById("cartCount");
+
+  listEl.innerHTML = "";
+  let total = 0;
+
+  if (currentOrder.length === 0) {
+    listEl.innerHTML = `<li style="text-align:center; color: var(--text-muted); margin-top: 20px; font-size: 0.9rem;">Cart is empty</li>`;
+  } else {
+    currentOrder.forEach((item) => {
+      total += item.price;
+      const li = document.createElement("li");
+      li.className = "order-item";
+      li.innerHTML = `
+        <div style="display: flex; align-items: center;">
+          <span class="item-qty">1x</span>
+          <span class="item-name">${item.name}</span>
+        </div>
+        <span class="item-price">RM ${item.price.toFixed(2)}</span>
+      `;
+      listEl.appendChild(li);
     });
-
-    document.getElementById("reportSalesList").innerHTML = salesList;
-    modal.style.display = "flex";
   }
 
-  // ========== SALE FUNCTIONS ==========
-  function saveSale() {
-    if (currentOrder.length === 0) {
-      alert("No items in order!");
-      return;
+  const formattedTotal = `RM ${total.toFixed(2)}`;
+  totalEl.textContent = formattedTotal;
+  sheetTotalEl.textContent = formattedTotal;
+  countEl.textContent = `${currentOrder.length} Items`;
+
+  if (currentOrder.length > 0 && !cartOpen) {
+    const header = document.getElementById("cartHeaderToggle");
+    header.style.background = "var(--primary)";
+    header.style.color = "#fff";
+    setTimeout(() => {
+      header.style.background = "";
+      header.style.color = "";
+    }, 300);
+  } else if (currentOrder.length === 0 && cartOpen) {
+    toggleCart();
+  }
+}
+
+// ========== CALCULATOR FUNCTIONS ==========
+function updateCalcDisplay() {
+  document.getElementById("calc-result").textContent = calcInput;
+}
+
+function handleCalcInput(val) {
+  if (val === "C") {
+    calcInput = "0";
+    calcPrev = null;
+    calcOp = null;
+    calcReset = false;
+  } else if (val === "=") {
+    if (calcPrev !== null && calcOp !== null) {
+      const current = parseFloat(calcInput);
+      let result;
+      switch (calcOp) {
+        case "+":
+          result = calcPrev + current;
+          break;
+        case "-":
+          result = calcPrev - current;
+          break;
+        case "*":
+          result = calcPrev * current;
+          break;
+        case "/":
+          result = current === 0 ? 0 : calcPrev / current;
+          break;
+        default:
+          return;
+      }
+      calcInput = result.toString();
+      calcPrev = null;
+      calcOp = null;
+      calcReset = true;
     }
+  } else if (["+", "-", "*", "/"].includes(val)) {
+    if (calcPrev === null) {
+      calcPrev = parseFloat(calcInput);
+      calcOp = val;
+      calcReset = true;
+    } else if (calcOp !== null) {
+      const current = parseFloat(calcInput);
+      let result;
+      switch (calcOp) {
+        case "+":
+          result = calcPrev + current;
+          break;
+        case "-":
+          result = calcPrev - current;
+          break;
+        case "*":
+          result = calcPrev * current;
+          break;
+        case "/":
+          result = current === 0 ? 0 : calcPrev / current;
+          break;
+        default:
+          return;
+      }
+      calcInput = result.toString();
+      calcPrev = parseFloat(calcInput);
+      calcOp = val;
+      calcReset = true;
+    }
+  } else {
+    if (calcReset) {
+      calcInput = val;
+      calcReset = false;
+    } else {
+      if (val === "." && calcInput.includes(".")) return;
+      calcInput = calcInput === "0" && val !== "." ? val : calcInput + val;
+    }
+  }
+  updateCalcDisplay();
+}
 
-    const total = parseFloat(orderTotalEl.textContent.replace("RM ", ""));
-    const now = new Date();
-    const saleRecord = {
-      id: Date.now(),
-      date: now.toISOString(),
-      datetime: now.toLocaleString("en-MY"),
-      items: [...currentOrder],
-      total: total,
-      paid: cashAmount || 0,
-      change: Math.max(0, (cashAmount || 0) - total),
-      staff: currentStaff,
-      remarks: saleRemarks.value || "No remarks",
-    };
+function addCalcToOrder() {
+  const val = parseFloat(calcInput);
+  if (!isNaN(val) && val > 0) {
+    addItem("Calc: RM" + val.toFixed(2), val);
+  }
+}
 
-    allSales.push(saleRecord);
-    localStorage.setItem("churrosSales", JSON.stringify(allSales));
+// ========== CORE POS LOGIC ==========
+function addItem(name, price) {
+  currentOrder.push({ name, price });
+  updateOrderList();
+}
 
-    // Show receipt
-    showReceipt(saleRecord);
+function voidLastItem() {
+  if (currentOrder.length > 0) {
+    currentOrder.pop();
+    updateOrderList();
+  }
+}
 
-    // Clear everything
+function clearOrder() {
+  if (confirm("Clear current order?")) {
     currentOrder = [];
-    cashAmount = null;
-    saleRemarks.value = "";
-    clearCalculator();
-    updateOrderDisplay();
-    updateDashboard();
+    updateOrderList();
+  }
+}
+
+function saveSale() {
+  if (currentOrder.length === 0) {
+    alert("Order is empty!");
+    return;
   }
 
-  // ========== EXPORT FUNCTION ==========
-  function exportToExcel() {
-    if (allSales.length === 0) {
-      alert("No sales data to export");
-      return;
-    }
+  const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
+  const staff = document.getElementById("staffName").value || "Staff";
 
-    let csv =
-      "Date,Time,Staff,Items,Total (RM),Paid (RM),Change (RM),Remarks\n";
-    let grandTotal = 0;
+  const newSale = {
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+    staff: staff,
+    items: [...currentOrder],
+    total: total,
+    paid: total,
+    change: 0,
+    remarks: "",
+  };
 
-    allSales.forEach((sale) => {
-      const date = new Date(sale.date);
-      const dateStr = date.toLocaleDateString("en-MY");
-      const timeStr = date.toLocaleTimeString("en-MY");
-      let itemsList = sale.items.map((i) => i.name).join(" + ");
+  allSales.push(newSale);
+  localStorage.setItem("churrosSales", JSON.stringify(allSales));
 
-      csv += `"${dateStr}","${timeStr}","${sale.staff || "Unknown"}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.remarks || ""}"\n`;
-      grandTotal += sale.total;
-    });
+  generateReceipt(newSale);
 
-    csv += `\n"GRAND TOTAL","","","",${grandTotal.toFixed(2)},,,`;
+  currentOrder = [];
+  updateOrderList();
+  updateReports();
+  if (cartOpen) toggleCart();
+}
 
-    const blob = new Blob(["\uFEFF" + csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const now = new Date();
-    const filename = `churros_sales_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}.csv`;
-
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  }
-
-  function resetAllData() {
-    if (confirm("⚠️ Reset ALL sales data? This cannot be undone!")) {
-      allSales = [];
-      localStorage.removeItem("churrosSales");
-      currentOrder = [];
-      cashAmount = null;
-      clearCalculator();
-      updateOrderDisplay();
-      updateDashboard();
-      alert("All data cleared");
+// ========== CUSTOM NUMPAD ==========
+function calcType(val) {
+  if (val === "C") {
+    customInputVal = "0";
+  } else {
+    if (customInputVal === "0" && val !== "00") {
+      customInputVal = val;
+    } else {
+      customInputVal += val;
     }
   }
 
-  // ========== EVENT LISTENERS ==========
-  // Number buttons - for MANUAL ENTRY of any amount
-  document.querySelectorAll("[data-num]").forEach((btn) => {
-    btn.addEventListener("click", () => appendNumber(btn.dataset.num));
+  let num = parseInt(customInputVal, 10);
+  if (isNaN(num)) num = 0;
+  document.getElementById("calcDisplay").textContent = (num / 100).toFixed(2);
+}
+
+function addCustomItem() {
+  let num = parseInt(customInputVal, 10);
+  if (isNaN(num) || num === 0) return;
+
+  let price = num / 100;
+  let name = document.getElementById("customItemName").value || "Misc Item";
+
+  addItem(name, price);
+
+  customInputVal = "0";
+  document.getElementById("calcDisplay").textContent = "0.00";
+  document.getElementById("customItemName").value = "Misc Item";
+  closeModal("customItemModal");
+}
+
+// ========== RECEIPTS & REPORTS ==========
+function generateReceipt(sale) {
+  document.getElementById("receiptDateTime").textContent = sale.date;
+  document.getElementById("receiptStaff").textContent =
+    "Served by: " + sale.staff;
+
+  const itemsContainer = document.getElementById("receiptItems");
+  itemsContainer.innerHTML = "";
+
+  sale.items.forEach((item) => {
+    itemsContainer.innerHTML += `
+      <div class="receipt-item">
+        <span>1x ${item.name}</span>
+        <span>${item.price.toFixed(2)}</span>
+      </div>
+    `;
   });
 
-  // Operator buttons (for calculations)
-  document.querySelectorAll("[data-op]").forEach((btn) => {
-    btn.addEventListener("click", () => chooseOperation(btn.dataset.op));
-  });
+  document.getElementById("receiptTotal").textContent =
+    "RM " + sale.total.toFixed(2);
+  openModal("receiptModal");
+}
 
-  // Equals button
-  document.getElementById("equals-btn").addEventListener("click", calculate);
+function updateReports() {
+  const today = new Date().toLocaleDateString();
+  const todaysSales = allSales.filter((sale) => sale.date.includes(today));
 
-  // Clear button
-  document
-    .getElementById("clear-btn")
-    .addEventListener("click", clearCalculator);
+  const totalAmount = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
 
-  // Cash note buttons - QUICK BUTTONS for common amounts
-  document
-    .getElementById("note-10")
-    .addEventListener("click", () => setCashAmount(10));
-  document
-    .getElementById("note-20")
-    .addEventListener("click", () => setCashAmount(20));
-  document
-    .getElementById("note-50")
-    .addEventListener("click", () => setCashAmount(50));
-  document
-    .getElementById("note-100")
-    .addEventListener("click", () => setCashAmount(100));
+  document.getElementById("reportTotalSales").textContent =
+    `RM ${totalAmount.toFixed(2)}`;
+  document.getElementById("reportOrderCount").textContent = todaysSales.length;
 
-  // Meal buttons - choose items
-  document
-    .getElementById("meal-single")
-    .addEventListener("click", () => addToOrder("Single Set", 7));
-  document
-    .getElementById("meal-family")
-    .addEventListener("click", () => addToOrder("Family Box", 35));
+  const listEl = document.getElementById("reportSalesList");
+  listEl.innerHTML = "";
 
-  // New meal buttons
-  document
-    .getElementById("meal-seasonal")
-    .addEventListener("click", () => addToOrder("Seasonal Set", 8));
-  document
-    .getElementById("meal-keychain")
-    .addEventListener("click", () => addToOrder("Keychain", 5));
-
-  // Allow Enter key in price input
-  if (newItemPrice) {
-    newItemPrice.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        addNewCustomItem();
-      }
-    });
+  if (todaysSales.length === 0) {
+    listEl.innerHTML = `<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem;">No sales yet today.</li>`;
+    return;
   }
 
-  // Allow Enter key in name input
-  if (newItemName) {
-    newItemName.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        newItemPrice.focus();
-      }
-    });
+  [...todaysSales].reverse().forEach((sale) => {
+    const li = document.createElement("li");
+    li.style.cssText =
+      "display:flex; justify-content:space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size:0.9rem;";
+
+    let time = sale.date.split(", ")[1] || sale.date;
+
+    li.innerHTML = `
+      <div>
+        <strong style="color:var(--text-main);">${time}</strong><br>
+        <span style="color:var(--text-muted); font-size:0.8rem;">${sale.items.length} items</span>
+      </div>
+      <strong style="color:var(--primary);">RM ${sale.total.toFixed(2)}</strong>
+    `;
+    listEl.appendChild(li);
+  });
+}
+
+function exportToExcel() {
+  if (allSales.length === 0) {
+    alert("No data to export");
+    return;
   }
 
-  // Void last item
-  document.getElementById("void-last").addEventListener("click", voidLastItem);
+  let csvContent = "Date,Staff,Items,Total(RM)\n";
 
-  // Clear order
-  document.getElementById("clear-order").addEventListener("click", clearOrder);
-  document.getElementById("reset-btn").addEventListener("click", resetAllData);
-
-  // Save and export
-  document.getElementById("save-sale").addEventListener("click", saveSale);
-  document
-    .getElementById("export-btn")
-    .addEventListener("click", exportToExcel);
-
-  // Daily Report
-  document
-    .getElementById("daily-report")
-    .addEventListener("click", showDailyReport);
-
-  // Close modal when clicking outside
-  window.addEventListener("click", (e) => {
-    const receiptModal = document.getElementById("receiptModal");
-    const reportModal = document.getElementById("reportModal");
-
-    if (e.target === receiptModal) {
-      receiptModal.style.display = "none";
-    }
-    if (e.target === reportModal) {
-      reportModal.style.display = "none";
-    }
+  allSales.forEach((sale) => {
+    let itemsStr = sale.items.map((i) => i.name).join(" + ");
+    let row = `"${sale.date}","${sale.staff}","${itemsStr}",${sale.total.toFixed(2)}`;
+    csvContent += row + "\n";
   });
 
-  // ========== INITIALIZE ==========
-  updateDisplay();
-  updateOrderDisplay();
-  updateDashboard();
-  renderCustomItems(); // Initialize custom items display
-})();
+  const blob = new Blob(["\uFEFF" + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const filename = `churros_sales_${new Date().toISOString().split("T")[0]}.csv`;
+
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
+// ========== UI INTERACTIONS ==========
+function toggleCart() {
+  const sheet = document.getElementById("cartSheet");
+  cartOpen = !cartOpen;
+  sheet.classList.toggle("open", cartOpen);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
+}
+
+function switchView(pageId) {
+  document
+    .querySelectorAll(".page")
+    .forEach((p) => p.classList.remove("active"));
+  document
+    .querySelectorAll(".nav-btn")
+    .forEach((b) => b.classList.remove("active"));
+
+  document.getElementById("page-" + pageId).classList.add("active");
+  document
+    .querySelector(`.nav-btn[data-page="${pageId}"]`)
+    .classList.add("active");
+
+  const sheet = document.getElementById("cartSheet");
+  if (pageId === "pos" || pageId === "calc") {
+    sheet.style.display = "flex";
+  } else {
+    sheet.style.display = "none";
+    if (cartOpen) toggleCart();
+  }
+}
+
+// ========== EVENT LISTENERS ==========
+document
+  .getElementById("cartHeaderToggle")
+  .addEventListener("click", toggleCart);
+
+document.getElementById("darkModeToggle").addEventListener("click", () => {
+  darkMode = !darkMode;
+  localStorage.setItem("darkMode", darkMode);
+  document.body.classList.toggle("dark-mode", darkMode);
+});
+
+document.getElementById("void-last").addEventListener("click", voidLastItem);
+document.getElementById("clear-order").addEventListener("click", clearOrder);
+document.getElementById("save-sale").addEventListener("click", saveSale);
+document.getElementById("export-btn").addEventListener("click", exportToExcel);
+
+document.getElementById("reset-btn").addEventListener("click", () => {
+  if (
+    confirm(
+      "Are you sure you want to delete all sales data? This cannot be undone.",
+    )
+  ) {
+    allSales = [];
+    localStorage.removeItem("churrosSales");
+    updateReports();
+    alert("Data reset successful.");
+  }
+});
+
+// Calculator event listeners
+document.querySelectorAll("[data-calc]").forEach((btn) => {
+  btn.addEventListener("click", () => handleCalcInput(btn.dataset.calc));
+});
+
+document
+  .getElementById("calc-add-to-cart")
+  .addEventListener("click", addCalcToOrder);
+document.getElementById("calc-clear").addEventListener("click", () => {
+  calcInput = "0";
+  calcPrev = null;
+  calcOp = null;
+  calcReset = false;
+  updateCalcDisplay();
+});
+
+// Navigation
+document.querySelectorAll(".nav-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const pageId = btn.dataset.page;
+    switchView(pageId);
+  });
+});
+
+// Expose functions globally
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.calcType = calcType;
+window.addCustomItem = addCustomItem;
