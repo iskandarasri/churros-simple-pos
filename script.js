@@ -37,7 +37,7 @@ const menuItems = [
     name: "Seasonal Set",
     price: 8.0,
     image: "seasonal.png", // Your image file name
-    color: "#FBCFE8",
+    color: "#eefbcf",
     category: "churros",
   },
   {
@@ -50,17 +50,25 @@ const menuItems = [
   },
   {
     id: 5,
-    name: "Choco Dip",
+    name: "Milk Choco Dip",
     price: 2.0,
-    image: "choco-dip.png", // Your image file name
-    color: "#D1D5DB",
+    image: "milk_choco.png", // Your image file name
+    color: "#e6ae74",
     category: "dips",
   },
   {
     id: 6,
+    name: "Dark Choco Dip",
+    price: 2.0,
+    image: "dark_choco.png", // Your image file name
+    color: "#a78b78",
+    category: "dips",
+  },
+  {
+    id: 7,
     name: "Caramel Dip",
     price: 2.0,
-    image: "caramel-dip.png", // Your image file name
+    image: "caramel.png", // Your image file name
     color: "#FEF3C7",
     category: "dips",
   },
@@ -71,44 +79,88 @@ window.onload = () => {
   try {
     const saved = localStorage.getItem("churrosSales");
     if (saved) allSales = JSON.parse(saved);
-  } catch (e) {
-    console.log("No saved data");
-  }
+  } catch (e) { console.log("No saved data"); }
 
   if (darkMode) document.body.classList.add("dark-mode");
-
+  
   renderMenu();
   updateOrderList();
   updateReports();
   updateCalcDisplay();
-
+  
   document.getElementById("staffName").addEventListener("input", (e) => {
     currentStaff = e.target.value || "Cashier 1";
   });
 
   // Category filters
-  document.querySelectorAll(".cat-btn").forEach((btn) => {
+  document.querySelectorAll(".cat-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      document
-        .querySelectorAll(".cat-btn")
-        .forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
       e.target.classList.add("active");
       currentCategory = e.target.dataset.category;
       renderMenu();
     });
   });
+
+  // FIXED: Search input listener - triggers on every keystroke
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    // Remove readonly attribute if it's still there
+    searchInput.removeAttribute('readonly');
+    
+    // Listen for input events (every keystroke)
+    searchInput.addEventListener("input", function(e) {
+      console.log("Searching for:", e.target.value); // Debug log
+      renderMenu();
+    });
+    
+    // Also listen for search event (when user clicks "x" or presses Enter)
+    searchInput.addEventListener("search", function(e) {
+      console.log("Search cleared or submitted");
+      renderMenu();
+    });
+    
+    // Initial focus
+    searchInput.focus();
+  }
 };
 
 // ========== UI RENDERERS ==========
 function renderMenu() {
   const grid = document.getElementById("menuGrid");
+  const searchInput = document.getElementById("searchInput");
+  const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
+
   grid.innerHTML = "";
-  
-  const filtered = currentCategory === "all" 
-    ? menuItems 
-    : menuItems.filter(item => item.category === currentCategory);
-  
-  filtered.forEach(item => {
+
+  // First filter by category
+  let filtered =
+    currentCategory === "all"
+      ? menuItems
+      : menuItems.filter((item) => item.category === currentCategory);
+
+  // Then filter by search term if present
+  if (searchTerm) {
+    filtered = filtered.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm),
+    );
+  }
+
+  if (filtered.length === 0) {
+    // Show "No results" message
+    const noResults = document.createElement("div");
+    noResults.className = "no-results";
+    noResults.style.cssText =
+      "grid-column: span 2; text-align: center; padding: 40px 20px; color: var(--text-muted);";
+    noResults.innerHTML = `
+      <span style="font-size: 3rem; display: block; margin-bottom: 10px;">🔍</span>
+      <p>No items found matching "${searchTerm}"</p>
+    `;
+    grid.appendChild(noResults);
+    return;
+  }
+
+  filtered.forEach((item) => {
     const card = document.createElement("div");
     card.className = "product-card";
     card.onclick = () => addItem(item.name, item.price);
@@ -125,11 +177,14 @@ function renderMenu() {
     grid.appendChild(card);
   });
 
-  // Custom Item Card (only show in "all" or "churros" category)
-  if (currentCategory === "all" || currentCategory === "churros") {
+  // Custom Item Card (only show in "all" or "churros" category and when not searching)
+  if (
+    !searchTerm &&
+    (currentCategory === "all" || currentCategory === "churros")
+  ) {
     const customCard = document.createElement("div");
     customCard.className = "product-card custom-item-card";
-    customCard.onclick = () => openModal('customItemModal');
+    customCard.onclick = () => openModal("customItemModal");
     customCard.innerHTML = `
       <div class="product-img" style="display: flex; align-items: center; justify-content: center;">
         <span style="font-size: 2.5rem;">➕</span>
@@ -140,6 +195,18 @@ function renderMenu() {
     `;
     grid.appendChild(customCard);
   }
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }
 
 function updateOrderList() {
