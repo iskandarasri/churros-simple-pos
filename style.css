@@ -6,7 +6,7 @@
 }
 
 body {
-  background: #bb1c07;
+  background: #be2327;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
@@ -1198,3 +1198,4 @@ body.dark-mode .receipt-total {
 body.dark-mode .receipt-footer {
   color: #ffffff;
 }
+
