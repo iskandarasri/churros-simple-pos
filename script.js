@@ -8,7 +8,7 @@
   let cashAmount = null;
   let currentOrder = [];
   let allSales = [];
-  
+
   // ========== CUSTOM ITEMS STATE ==========
   let customItems = [];
 
@@ -47,7 +47,7 @@
   const saleRemarks = document.getElementById("saleRemarks");
   const currentStaffEl = document.getElementById("currentStaff");
   const staffNameInput = document.getElementById("staffName");
-  
+
   // ========== DOM ELEMENTS for Custom Items ==========
   const newItemName = document.getElementById("newItemName");
   const newItemPrice = document.getElementById("newItemPrice");
@@ -268,12 +268,13 @@
   // ========== CUSTOM ITEMS FUNCTIONS ==========
   function renderCustomItems() {
     if (!customItemsList) return;
-    
+
     if (customItems.length === 0) {
-      customItemsList.innerHTML = '<div style="color: #666; padding: 10px; text-align: center;">No custom items yet. Add one above!</div>';
+      customItemsList.innerHTML =
+        '<div style="color: #666; padding: 10px; text-align: center;">No custom items yet. Add one above!</div>';
       return;
     }
-    
+
     let html = "";
     customItems.forEach((item, index) => {
       html += `
@@ -283,15 +284,15 @@
         </div>
       `;
     });
-    
+
     customItemsList.innerHTML = html;
-    
+
     // Add click events to custom item tags
-    document.querySelectorAll('.custom-item-tag').forEach(tag => {
-      tag.addEventListener('click', (e) => {
+    document.querySelectorAll(".custom-item-tag").forEach((tag) => {
+      tag.addEventListener("click", (e) => {
         // Don't trigger if clicking delete button
-        if (e.target.classList.contains('delete-item')) return;
-        
+        if (e.target.classList.contains("delete-item")) return;
+
         const index = tag.dataset.itemIndex;
         if (index !== undefined) {
           const item = customItems[index];
@@ -299,10 +300,10 @@
         }
       });
     });
-    
+
     // Add click events to delete buttons
-    document.querySelectorAll('.delete-item').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    document.querySelectorAll(".delete-item").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const index = btn.dataset.deleteIndex;
         if (index !== undefined) {
@@ -315,30 +316,30 @@
   function addNewCustomItem() {
     const name = newItemName.value.trim();
     const price = parseFloat(newItemPrice.value);
-    
+
     if (!name) {
       alert("Please enter an item name");
       return;
     }
-    
+
     if (isNaN(price) || price <= 0) {
       alert("Please enter a valid price");
       return;
     }
-    
+
     customItems.push({
       name: name,
       price: price,
-      id: Date.now() + Math.random()
+      id: Date.now() + Math.random(),
     });
-    
+
     // Save to localStorage
     localStorage.setItem("customItems", JSON.stringify(customItems));
-    
+
     // Clear inputs
     newItemName.value = "";
     newItemPrice.value = "";
-    
+
     // Refresh display
     renderCustomItems();
   }
@@ -387,7 +388,7 @@
     const modal = document.getElementById("reportModal");
     const today = new Date().toDateString();
     const todaySales = allSales.filter(
-      (s) => new Date(s.date).toDateString() === today
+      (s) => new Date(s.date).toDateString() === today,
     );
 
     let totalRevenue = 0;
@@ -404,7 +405,8 @@
       });
     });
 
-    document.getElementById("reportDate").innerHTML = `<strong>${today}</strong>`;
+    document.getElementById("reportDate").innerHTML =
+      `<strong>${today}</strong>`;
     document.getElementById("reportStats").innerHTML = `
       <div>Total Sales: ${todaySales.length}</div>
       <div>Total Revenue: RM ${totalRevenue.toFixed(2)}</div>
@@ -532,23 +534,40 @@
   document.getElementById("equals-btn").addEventListener("click", calculate);
 
   // Clear button
-  document.getElementById("clear-btn").addEventListener("click", clearCalculator);
+  document
+    .getElementById("clear-btn")
+    .addEventListener("click", clearCalculator);
 
   // Cash note buttons - QUICK BUTTONS for common amounts
-  document.getElementById("note-10").addEventListener("click", () => setCashAmount(10));
-  document.getElementById("note-20").addEventListener("click", () => setCashAmount(20));
-  document.getElementById("note-50").addEventListener("click", () => setCashAmount(50));
-  document.getElementById("note-100").addEventListener("click", () => setCashAmount(100));
+  document
+    .getElementById("note-10")
+    .addEventListener("click", () => setCashAmount(10));
+  document
+    .getElementById("note-20")
+    .addEventListener("click", () => setCashAmount(20));
+  document
+    .getElementById("note-50")
+    .addEventListener("click", () => setCashAmount(50));
+  document
+    .getElementById("note-100")
+    .addEventListener("click", () => setCashAmount(100));
 
   // Meal buttons - choose items
-  document.getElementById("meal-single").addEventListener("click", () => addToOrder("Single Set", 7));
-  document.getElementById("meal-family").addEventListener("click", () => addToOrder("Family Box", 35));
+  document
+    .getElementById("meal-single")
+    .addEventListener("click", () => addToOrder("Single Set", 7));
+  document
+    .getElementById("meal-family")
+    .addEventListener("click", () => addToOrder("Family Box", 35));
 
-  // ========== CUSTOM ITEMS EVENT LISTENERS ==========
-  if (addNewItemBtn) {
-    addNewItemBtn.addEventListener("click", addNewCustomItem);
-  }
-  
+  // New meal buttons
+  document
+    .getElementById("meal-seasonal")
+    .addEventListener("click", () => addToOrder("Seasonal Set", 8));
+  document
+    .getElementById("meal-keychain")
+    .addEventListener("click", () => addToOrder("Keychain", 5));
+
   // Allow Enter key in price input
   if (newItemPrice) {
     newItemPrice.addEventListener("keypress", (e) => {
@@ -557,7 +576,7 @@
       }
     });
   }
-  
+
   // Allow Enter key in name input
   if (newItemName) {
     newItemName.addEventListener("keypress", (e) => {
@@ -576,16 +595,20 @@
 
   // Save and export
   document.getElementById("save-sale").addEventListener("click", saveSale);
-  document.getElementById("export-btn").addEventListener("click", exportToExcel);
+  document
+    .getElementById("export-btn")
+    .addEventListener("click", exportToExcel);
 
   // Daily Report
-  document.getElementById("daily-report").addEventListener("click", showDailyReport);
+  document
+    .getElementById("daily-report")
+    .addEventListener("click", showDailyReport);
 
   // Close modal when clicking outside
   window.addEventListener("click", (e) => {
     const receiptModal = document.getElementById("receiptModal");
     const reportModal = document.getElementById("reportModal");
-    
+
     if (e.target === receiptModal) {
       receiptModal.style.display = "none";
     }
