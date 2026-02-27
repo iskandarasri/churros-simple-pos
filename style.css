@@ -686,7 +686,7 @@ body.dark-mode .set-name {
 
 .key.clear-key {
   grid-column: span 2;
-  background: #e1100b;
+  background: #a00005;
   color: #f4f1e9;
   font-size: 1.8rem;
   padding: 20px 0;
@@ -1201,5 +1201,6 @@ body.dark-mode .receipt-total {
 body.dark-mode .receipt-footer {
   color: #ffffff;
 }
+
 
 
