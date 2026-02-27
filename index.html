@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"
+    />
+    <title>Mr. Churros · POS System</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="phone-app">
+      <!-- Header with Dark Mode Toggle -->
+      <div class="app-header">
+        <div></div>
+        <button class="dark-toggle" id="darkModeToggle">🌙 Dark Mode</button>
+      </div>
+
+      <!-- Logo Section -->
+      <div class="logo-section">
+        <img src="logo-new.png" class="logo-preview" alt="Churros Logo" />
+      </div>
+
+      <!-- Staff Login Section -->
+      <div class="staff-section">
+        <div class="staff-header">
+          <input
+            type="text"
+            id="staffName"
+            class="staff-input"
+            placeholder="Enter staff name"
+            value="Cashier 1"
+          />
+          <button class="staff-btn" id="staffLogin">Login</button>
+        </div>
+        <div class="current-staff" id="currentStaff">👤 Current: Cashier 1</div>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="dashboard">
+        <div class="dashboard-card">
+          <div class="value" id="today-total">RM0</div>
+          <div class="label">TODAY</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="value" id="total-sales">0</div>
+          <div class="label">SALES</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="value" id="total-items">0</div>
+          <div class="label">ITEMS</div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <div class="summary-header">
+          <span>Current Order</span>
+          <span>Qty</span>
+        </div>
+        <div id="order-list"></div>
+        <div class="order-total">
+          <span>Total:</span>
+          <span id="order-total-amount">RM 0.00</span>
+        </div>
+      </div>
+
+      <!-- Payment Summary -->
+      <div class="payment-summary">
+        <div class="payment-row">
+          <span class="payment-label">Customer Paid:</span>
+          <span class="payment-value" id="paid-amount">RM 0.00</span>
+        </div>
+        <div class="payment-row payment-change">
+          <span class="payment-label">Change to Return:</span>
+          <span class="payment-value" id="change-amount">RM 0.00</span>
+        </div>
+      </div>
+
+      <!-- Remarks Section -->
+      <div class="remarks-section">
+        <input
+          type="text"
+          id="saleRemarks"
+          class="remarks-input"
+          placeholder="Remarks (e.g., Extra churros, No sugar)"
+        />
+      </div>
+
+      <!-- Meal Buttons -->
+      <div class="meal-presets">
+        <button class="meal-btn" id="meal-single">
+          <div class="btn-content">
+            <img src="single.png" class="btn-icon" alt="icon" />
+            <span class="set-name">Single set</span>
+          </div>
+        </button>
+        <button class="meal-btn" id="meal-family">
+          <div class="btn-content">
+            <img src="family.png" class="btn-icon" alt="icon" />
+            <span class="set-name">Family set</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- NEW: Custom Item Section -->
+      <div class="custom-item-section">
+        <div class="custom-item-header">
+          <span>➕ Add New Item</span>
+        </div>
+        <div class="custom-item-inputs">
+          <input
+            type="text"
+            id="newItemName"
+            class="custom-input"
+            placeholder="Item name"
+          />
+          <input
+            type="number"
+            id="newItemPrice"
+            class="custom-input price-input"
+            placeholder="Price"
+            step="0.10"
+            min="0"
+          />
+          <button class="custom-btn" id="addNewItemBtn">Add</button>
+        </div>
+        <div id="customItemsList" class="custom-items-list"></div>
+      </div>
+
+      <!-- Calculator Screen -->
+      <div class="calc-screen">
+        <div id="result">0</div>
+      </div>
+
+      <!-- Cash Notes -->
+      <div class="quick-panel">
+        <button class="note-btn" id="note-10">RM10</button>
+        <button class="note-btn" id="note-20">RM20</button>
+        <button class="note-btn" id="note-50">RM50</button>
+        <button class="note-btn" id="note-100">RM100</button>
+      </div>
+
+      <!-- Calculator Keypad - For MANUAL ENTRY of any amount (RM25, RM43, etc) -->
+      <div class="keypad">
+        <button class="key" data-num="7">7</button>
+        <button class="key" data-num="8">8</button>
+        <button class="key" data-num="9">9</button>
+        <button class="key operator" data-op="+">+</button>
+
+        <button class="key" data-num="4">4</button>
+        <button class="key" data-num="5">5</button>
+        <button class="key" data-num="6">6</button>
+        <button class="key operator" data-op="-">−</button>
+
+        <button class="key" data-num="1">1</button>
+        <button class="key" data-num="2">2</button>
+        <button class="key" data-num="3">3</button>
+        <button class="key operator" data-op="*">×</button>
+
+        <button class="key zero" data-num="0">0</button>
+        <button class="key" data-num=".">.</button>
+        <button class="key operator divide-key" data-op="/">÷</button>
+
+        <!-- Equal and Clear buttons side by side - half each -->
+         <button class="key clear-key" id="clear-btn">AC</button>
+        <button class="key equals-key" id="equals-btn">=</button>
+      </div>
+
+      <!-- POS Actions -->
+      <div class="pos-actions">
+        <button class="pos-btn" id="save-sale">💾 Save & Receipt</button>
+        <button class="pos-btn" id="void-last">↩️ Void Last</button>
+        <button class="pos-btn" id="clear-order">🗑️ Clear</button>
+      </div>
+
+      <div class="pos-actions">
+        <button class="pos-btn special" id="daily-report">
+          📊 Daily Report
+        </button>
+        <button class="pos-btn special" id="export-btn">📎 Export CSV</button>
+        <button class="pos-btn" id="reset-btn">🔄 Reset All</button>
+      </div>
+
+      <div class="footer-badge">
+        <span>🍫 Choose Set • Cash Buttons • Manual Entry • Auto-Change</span>
+      </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="receipt-modal" id="receiptModal">
+      <div class="receipt-content">
+        <div class="receipt-header">
+          <div class="receipt-title">
+            <img src="logo-new.png" class="receipt-logo" alt="Churros Logo" />
+          </div>
+          <div id="receiptDateTime"></div>
+          <div id="receiptStaff"></div>
+        </div>
+        <div class="receipt-details" id="receiptItems"></div>
+        <div class="receipt-total" id="receiptTotal"></div>
+        <div class="payment-row">
+          <span>Paid:</span>
+          <span id="receiptPaid"></span>
+        </div>
+        <div class="payment-row">
+          <span>Change:</span>
+          <span id="receiptChange"></span>
+        </div>
+        <div
+          id="receiptRemarks"
+          style="margin: 10px 0; font-style: italic"
+        ></div>
+        <div class="receipt-footer">Thank you! Come again!</div>
+        <button
+          class="close-receipt"
+          onclick="
+            document.getElementById('receiptModal').style.display = 'none'
+          "
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Daily Report Modal -->
+    <div class="report-modal" id="reportModal">
+      <div class="report-content">
+        <h2 style="color: #c31f0a; margin-bottom: 20px">📊 Daily Report</h2>
+        <div id="reportDate"></div>
+        <div style="margin: 20px 0" id="reportStats"></div>
+        <div id="reportSalesList"></div>
+        <button
+          class="close-receipt"
+          onclick="
+            document.getElementById('reportModal').style.display = 'none'
+          "
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
