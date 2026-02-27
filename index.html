@@ -88,47 +88,43 @@
         />
       </div>
 
-      <!-- Meal Buttons -->
+      <!-- Meal Buttons Section -->
       <div class="meal-presets">
+        <!-- Regular Sets -->
         <button class="meal-btn" id="meal-single">
           <div class="btn-content">
-            <img src="single.png" class="btn-icon" alt="icon" />
+            <img src="single.png" class="btn-icon" alt="single" />
             <span class="set-name">Single set</span>
+            <span class="set-price">RM7</span>
           </div>
         </button>
+
         <button class="meal-btn" id="meal-family">
           <div class="btn-content">
-            <img src="family.png" class="btn-icon" alt="icon" />
+            <img src="family.png" class="btn-icon" alt="family" />
             <span class="set-name">Family set</span>
+            <span class="set-price">RM35</span>
+          </div>
+        </button>
+
+        <!-- New Seasonal Set -->
+        <button class="meal-btn" id="meal-seasonal">
+          <div class="btn-content">
+            <img src="seasonal.png" class="btn-icon" alt="seasonal" />
+            <span class="set-name">Seasonal set</span>
+            <span class="set-price">RM8</span>
+          </div>
+        </button>
+
+        <!-- New Keychain -->
+        <button class="meal-btn" id="meal-keychain">
+          <div class="btn-content">
+            <img src="keychain.png" class="btn-icon" alt="keychain" />
+            <span class="set-name">Keychain</span>
+            <span class="set-price">RM5</span>
           </div>
         </button>
       </div>
-
-      <!-- NEW: Custom Item Section -->
-      <div class="custom-item-section">
-        <div class="custom-item-header">
-          <span>➕ Add New Item</span>
-        </div>
-        <div class="custom-item-inputs">
-          <input
-            type="text"
-            id="newItemName"
-            class="custom-input"
-            placeholder="Item name"
-          />
-          <input
-            type="number"
-            id="newItemPrice"
-            class="custom-input price-input"
-            placeholder="Price"
-            step="0.10"
-            min="0"
-          />
-          <button class="custom-btn" id="addNewItemBtn">Add</button>
-        </div>
-        <div id="customItemsList" class="custom-items-list"></div>
-      </div>
-
       <!-- Calculator Screen -->
       <div class="calc-screen">
         <div id="result">0</div>
@@ -164,7 +160,7 @@
         <button class="key operator divide-key" data-op="/">÷</button>
 
         <!-- Equal and Clear buttons side by side - half each -->
-         <button class="key clear-key" id="clear-btn">AC</button>
+        <button class="key clear-key" id="clear-btn">AC</button>
         <button class="key equals-key" id="equals-btn">=</button>
       </div>
 
