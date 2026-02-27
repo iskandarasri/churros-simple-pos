@@ -406,12 +406,18 @@ body.dark-mode .remarks-input::placeholder {
   margin-bottom: 8px;
 }
 
+/* Meal Presets - 2x2 Grid */
 .meal-presets {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 15px;
-  padding: 0 2px;
+  width: 100%;
+}
+
+.meal-presets > * {
+  min-width: 0;
+  width: 100%;
 }
 
 .meal-btn {
@@ -426,10 +432,12 @@ body.dark-mode .remarks-input::placeholder {
   cursor: pointer;
   transition: all 0.05s ease;
   width: 100%;
-  aspect-ratio: 1/0.9; /* Slightly less tall than wide */
+  aspect-ratio: 1/0.95;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .btn-content {
@@ -437,23 +445,36 @@ body.dark-mode .remarks-input::placeholder {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   width: 100%;
 }
 
 .btn-icon {
-  width: 55px;
-  height: 55px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
 }
 
 .set-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #f4f1e9;
   line-height: 1.2;
   text-align: center;
   letter-spacing: 0.3px;
+  width: 100%;
+  word-wrap: break-word;
+}
+
+.set-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f4f1e9;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 8px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-top: 2px;
 }
 
 .meal-btn:active {
@@ -462,8 +483,49 @@ body.dark-mode .remarks-input::placeholder {
 }
 
 /* Dark mode support */
-body.dark-mode .set-name {
+body.dark-mode .set-name,
+body.dark-mode .set-price {
   color: #ffffff;
+}
+
+/* Small screen optimization */
+@media (max-width: 375px) {
+  .meal-presets {
+    gap: 8px;
+  }
+
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .set-name {
+    font-size: 0.9rem;
+  }
+
+  .set-price {
+    font-size: 1rem;
+    padding: 2px 6px;
+  }
+
+  .meal-btn {
+    padding: 10px 3px 8px 3px;
+  }
+}
+
+@media (max-width: 320px) {
+  .btn-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .set-name {
+    font-size: 0.8rem;
+  }
+
+  .set-price {
+    font-size: 0.9rem;
+  }
 }
 
 /* Small screen optimization (iPhone SE, etc) */
@@ -569,7 +631,7 @@ body.dark-mode .set-name {
 .key {
   background: #f4f1e9;
   border: none;
-  border-radius: 25px;
+  border-radius: 100%;
   padding: 20px 0;
   font-size: 1.8rem;
   font-weight: 700;
@@ -592,6 +654,7 @@ body.dark-mode .set-name {
 
 .key.zero {
   grid-column: span 2;
+  border-radius: 50px;
 }
 
 .key:active {
@@ -609,11 +672,13 @@ body.dark-mode .set-name {
     0 5px 0 #821e0e,
     0 6px 12px rgba(0, 0, 0, 0.15);
   border: 2px solid #e0a94b;
+  border-radius: 50px;
 }
 
 .key.equals-key:active {
   transform: translateY(3px);
   box-shadow: 0 2px 0 #821e0e;
+  border-radius: 50px;
 }
 
 .key.clear-key {
@@ -626,6 +691,7 @@ body.dark-mode .set-name {
     0 5px 0 #821e0e,
     0 6px 12px rgba(0, 0, 0, 0.15);
   border: 2px solid #e0a94b;
+  border-radius: 50px;
 }
 
 .key.clear-key:active {
