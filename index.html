@@ -4,242 +4,298 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Mr. Churros · POS System</title>
+    <title>Mr. Churros · Modern POS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="phone-app">
-      <!-- Header with Dark Mode Toggle -->
-      <div class="app-header">
-        <div></div>
-        <button class="dark-toggle" id="darkModeToggle">🌙 Dark Mode</button>
-      </div>
-
-      <!-- Logo Section -->
-      <div class="logo-section">
-        <img src="logo-new.png" class="logo-preview" alt="Churros Logo" />
-      </div>
-
-      <!-- Staff Login Section -->
-      <div class="staff-section">
-        <div class="staff-header">
+    <div class="app-container">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="logo-wrapper">
+          <img src="logo-new.png" alt="Mr. Churros" class="header-logo" />
+        </div>
+        <div class="header-actions">
           <input
             type="text"
             id="staffName"
             class="staff-input"
-            placeholder="Enter staff name"
+            placeholder="Staff"
             value="Cashier 1"
           />
-          <button class="staff-btn" id="staffLogin">Login</button>
+          <button id="darkModeToggle" class="btn-icon">🌙</button>
         </div>
-        <div class="current-staff" id="currentStaff">👤 Current: Cashier 1</div>
+      </header>
+
+      <!-- MAIN CONTENT -->
+      <main class="main-content">
+        <!-- POS PAGE (Menu) -->
+        <div id="page-pos" class="page active">
+          <input
+            type="text"
+            class="search-bar"
+            placeholder="Search menu..."
+            readonly
+          />
+
+          <div class="categories">
+            <button class="cat-btn active" data-category="all">
+              All Items
+            </button>
+            <button class="cat-btn" data-category="churros">Churros</button>
+            <button class="cat-btn" data-category="dips">Dips</button>
+          </div>
+
+          <div class="product-grid" id="menuGrid"></div>
+        </div>
+
+        <!-- CALCULATOR PAGE -->
+        <div id="page-calc" class="page">
+          <div class="calculator-container">
+            <div class="calc-screen-modern">
+              <div id="calc-result">0</div>
+              <div class="calc-subinfo">
+                <span id="calc-memory"></span>
+                <span id="calc-operator-hint"></span>
+              </div>
+            </div>
+
+            <div class="calc-keypad">
+              <button class="calc-key" data-calc="7">7</button>
+              <button class="calc-key" data-calc="8">8</button>
+              <button class="calc-key" data-calc="9">9</button>
+              <button class="calc-key operator" data-calc="/">÷</button>
+
+              <button class="calc-key" data-calc="4">4</button>
+              <button class="calc-key" data-calc="5">5</button>
+              <button class="calc-key" data-calc="6">6</button>
+              <button class="calc-key operator" data-calc="*">×</button>
+
+              <button class="calc-key" data-calc="1">1</button>
+              <button class="calc-key" data-calc="2">2</button>
+              <button class="calc-key" data-calc="3">3</button>
+              <button class="calc-key operator" data-calc="-">−</button>
+
+              <button class="calc-key" data-calc="0">0</button>
+              <button class="calc-key" data-calc=".">.</button>
+              <button class="calc-key operator" data-calc="+">+</button>
+              <button class="calc-key clear" data-calc="C">C</button>
+
+              <button
+                class="calc-key equals"
+                data-calc="="
+                style="grid-column: span 4"
+              >
+                =
+              </button>
+            </div>
+
+            <div class="calc-actions">
+              <button class="btn btn-outline" id="calc-add-to-cart">
+                ➕ Add to Order
+              </button>
+              <button class="btn btn-outline" id="calc-clear">🔄 Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPORTS PAGE -->
+        <div id="page-reports" class="page">
+          <h2 style="margin-bottom: 16px; font-size: 1.4rem">
+            Daily Dashboard
+          </h2>
+
+          <div class="report-stats">
+            <div class="stat-card">
+              <span>Today's Sales</span>
+              <strong id="reportTotalSales">RM 0.00</strong>
+            </div>
+            <div class="stat-card">
+              <span>Orders</span>
+              <strong id="reportOrderCount">0</strong>
+            </div>
+          </div>
+
+          <h3
+            style="
+              margin-bottom: 12px;
+              font-size: 1rem;
+              color: var(--text-muted);
+            "
+          >
+            Recent Transactions
+          </h3>
+          <ul
+            class="order-list"
+            id="reportSalesList"
+            style="
+              background: var(--bg-surface);
+              padding: 16px;
+              border-radius: 16px;
+              box-shadow: var(--card-shadow);
+            "
+          >
+            <li
+              style="
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 0.9rem;
+              "
+            >
+              No sales yet today.
+            </li>
+          </ul>
+
+          <div
+            style="
+              margin-top: 24px;
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            "
+          >
+            <button id="export-btn" class="btn btn-outline">
+              📥 Export CSV
+            </button>
+            <button id="reset-btn" class="btn btn-danger">
+              ⚠️ Reset All Data
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- STICKY CART -->
+      <div id="cartSheet" class="cart-sheet">
+        <div class="cart-header" id="cartHeaderToggle">
+          <div class="cart-summary">
+            <div class="cart-badge" id="cartCount">0 Items</div>
+            <div class="cart-total-display" id="cartTotalSummary">RM 0.00</div>
+          </div>
+          <div class="cart-chevron">▲</div>
+        </div>
+
+        <div class="cart-body">
+          <ul id="order-list" class="order-list"></ul>
+        </div>
+
+        <div class="cart-footer">
+          <div class="cart-totals">
+            <span>Total</span>
+            <span id="order-total-amount">RM 0.00</span>
+          </div>
+          <div class="cart-actions">
+            <button id="void-last" class="btn btn-danger">Void Last</button>
+            <button id="clear-order" class="btn btn-outline">Clear All</button>
+          </div>
+          <button id="save-sale" class="btn btn-primary">Pay / Save</button>
+        </div>
       </div>
 
-      <!-- Dashboard -->
-      <div class="dashboard">
-        <div class="dashboard-card">
-          <div class="value" id="today-total">RM0</div>
-          <div class="label">TODAY</div>
-        </div>
-        <div class="dashboard-card">
-          <div class="value" id="total-sales">0</div>
-          <div class="label">SALES</div>
-        </div>
-        <div class="dashboard-card">
-          <div class="value" id="total-items">0</div>
-          <div class="label">ITEMS</div>
-        </div>
-      </div>
+      <!-- BOTTOM NAV -->
+      <nav class="bottom-nav">
+        <button class="nav-btn active" data-page="pos">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+            ></path>
+          </svg>
+          Menu
+        </button>
+        <button class="nav-btn" data-page="calc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M9 7h6m0 10v-4m-6 4h.01M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"
+            />
+            <path d="M8 9h8M8 13h4" />
+          </svg>
+          Calc
+        </button>
+        <button class="nav-btn" data-page="reports">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            ></path>
+          </svg>
+          Reports
+        </button>
+      </nav>
+    </div>
 
-      <!-- Order Summary -->
-      <div class="order-summary">
-        <div class="summary-header">
-          <span>Current Order</span>
-          <span>Qty</span>
-        </div>
-        <div id="order-list"></div>
-        <div class="order-total">
-          <span>Total:</span>
-          <span id="order-total-amount">RM 0.00</span>
-        </div>
-      </div>
-
-      <!-- Payment Summary -->
-      <div class="payment-summary">
-        <div class="payment-row">
-          <span class="payment-label">Customer Paid:</span>
-          <span class="payment-value" id="paid-amount">RM 0.00</span>
-        </div>
-        <div class="payment-row payment-change">
-          <span class="payment-label">Change to Return:</span>
-          <span class="payment-value" id="change-amount">RM 0.00</span>
-        </div>
-      </div>
-
-      <!-- Remarks Section -->
-      <div class="remarks-section">
+    <!-- Custom Item Modal -->
+    <div class="modal-overlay" id="customItemModal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('customItemModal')"
+          >&times;</span
+        >
+        <h3 style="margin-bottom: 16px; text-align: center">Custom Amount</h3>
         <input
           type="text"
-          id="saleRemarks"
-          class="remarks-input"
-          placeholder="Remarks (e.g., Extra churros, No sugar)"
+          id="customItemName"
+          class="custom-input"
+          placeholder="Item Name"
+          value="Misc Item"
         />
-      </div>
+        <div class="custom-display" id="calcDisplay">0.00</div>
 
-      <!-- Meal Buttons Section -->
-      <div class="meal-presets">
-        <!-- Regular Sets -->
-        <button class="meal-btn" id="meal-single">
-          <div class="btn-content">
-            <img src="single.png" class="btn-icon" alt="single" />
-            <span class="set-name">Single set</span>
-            <span class="set-price">RM7</span>
-          </div>
+        <div class="numpad">
+          <button class="num-btn" onclick="calcType('1')">1</button>
+          <button class="num-btn" onclick="calcType('2')">2</button>
+          <button class="num-btn" onclick="calcType('3')">3</button>
+          <button class="num-btn" onclick="calcType('4')">4</button>
+          <button class="num-btn" onclick="calcType('5')">5</button>
+          <button class="num-btn" onclick="calcType('6')">6</button>
+          <button class="num-btn" onclick="calcType('7')">7</button>
+          <button class="num-btn" onclick="calcType('8')">8</button>
+          <button class="num-btn" onclick="calcType('9')">9</button>
+          <button class="num-btn" onclick="calcType('C')">C</button>
+          <button class="num-btn" onclick="calcType('0')">0</button>
+          <button class="num-btn" onclick="calcType('00')">00</button>
+        </div>
+        <button
+          class="btn btn-primary"
+          style="margin-top: 16px"
+          onclick="addCustomItem()"
+        >
+          Add to Order
         </button>
-
-        <button class="meal-btn" id="meal-family">
-          <div class="btn-content">
-            <img src="family.png" class="btn-icon" alt="family" />
-            <span class="set-name">Family set</span>
-            <span class="set-price">RM35</span>
-          </div>
-        </button>
-
-        <!-- New Seasonal Set -->
-        <button class="meal-btn" id="meal-seasonal">
-          <div class="btn-content">
-            <img src="seasonal.png" class="btn-icon" alt="seasonal" />
-            <span class="set-name">Seasonal set</span>
-            <span class="set-price">RM8</span>
-          </div>
-        </button>
-
-        <!-- New Keychain -->
-        <button class="meal-btn" id="meal-keychain">
-          <div class="btn-content">
-            <img src="keychain.png" class="btn-icon" alt="keychain" />
-            <span class="set-name">Keychain</span>
-            <span class="set-price">RM5</span>
-          </div>
-        </button>
-      </div>
-      <!-- Calculator Screen -->
-      <div class="calc-screen">
-        <div id="result">0</div>
-      </div>
-
-      <!-- Cash Notes -->
-      <div class="quick-panel">
-        <button class="note-btn" id="note-10">RM10</button>
-        <button class="note-btn" id="note-20">RM20</button>
-        <button class="note-btn" id="note-50">RM50</button>
-        <button class="note-btn" id="note-100">RM100</button>
-      </div>
-
-      <!-- Calculator Keypad - For MANUAL ENTRY of any amount (RM25, RM43, etc) -->
-      <div class="keypad">
-        <button class="key" data-num="7">7</button>
-        <button class="key" data-num="8">8</button>
-        <button class="key" data-num="9">9</button>
-        <button class="key operator" data-op="+">+</button>
-
-        <button class="key" data-num="4">4</button>
-        <button class="key" data-num="5">5</button>
-        <button class="key" data-num="6">6</button>
-        <button class="key operator" data-op="-">−</button>
-
-        <button class="key" data-num="1">1</button>
-        <button class="key" data-num="2">2</button>
-        <button class="key" data-num="3">3</button>
-        <button class="key operator" data-op="*">×</button>
-
-        <button class="key zero" data-num="0">0</button>
-        <button class="key" data-num=".">.</button>
-        <button class="key operator divide-key" data-op="/">÷</button>
-
-        <!-- Equal and Clear buttons side by side - half each -->
-        <button class="key clear-key" id="clear-btn">AC</button>
-        <button class="key equals-key" id="equals-btn">=</button>
-      </div>
-
-      <!-- POS Actions -->
-      <div class="pos-actions">
-        <button class="pos-btn" id="save-sale">💾 Save & Receipt</button>
-        <button class="pos-btn" id="void-last">↩️ Void Last</button>
-        <button class="pos-btn" id="clear-order">🗑️ Clear</button>
-      </div>
-
-      <div class="pos-actions">
-        <button class="pos-btn special" id="daily-report">
-          📊 Daily Report
-        </button>
-        <button class="pos-btn special" id="export-btn">📎 Export CSV</button>
-        <button class="pos-btn" id="reset-btn">🔄 Reset All</button>
-      </div>
-
-      <div class="footer-badge">
-        <span>🍫 Created by Nazurah !</span>
       </div>
     </div>
 
     <!-- Receipt Modal -->
-    <div class="receipt-modal" id="receiptModal">
-      <div class="receipt-content">
+    <div class="modal-overlay" id="receiptModal">
+      <div class="modal-content receipt" style="max-width: 320px">
         <div class="receipt-header">
-          <div class="receipt-title">
-            <img src="logo-new.png" class="receipt-logo" alt="Churros Logo" />
-          </div>
-          <div id="receiptDateTime"></div>
-          <div id="receiptStaff"></div>
+          <h2 style="font-size: 1.2rem; font-weight: 800">🍩 Mr. Churros</h2>
+          <p style="font-size: 0.8rem; color: #555">
+            Thank you for your purchase!
+          </p>
+          <div
+            id="receiptDateTime"
+            style="font-size: 0.8rem; margin-top: 4px"
+          ></div>
+          <div id="receiptStaff" style="font-size: 0.8rem"></div>
         </div>
-        <div class="receipt-details" id="receiptItems"></div>
-        <div class="receipt-total" id="receiptTotal"></div>
-        <div class="payment-row">
-          <span>Paid:</span>
-          <span id="receiptPaid"></span>
-        </div>
-        <div class="payment-row">
-          <span>Change:</span>
-          <span id="receiptChange"></span>
-        </div>
-        <div
-          id="receiptRemarks"
-          style="margin: 10px 0; font-style: italic"
-        ></div>
-        <div class="receipt-footer">Thank you! Come again!</div>
-        <button
-          class="close-receipt"
-          onclick="
-            document.getElementById('receiptModal').style.display = 'none'
-          "
-        >
-          Close
-        </button>
-      </div>
-    </div>
 
-    <!-- Daily Report Modal -->
-    <div class="report-modal" id="reportModal">
-      <div class="report-content">
-        <h2 style="color: #c31f0a; margin-bottom: 20px">📊 Daily Report</h2>
-        <div id="reportDate"></div>
-        <div style="margin: 20px 0" id="reportStats"></div>
-        <div id="reportSalesList"></div>
+        <div id="receiptItems" style="margin-bottom: 12px"></div>
+
+        <div class="receipt-total">
+          <span>TOTAL</span>
+          <span id="receiptTotal">RM 0.00</span>
+        </div>
+
         <button
-          class="close-receipt"
-          onclick="
-            document.getElementById('reportModal').style.display = 'none'
-          "
+          class="btn btn-primary"
+          style="margin-top: 20px; width: 100%; border-radius: 8px"
+          onclick="closeModal('receiptModal')"
         >
-          Close
+          Done
         </button>
       </div>
     </div>
@@ -247,4 +303,3 @@
     <script src="script.js"></script>
   </body>
 </html>
-
