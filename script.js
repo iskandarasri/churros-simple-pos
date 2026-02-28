@@ -7,20 +7,20 @@ let customInputVal = "0";
 let currentStaff = "Cashier 1";
 let currentCategory = "all";
 
-// Calculator state
+// Calculator & Payment state
 let calcInput = "0";
 let calcPrev = null;
 let calcOp = null;
 let calcReset = false;
+let cashAmount = null; // Amount customer paid
 
-// Menu Items
 // Menu Items with custom images
 const menuItems = [
   {
     id: 1,
     name: "Single Set",
     price: 7.0,
-    image: "single.png", // Your image file name
+    image: "single.png",
     color: "#FEF3C7",
     category: "churros",
   },
@@ -28,7 +28,7 @@ const menuItems = [
     id: 2,
     name: "Family Box",
     price: 35.0,
-    image: "family.png", // Your image file name
+    image: "family.png",
     color: "#FDE68A",
     category: "churros",
   },
@@ -36,7 +36,7 @@ const menuItems = [
     id: 3,
     name: "Seasonal Set",
     price: 8.0,
-    image: "seasonal.png", // Your image file name
+    image: "seasonal.png",
     color: "#eefbcf",
     category: "churros",
   },
@@ -44,7 +44,7 @@ const menuItems = [
     id: 4,
     name: "Keychain",
     price: 5.0,
-    image: "keychain.png", // Your image file name
+    image: "keychain.png",
     color: "#E5E7EB",
     category: "merch",
   },
@@ -52,7 +52,7 @@ const menuItems = [
     id: 5,
     name: "Milk Choco Dip",
     price: 2.0,
-    image: "milk_choco.png", // Your image file name
+    image: "milk_choco.png",
     color: "#e6ae74",
     category: "dips",
   },
@@ -60,7 +60,7 @@ const menuItems = [
     id: 6,
     name: "Dark Choco Dip",
     price: 2.0,
-    image: "dark_choco.png", // Your image file name
+    image: "dark_choco.png",
     color: "#a78b78",
     category: "dips",
   },
@@ -68,7 +68,7 @@ const menuItems = [
     id: 7,
     name: "Caramel Dip",
     price: 2.0,
-    image: "caramel.png", // Your image file name
+    image: "caramel.png",
     color: "#FEF3C7",
     category: "dips",
   },
@@ -79,50 +79,101 @@ window.onload = () => {
   try {
     const saved = localStorage.getItem("churrosSales");
     if (saved) allSales = JSON.parse(saved);
-  } catch (e) { console.log("No saved data"); }
+  } catch (e) {
+    console.log("No saved data");
+  }
 
   if (darkMode) document.body.classList.add("dark-mode");
-  
+
   renderMenu();
   updateOrderList();
   updateReports();
   updateCalcDisplay();
-  
+  updatePaymentDisplay();
+
   document.getElementById("staffName").addEventListener("input", (e) => {
     currentStaff = e.target.value || "Cashier 1";
   });
 
   // Category filters
-  document.querySelectorAll(".cat-btn").forEach(btn => {
+  document.querySelectorAll(".cat-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
-      document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+      document
+        .querySelectorAll(".cat-btn")
+        .forEach((b) => b.classList.remove("active"));
       e.target.classList.add("active");
       currentCategory = e.target.dataset.category;
       renderMenu();
     });
   });
 
-  // FIXED: Search input listener - triggers on every keystroke
+  // Search input listener
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
-    // Remove readonly attribute if it's still there
-    searchInput.removeAttribute('readonly');
-    
-    // Listen for input events (every keystroke)
-    searchInput.addEventListener("input", function(e) {
-      console.log("Searching for:", e.target.value); // Debug log
+    searchInput.removeAttribute("readonly");
+    searchInput.addEventListener("input", function (e) {
       renderMenu();
     });
-    
-    // Also listen for search event (when user clicks "x" or presses Enter)
-    searchInput.addEventListener("search", function(e) {
-      console.log("Search cleared or submitted");
+    searchInput.addEventListener("search", function (e) {
       renderMenu();
     });
-    
-    // Initial focus
-    searchInput.focus();
   }
+
+  // Cart header toggle
+  document.getElementById("cartHeaderToggle").addEventListener("click", toggleCart);
+
+  // Dark mode toggle
+  document.getElementById("darkModeToggle").addEventListener("click", () => {
+    darkMode = !darkMode;
+    localStorage.setItem("darkMode", darkMode);
+    document.body.classList.toggle("dark-mode", darkMode);
+  });
+
+  // Core buttons
+  document.getElementById("void-last").addEventListener("click", voidLastItem);
+  document.getElementById("clear-order").addEventListener("click", clearOrder);
+  document.getElementById("save-sale").addEventListener("click", saveSale);
+  document.getElementById("export-btn").addEventListener("click", exportToExcel);
+  
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    if (confirm("Are you sure you want to delete all sales data? This cannot be undone.")) {
+      allSales = [];
+      localStorage.removeItem("churrosSales");
+      updateReports();
+      alert("Data reset successful.");
+    }
+  });
+
+  // Calculator event listeners
+  document.querySelectorAll("[data-calc]").forEach((btn) => {
+    btn.addEventListener("click", () => handleCalcInput(btn.dataset.calc));
+  });
+
+  document.getElementById("calc-add-to-cart").addEventListener("click", addCalcToOrder);
+  document.getElementById("calc-clear").addEventListener("click", () => {
+    calcInput = "0";
+    calcPrev = null;
+    calcOp = null;
+    calcReset = false;
+    cashAmount = null;
+    updateCalcDisplay();
+    updatePaymentDisplay();
+  });
+
+  // Navigation
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const pageId = btn.dataset.page;
+      switchView(pageId);
+    });
+  });
+
+  // Expose functions globally
+  window.setCashAmount = setCashAmount;
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+  window.calcType = calcType;
+  window.addCustomItem = addCustomItem;
 };
 
 // ========== UI RENDERERS ==========
@@ -142,12 +193,11 @@ function renderMenu() {
   // Then filter by search term if present
   if (searchTerm) {
     filtered = filtered.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm),
+      item.name.toLowerCase().includes(searchTerm)
     );
   }
 
   if (filtered.length === 0) {
-    // Show "No results" message
     const noResults = document.createElement("div");
     noResults.className = "no-results";
     noResults.style.cssText =
@@ -177,11 +227,8 @@ function renderMenu() {
     grid.appendChild(card);
   });
 
-  // Custom Item Card (only show in "all" or "churros" category and when not searching)
-  if (
-    !searchTerm &&
-    (currentCategory === "all" || currentCategory === "churros")
-  ) {
+  // Custom Item Card
+  if (!searchTerm && (currentCategory === "all" || currentCategory === "churros")) {
     const customCard = document.createElement("div");
     customCard.className = "product-card custom-item-card";
     customCard.onclick = () => openModal("customItemModal");
@@ -195,18 +242,6 @@ function renderMenu() {
     `;
     grid.appendChild(customCard);
   }
-}
-
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
 }
 
 function updateOrderList() {
@@ -226,7 +261,7 @@ function updateOrderList() {
       const li = document.createElement("li");
       li.className = "order-item";
       li.innerHTML = `
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
           <span class="item-qty">1x</span>
           <span class="item-name">${item.name}</span>
         </div>
@@ -240,6 +275,8 @@ function updateOrderList() {
   totalEl.textContent = formattedTotal;
   sheetTotalEl.textContent = formattedTotal;
   countEl.textContent = `${currentOrder.length} Items`;
+
+  updatePaymentDisplay();
 
   if (currentOrder.length > 0 && !cartOpen) {
     const header = document.getElementById("cartHeaderToggle");
@@ -257,6 +294,13 @@ function updateOrderList() {
 // ========== CALCULATOR FUNCTIONS ==========
 function updateCalcDisplay() {
   document.getElementById("calc-result").textContent = calcInput;
+
+  const hintEl = document.getElementById("calc-operator-hint");
+  if (calcOp && calcPrev !== null) {
+    hintEl.textContent = `${calcPrev} ${calcOp}`;
+  } else {
+    hintEl.textContent = "";
+  }
 }
 
 function handleCalcInput(val) {
@@ -265,10 +309,13 @@ function handleCalcInput(val) {
     calcPrev = null;
     calcOp = null;
     calcReset = false;
+    cashAmount = null;
+    updatePaymentDisplay();
   } else if (val === "=") {
     if (calcPrev !== null && calcOp !== null) {
       const current = parseFloat(calcInput);
       let result;
+
       switch (calcOp) {
         case "+":
           result = calcPrev + current;
@@ -280,23 +327,31 @@ function handleCalcInput(val) {
           result = calcPrev * current;
           break;
         case "/":
-          result = current === 0 ? 0 : calcPrev / current;
+          if (current === 0) {
+            alert("Cannot divide by zero");
+            return;
+          }
+          result = calcPrev / current;
           break;
         default:
           return;
       }
+
       calcInput = result.toString();
+      cashAmount = parseFloat(calcInput); // Set as cash paid
       calcPrev = null;
       calcOp = null;
       calcReset = true;
+      updatePaymentDisplay();
     }
   } else if (["+", "-", "*", "/"].includes(val)) {
+    const current = parseFloat(calcInput);
+
     if (calcPrev === null) {
-      calcPrev = parseFloat(calcInput);
+      calcPrev = current;
       calcOp = val;
       calcReset = true;
     } else if (calcOp !== null) {
-      const current = parseFloat(calcInput);
       let result;
       switch (calcOp) {
         case "+":
@@ -309,7 +364,11 @@ function handleCalcInput(val) {
           result = calcPrev * current;
           break;
         case "/":
-          result = current === 0 ? 0 : calcPrev / current;
+          if (current === 0) {
+            alert("Cannot divide by zero");
+            return;
+          }
+          result = calcPrev / current;
           break;
         default:
           return;
@@ -320,21 +379,78 @@ function handleCalcInput(val) {
       calcReset = true;
     }
   } else {
+    // Number or decimal input
     if (calcReset) {
       calcInput = val;
       calcReset = false;
     } else {
-      if (val === "." && calcInput.includes(".")) return;
-      calcInput = calcInput === "0" && val !== "." ? val : calcInput + val;
+      if (val === ".") {
+        if (calcInput.includes(".")) return;
+        calcInput = calcInput + ".";
+      } else {
+        calcInput = calcInput === "0" ? val : calcInput + val;
+      }
     }
+    cashAmount = parseFloat(calcInput); // Update cash amount as user types
+    updatePaymentDisplay();
   }
+
   updateCalcDisplay();
 }
 
+// Quick cash buttons - SETS the cash amount (what customer paid)
+function setCashAmount(amount) {
+  cashAmount = amount;
+  calcInput = amount.toString();
+  calcPrev = null;
+  calcOp = null;
+  calcReset = false;
+  updateCalcDisplay();
+  updatePaymentDisplay();
+}
+
+// ADD TO ORDER BUTTON - Now just updates payment display
 function addCalcToOrder() {
-  const val = parseFloat(calcInput);
-  if (!isNaN(val) && val > 0) {
-    addItem("Calc: RM" + val.toFixed(2), val);
+  if (currentOrder.length === 0) {
+    alert("Add items to order first!");
+    return;
+  }
+  
+  // This just updates the payment display - doesn't add an item
+  updatePaymentDisplay();
+  
+  // Show confirmation that payment is recorded
+  const calcAddBtn = document.getElementById("calc-add-to-cart");
+  const originalText = calcAddBtn.textContent;
+  calcAddBtn.textContent = "✓ Payment Set";
+  setTimeout(() => {
+    calcAddBtn.textContent = originalText;
+  }, 1000);
+}
+
+// ========== PAYMENT DISPLAY ==========
+function updatePaymentDisplay() {
+  const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
+  const paid = cashAmount || 0;
+  const change = paid - total;
+
+  const paidEl = document.getElementById("paid-amount");
+  const changeEl = document.getElementById("change-amount");
+  const changeRow = document.querySelector(".change-row");
+
+  if (paidEl && changeEl && changeRow) {
+    paidEl.textContent = `RM ${paid.toFixed(2)}`;
+    changeEl.textContent = `RM ${Math.max(0, change).toFixed(2)}`;
+
+    if (change < 0) {
+      changeEl.style.color = "var(--danger)";
+      changeRow.style.color = "var(--danger)";
+      changeRow.querySelector("span:first-child").textContent = "Still Need:";
+    } else {
+      changeEl.style.color = "var(--success)";
+      changeRow.style.color = "var(--text-main)";
+      changeRow.querySelector("span:first-child").textContent = "Change to Return:";
+    }
   }
 }
 
@@ -354,7 +470,13 @@ function voidLastItem() {
 function clearOrder() {
   if (confirm("Clear current order?")) {
     currentOrder = [];
+    cashAmount = null;
+    calcInput = "0";
+    calcPrev = null;
+    calcOp = null;
     updateOrderList();
+    updateCalcDisplay();
+    updatePaymentDisplay();
   }
 }
 
@@ -365,7 +487,17 @@ function saveSale() {
   }
 
   const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
+  const paid = cashAmount || 0;
+  const change = Math.max(0, paid - total);
+
+  if (paid < total) {
+    if (!confirm(`Customer still needs to pay RM ${(total - paid).toFixed(2)}. Continue anyway?`)) {
+      return;
+    }
+  }
+
   const staff = document.getElementById("staffName").value || "Staff";
+  const remarks = document.getElementById("saleRemarks")?.value || "";
 
   const newSale = {
     id: Date.now(),
@@ -373,9 +505,9 @@ function saveSale() {
     staff: staff,
     items: [...currentOrder],
     total: total,
-    paid: total,
-    change: 0,
-    remarks: "",
+    paid: paid,
+    change: change,
+    remarks: remarks,
   };
 
   allSales.push(newSale);
@@ -384,48 +516,24 @@ function saveSale() {
   generateReceipt(newSale);
 
   currentOrder = [];
+  cashAmount = null;
+  calcInput = "0";
+  calcPrev = null;
+  calcOp = null;
+  if (document.getElementById("saleRemarks")) {
+    document.getElementById("saleRemarks").value = "";
+  }
+
   updateOrderList();
   updateReports();
+  updateCalcDisplay();
   if (cartOpen) toggleCart();
 }
 
-// ========== CUSTOM NUMPAD ==========
-function calcType(val) {
-  if (val === "C") {
-    customInputVal = "0";
-  } else {
-    if (customInputVal === "0" && val !== "00") {
-      customInputVal = val;
-    } else {
-      customInputVal += val;
-    }
-  }
-
-  let num = parseInt(customInputVal, 10);
-  if (isNaN(num)) num = 0;
-  document.getElementById("calcDisplay").textContent = (num / 100).toFixed(2);
-}
-
-function addCustomItem() {
-  let num = parseInt(customInputVal, 10);
-  if (isNaN(num) || num === 0) return;
-
-  let price = num / 100;
-  let name = document.getElementById("customItemName").value || "Misc Item";
-
-  addItem(name, price);
-
-  customInputVal = "0";
-  document.getElementById("calcDisplay").textContent = "0.00";
-  document.getElementById("customItemName").value = "Misc Item";
-  closeModal("customItemModal");
-}
-
-// ========== RECEIPTS & REPORTS ==========
+// ========== RECEIPT FUNCTION ==========
 function generateReceipt(sale) {
   document.getElementById("receiptDateTime").textContent = sale.date;
-  document.getElementById("receiptStaff").textContent =
-    "Served by: " + sale.staff;
+  document.getElementById("receiptStaff").textContent = "Served by: " + sale.staff;
 
   const itemsContainer = document.getElementById("receiptItems");
   itemsContainer.innerHTML = "";
@@ -434,24 +542,47 @@ function generateReceipt(sale) {
     itemsContainer.innerHTML += `
       <div class="receipt-item">
         <span>1x ${item.name}</span>
-        <span>${item.price.toFixed(2)}</span>
+        <span>RM ${item.price.toFixed(2)}</span>
       </div>
     `;
   });
 
-  document.getElementById("receiptTotal").textContent =
-    "RM " + sale.total.toFixed(2);
+  itemsContainer.innerHTML += `
+    <div style="border-top: 1px dashed var(--border); margin: 10px 0; padding-top: 10px;"></div>
+    <div class="receipt-item">
+      <span>Total</span>
+      <span>RM ${sale.total.toFixed(2)}</span>
+    </div>
+    <div class="receipt-item">
+      <span>Paid</span>
+      <span>RM ${sale.paid.toFixed(2)}</span>
+    </div>
+    <div class="receipt-item">
+      <span>Change</span>
+      <span>RM ${sale.change.toFixed(2)}</span>
+    </div>
+  `;
+
+  if (sale.remarks) {
+    itemsContainer.innerHTML += `
+      <div style="margin-top: 10px; font-style: italic; color: var(--text-muted);">
+        Note: ${sale.remarks}
+      </div>
+    `;
+  }
+
+  document.getElementById("receiptTotal").textContent = "RM " + sale.total.toFixed(2);
   openModal("receiptModal");
 }
 
+// ========== REPORTS ==========
 function updateReports() {
   const today = new Date().toLocaleDateString();
   const todaysSales = allSales.filter((sale) => sale.date.includes(today));
 
   const totalAmount = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
 
-  document.getElementById("reportTotalSales").textContent =
-    `RM ${totalAmount.toFixed(2)}`;
+  document.getElementById("reportTotalSales").textContent = `RM ${totalAmount.toFixed(2)}`;
   document.getElementById("reportOrderCount").textContent = todaysSales.length;
 
   const listEl = document.getElementById("reportSalesList");
@@ -486,14 +617,82 @@ function exportToExcel() {
     return;
   }
 
-  let csvContent = "Date,Staff,Items,Total(RM)\n";
+  // Calculate today's sales
+  const today = new Date().toLocaleDateString();
+  const todaysSales = allSales.filter((sale) => sale.date.includes(today));
+  const todayTotal = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
+  const todayCount = todaysSales.length;
 
-  allSales.forEach((sale) => {
-    let itemsStr = sale.items.map((i) => i.name).join(" + ");
-    let row = `"${sale.date}","${sale.staff}","${itemsStr}",${sale.total.toFixed(2)}`;
-    csvContent += row + "\n";
+  // Calculate overall totals
+  const grandTotal = allSales.reduce((sum, sale) => sum + sale.total, 0);
+  const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
+  const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
+
+  // Count items by category
+  let totalSingles = 0, totalFamilies = 0, totalSeasonal = 0, totalKeychains = 0, totalDips = 0;
+  
+  allSales.forEach(sale => {
+    sale.items.forEach(item => {
+      if (item.name.includes("Single")) totalSingles++;
+      else if (item.name.includes("Family")) totalFamilies++;
+      else if (item.name.includes("Seasonal")) totalSeasonal++;
+      else if (item.name.includes("Keychain")) totalKeychains++;
+      else if (item.name.includes("Dip")) totalDips++;
+    });
   });
 
+  // Create CSV header
+  let csvContent = "MR. CHURROS POS - SALES REPORT\n";
+  csvContent += `Generated: ${new Date().toLocaleString()}\n\n`;
+  
+  // TODAY'S SUMMARY
+  csvContent += "=== TODAY'S SUMMARY ===\n";
+  csvContent += `Date,${today}\n`;
+  csvContent += `Total Sales,${todayCount}\n`;
+  csvContent += `Total Revenue,RM ${todayTotal.toFixed(2)}\n\n`;
+  
+  // TODAY'S TRANSACTIONS
+  csvContent += "=== TODAY'S TRANSACTIONS ===\n";
+  csvContent += "Time,Items,Total(RM),Paid(RM),Change(RM),Staff,Remarks\n";
+  
+  todaysSales.forEach((sale) => {
+    const date = new Date(sale.date);
+    const timeStr = date.toLocaleTimeString();
+    let itemsList = sale.items.map((i) => i.name).join(" + ");
+    
+    csvContent += `"${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.staff}","${sale.remarks}"\n`;
+  });
+  
+  // OVERALL SUMMARY
+  csvContent += "\n=== OVERALL SUMMARY ===\n";
+  csvContent += `Total Transactions,${allSales.length}\n`;
+  csvContent += `Total Revenue,RM ${grandTotal.toFixed(2)}\n`;
+  csvContent += `Total Paid,RM ${totalPaid.toFixed(2)}\n`;
+  csvContent += `Total Change Given,RM ${totalChange.toFixed(2)}\n\n`;
+  
+  // ITEM BREAKDOWN
+  csvContent += "=== ITEM BREAKDOWN ===\n";
+  csvContent += `Single Sets,${totalSingles}\n`;
+  csvContent += `Family Boxes,${totalFamilies}\n`;
+  csvContent += `Seasonal Sets,${totalSeasonal}\n`;
+  csvContent += `Keychains,${totalKeychains}\n`;
+  csvContent += `Dips,${totalDips}\n`;
+  csvContent += `Total Items,${totalSingles + totalFamilies + totalSeasonal + totalKeychains + totalDips}\n\n`;
+  
+  // ALL TRANSACTIONS HISTORY
+  csvContent += "=== ALL TRANSACTIONS HISTORY ===\n";
+  csvContent += "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Staff,Remarks\n";
+  
+  allSales.forEach((sale) => {
+    const date = new Date(sale.date);
+    const dateStr = date.toLocaleDateString();
+    const timeStr = date.toLocaleTimeString();
+    let itemsList = sale.items.map((i) => i.name).join(" + ");
+    
+    csvContent += `"${dateStr}","${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.staff}","${sale.remarks}"\n`;
+  });
+
+  // Create and download file
   const blob = new Blob(["\uFEFF" + csvContent], {
     type: "text/csv;charset=utf-8;",
   });
@@ -507,6 +706,38 @@ function exportToExcel() {
   a.click();
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
+}
+
+// ========== CUSTOM NUMPAD ==========
+function calcType(val) {
+  if (val === "C") {
+    customInputVal = "0";
+  } else {
+    if (customInputVal === "0" && val !== "00") {
+      customInputVal = val;
+    } else {
+      customInputVal += val;
+    }
+  }
+
+  let num = parseInt(customInputVal, 10);
+  if (isNaN(num)) num = 0;
+  document.getElementById("calcDisplay").textContent = (num / 100).toFixed(2);
+}
+
+function addCustomItem() {
+  let num = parseInt(customInputVal, 10);
+  if (isNaN(num) || num === 0) return;
+
+  let price = num / 100;
+  let name = document.getElementById("customItemName").value || "Misc Item";
+
+  addItem(name, price);
+
+  customInputVal = "0";
+  document.getElementById("calcDisplay").textContent = "0.00";
+  document.getElementById("customItemName").value = "Misc Item";
+  closeModal("customItemModal");
 }
 
 // ========== UI INTERACTIONS ==========
@@ -525,17 +756,11 @@ function closeModal(id) {
 }
 
 function switchView(pageId) {
-  document
-    .querySelectorAll(".page")
-    .forEach((p) => p.classList.remove("active"));
-  document
-    .querySelectorAll(".nav-btn")
-    .forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
 
   document.getElementById("page-" + pageId).classList.add("active");
-  document
-    .querySelector(`.nav-btn[data-page="${pageId}"]`)
-    .classList.add("active");
+  document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add("active");
 
   const sheet = document.getElementById("cartSheet");
   if (pageId === "pos" || pageId === "calc") {
@@ -545,62 +770,3 @@ function switchView(pageId) {
     if (cartOpen) toggleCart();
   }
 }
-
-// ========== EVENT LISTENERS ==========
-document
-  .getElementById("cartHeaderToggle")
-  .addEventListener("click", toggleCart);
-
-document.getElementById("darkModeToggle").addEventListener("click", () => {
-  darkMode = !darkMode;
-  localStorage.setItem("darkMode", darkMode);
-  document.body.classList.toggle("dark-mode", darkMode);
-});
-
-document.getElementById("void-last").addEventListener("click", voidLastItem);
-document.getElementById("clear-order").addEventListener("click", clearOrder);
-document.getElementById("save-sale").addEventListener("click", saveSale);
-document.getElementById("export-btn").addEventListener("click", exportToExcel);
-
-document.getElementById("reset-btn").addEventListener("click", () => {
-  if (
-    confirm(
-      "Are you sure you want to delete all sales data? This cannot be undone.",
-    )
-  ) {
-    allSales = [];
-    localStorage.removeItem("churrosSales");
-    updateReports();
-    alert("Data reset successful.");
-  }
-});
-
-// Calculator event listeners
-document.querySelectorAll("[data-calc]").forEach((btn) => {
-  btn.addEventListener("click", () => handleCalcInput(btn.dataset.calc));
-});
-
-document
-  .getElementById("calc-add-to-cart")
-  .addEventListener("click", addCalcToOrder);
-document.getElementById("calc-clear").addEventListener("click", () => {
-  calcInput = "0";
-  calcPrev = null;
-  calcOp = null;
-  calcReset = false;
-  updateCalcDisplay();
-});
-
-// Navigation
-document.querySelectorAll(".nav-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const pageId = btn.dataset.page;
-    switchView(pageId);
-  });
-});
-
-// Expose functions globally
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.calcType = calcType;
-window.addCustomItem = addCustomItem;
