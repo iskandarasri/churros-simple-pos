@@ -212,30 +212,26 @@ window.onload = () => {
 
   function updatePaymentButtons() {
     if (paymentCashBtn && paymentQrBtn) {
-      if (paymentMethod === "Cash") {
-        paymentCashBtn.style.background = "var(--primary)";
-        paymentCashBtn.style.color = "white";
-        paymentQrBtn.style.background = "var(--bg-surface)";
-        paymentQrBtn.style.color = "var(--text-main)";
+      if (paymentMethod === "cash") {
+        paymentCashBtn.classList.add("active");
+        paymentQrBtn.classList.remove("active");
       } else {
-        paymentQrBtn.style.background = "var(--primary)";
-        paymentQrBtn.style.color = "white";
-        paymentCashBtn.style.background = "var(--bg-surface)";
-        paymentCashBtn.style.color = "var(--text-main)";
+        paymentQrBtn.classList.add("active");
+        paymentCashBtn.classList.remove("active");
       }
     }
   }
 
   if (paymentCashBtn) {
     paymentCashBtn.addEventListener("click", () => {
-      paymentMethod = "Cash";
+      paymentMethod = "cash";
       updatePaymentButtons();
     });
   }
 
   if (paymentQrBtn) {
     paymentQrBtn.addEventListener("click", () => {
-      paymentMethod = "QR";
+      paymentMethod = "qr";
       updatePaymentButtons();
     });
   }
@@ -529,10 +525,10 @@ function setCashAmount(amount) {
   } else {
     // Show the addition in calculator hint
     calcPrev = cashAmount;
-    calcOp = '+';
+    calcOp = "+";
     cashAmount += amount;
     calcInput = cashAmount.toString();
-    
+
     // Clear the operation after a short delay
     setTimeout(() => {
       calcPrev = null;
@@ -540,11 +536,11 @@ function setCashAmount(amount) {
       updateCalcDisplay();
     }, 1000);
   }
-  
+
   calcReset = false;
   updateCalcDisplay();
   updatePaymentDisplay();
-  
+
   // Visual feedback
   const cashBtn = event?.target;
   if (cashBtn) {
@@ -787,8 +783,12 @@ function exportToExcel() {
   const todayCount = todaysSales.length;
 
   // Calculate payment method totals
-  const cashToday = todaysSales.filter(s => s.paymentMethod === "Cash").reduce((sum, s) => sum + s.total, 0);
-  const qrToday = todaysSales.filter(s => s.paymentMethod === "QR").reduce((sum, s) => sum + s.total, 0);
+  const cashToday = todaysSales
+    .filter((s) => s.paymentMethod === "Cash")
+    .reduce((sum, s) => sum + s.total, 0);
+  const qrToday = todaysSales
+    .filter((s) => s.paymentMethod === "QR")
+    .reduce((sum, s) => sum + s.total, 0);
 
   // Calculate overall totals
   const grandTotal = allSales.reduce((sum, sale) => sum + sale.total, 0);
@@ -796,12 +796,18 @@ function exportToExcel() {
   const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
 
   // Count items by category - UPDATED with all your menu items
-  let totalSingles = 0, totalFamilies = 0, totalSpecialSingles = 0, totalSpecialFamilies = 0;
-  let totalMilkDips = 0, totalDarkDips = 0, totalCaramelDips = 0, totalSpecialDips = 0;
+  let totalSingles = 0,
+    totalFamilies = 0,
+    totalSpecialSingles = 0,
+    totalSpecialFamilies = 0;
+  let totalMilkDips = 0,
+    totalDarkDips = 0,
+    totalCaramelDips = 0,
+    totalSpecialDips = 0;
   let totalKeychains = 0;
-  
-  allSales.forEach(sale => {
-    sale.items.forEach(item => {
+
+  allSales.forEach((sale) => {
+    sale.items.forEach((item) => {
       if (item.name === "Single Set") totalSingles++;
       else if (item.name === "Family Box") totalFamilies++;
       else if (item.name === "Special Single Set") totalSpecialSingles++;
@@ -815,14 +821,16 @@ function exportToExcel() {
   });
 
   // Calculate totals
-  const totalChurros = totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
-  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
+  const totalChurros =
+    totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
+  const totalDips =
+    totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
   const totalItems = totalChurros + totalDips + totalKeychains;
 
   // Create CSV header
   let csvContent = "MR. CHURROS POS - SALES REPORT\n";
   csvContent += `Generated: ${new Date().toLocaleString()}\n\n`;
-  
+
   // TODAY'S SUMMARY
   csvContent += "=== TODAY'S SUMMARY ===\n";
   csvContent += `Date,${today}\n`;
@@ -830,33 +838,38 @@ function exportToExcel() {
   csvContent += `Total Revenue,RM ${todayTotal.toFixed(2)}\n`;
   csvContent += `Cash Payments,RM ${cashToday.toFixed(2)}\n`;
   csvContent += `QR Payments,RM ${qrToday.toFixed(2)}\n\n`;
-  
+
   // TODAY'S TRANSACTIONS
   csvContent += "=== TODAY'S TRANSACTIONS ===\n";
-  csvContent += "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
-  
+  csvContent +=
+    "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+
   todaysSales.forEach((sale) => {
     const date = new Date(sale.date);
     const timeStr = date.toLocaleTimeString();
     let itemsList = sale.items.map((i) => i.name).join(" + ");
-    
+
     csvContent += `"${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
   });
-  
+
   // OVERALL SUMMARY
   csvContent += "\n=== OVERALL SUMMARY ===\n";
   csvContent += `Total Transactions,${allSales.length}\n`;
   csvContent += `Total Revenue,RM ${grandTotal.toFixed(2)}\n`;
   csvContent += `Total Paid,RM ${totalPaid.toFixed(2)}\n`;
   csvContent += `Total Change Given,RM ${totalChange.toFixed(2)}\n\n`;
-  
+
   // PAYMENT METHOD BREAKDOWN
   csvContent += "=== PAYMENT METHOD BREAKDOWN ===\n";
-  const totalCash = allSales.filter(s => s.paymentMethod === "Cash").reduce((sum, s) => sum + s.total, 0);
-  const totalQR = allSales.filter(s => s.paymentMethod === "QR").reduce((sum, s) => sum + s.total, 0);
+  const totalCash = allSales
+    .filter((s) => s.paymentMethod === "Cash")
+    .reduce((sum, s) => sum + s.total, 0);
+  const totalQR = allSales
+    .filter((s) => s.paymentMethod === "QR")
+    .reduce((sum, s) => sum + s.total, 0);
   csvContent += `Cash Payments,RM ${totalCash.toFixed(2)}\n`;
   csvContent += `QR Payments,RM ${totalQR.toFixed(2)}\n\n`;
-  
+
   // ITEM BREAKDOWN - UPDATED with all your items
   csvContent += "=== ITEM BREAKDOWN ===\n";
   csvContent += "CHURROS SETS\n";
@@ -865,31 +878,32 @@ function exportToExcel() {
   csvContent += `Special Single Set,${totalSpecialSingles}\n`;
   csvContent += `Special Family Box,${totalSpecialFamilies}\n`;
   csvContent += `Total Churros Sets,${totalChurros}\n\n`;
-  
+
   csvContent += "DIPS\n";
   csvContent += `Milk Choco Dip,${totalMilkDips}\n`;
   csvContent += `Dark Choco Dip,${totalDarkDips}\n`;
   csvContent += `Caramel Dip,${totalCaramelDips}\n`;
   csvContent += `Special Dip,${totalSpecialDips}\n`;
   csvContent += `Total Dips,${totalDips}\n\n`;
-  
+
   csvContent += "MERCHANDISE\n";
   csvContent += `Keychain,${totalKeychains}\n\n`;
-  
+
   csvContent += `TOTAL ITEMS SOLD,${totalItems}\n\n`;
-  
+
   // ALL TRANSACTIONS HISTORY
   csvContent += "=== ALL TRANSACTIONS HISTORY ===\n";
-  csvContent += "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
-  
+  csvContent +=
+    "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+
   allSales.forEach((sale) => {
     const date = new Date(sale.date);
     const dateStr = date.toLocaleDateString();
     const timeStr = date.toLocaleTimeString();
     let itemsList = sale.items.map((i) => i.name).join(" + ");
-    
+
     csvContent += `"${dateStr}","${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)}," ${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
-  })
+  });
 
   // Create and download file
   const blob = new Blob(["\uFEFF" + csvContent], {
