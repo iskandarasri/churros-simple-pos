@@ -4,7 +4,7 @@ let allSales = [];
 let darkMode = localStorage.getItem("darkMode") === "true";
 let cartOpen = false;
 let customInputVal = "0";
-let currentStaff = "Cashier 1";
+let currentStaff = "Nazurah";
 let currentCategory = "all";
 
 // Calculator & Payment state
@@ -34,19 +34,19 @@ const menuItems = [
   },
   {
     id: 3,
-    name: "Seasonal Set",
+    name: "Special Single Set",
     price: 8.0,
-    image: "seasonal.png",
+    image: "seasonal_single.png",
     color: "#eefbcf",
     category: "churros",
   },
   {
     id: 4,
-    name: "Keychain",
-    price: 5.0,
-    image: "keychain.png",
-    color: "#E5E7EB",
-    category: "merch",
+    name: "Special Family Box",
+    price: 36.0,
+    image: "seasonal_family.png",
+    color: "#eefbcf",
+    category: "churros",
   },
   {
     id: 5,
@@ -72,6 +72,22 @@ const menuItems = [
     color: "#FEF3C7",
     category: "dips",
   },
+  {
+    id: 8,
+    name: "Special Dip",
+    price: 3.0,
+    image: "seasonal_dip.png",
+    color: "#cfe9d0",
+    category: "dips",
+  },
+  {
+    id: 9,
+    name: "Keychain",
+    price: 5.0,
+    image: "keychain.png",
+    color: "#E5E7EB",
+    category: "merch",
+  }
 ];
 
 // ========== INITIALIZATION ==========
@@ -92,7 +108,7 @@ window.onload = () => {
   updatePaymentDisplay();
 
   document.getElementById("staffName").addEventListener("input", (e) => {
-    currentStaff = e.target.value || "Cashier 1";
+    currentStaff = e.target.value || "Nazurah";
   });
 
   // Category filters
@@ -174,6 +190,9 @@ window.onload = () => {
   window.closeModal = closeModal;
   window.calcType = calcType;
   window.addCustomItem = addCustomItem;
+  
+  // Initialize Easter egg
+  setTimeout(initEasterEgg, 1000);
 };
 
 // ========== UI RENDERERS ==========
@@ -249,27 +268,65 @@ function updateOrderList() {
   const totalEl = document.getElementById("order-total-amount");
   const sheetTotalEl = document.getElementById("cartTotalSummary");
   const countEl = document.getElementById("cartCount");
+  const cartHeader = document.getElementById("cartHeaderToggle");
 
   listEl.innerHTML = "";
   let total = 0;
 
   if (currentOrder.length === 0) {
     listEl.innerHTML = `<li style="text-align:center; color: var(--text-muted); margin-top: 20px; font-size: 0.9rem;">Cart is empty</li>`;
-  } else {
-    currentOrder.forEach((item) => {
-      total += item.price;
-      const li = document.createElement("li");
-      li.className = "order-item";
-      li.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="item-qty">1x</span>
-          <span class="item-name">${item.name}</span>
-        </div>
-        <span class="item-price">RM ${item.price.toFixed(2)}</span>
-      `;
-      listEl.appendChild(li);
-    });
+    countEl.textContent = `0 Items`;
+    totalEl.textContent = `RM 0.00`;
+    sheetTotalEl.textContent = `RM 0.00`;
+    return;
   }
+
+  // Group identical items
+  const groupedItems = {};
+  currentOrder.forEach((item, index) => {
+    const key = `${item.name}_${item.price}`;
+    if (!groupedItems[key]) {
+      groupedItems[key] = {
+        name: item.name,
+        price: item.price,
+        quantity: 1,
+        indices: [index]
+      };
+    } else {
+      groupedItems[key].quantity++;
+      groupedItems[key].indices.push(index);
+    }
+  });
+
+  // Calculate total
+  total = currentOrder.reduce((sum, item) => sum + item.price, 0);
+
+  // Render grouped items
+  Object.values(groupedItems).forEach((group) => {
+    const li = document.createElement("li");
+    li.className = "order-item";
+    li.innerHTML = `
+      <div class="order-item-left">
+        <span class="item-qty">${group.quantity}x</span>
+        <span class="item-name">${group.name}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="item-price">RM ${(group.price * group.quantity).toFixed(2)}</span>
+        <button class="delete-item-btn" data-item-name="${group.name}" data-item-price="${group.price}">✕</button>
+      </div>
+    `;
+    listEl.appendChild(li);
+  });
+
+  // Add delete event listeners
+  document.querySelectorAll(".delete-item-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const itemName = btn.dataset.itemName;
+      const itemPrice = parseFloat(btn.dataset.itemPrice);
+      deleteItemFromOrder(itemName, itemPrice);
+    });
+  });
 
   const formattedTotal = `RM ${total.toFixed(2)}`;
   totalEl.textContent = formattedTotal;
@@ -278,16 +335,27 @@ function updateOrderList() {
 
   updatePaymentDisplay();
 
+  // Flash effect with rounded corners
   if (currentOrder.length > 0 && !cartOpen) {
-    const header = document.getElementById("cartHeaderToggle");
-    header.style.background = "var(--primary)";
-    header.style.color = "#fff";
+    cartHeader.classList.add('cart-flash');
     setTimeout(() => {
-      header.style.background = "";
-      header.style.color = "";
+      cartHeader.classList.remove('cart-flash');
     }, 300);
   } else if (currentOrder.length === 0 && cartOpen) {
     toggleCart();
+  }
+}
+
+// New function to delete specific item
+function deleteItemFromOrder(itemName, itemPrice) {
+  // Find the index of the item to delete (first occurrence)
+  const index = currentOrder.findIndex(
+    (item) => item.name === itemName && item.price === itemPrice
+  );
+  
+  if (index !== -1) {
+    currentOrder.splice(index, 1);
+    updateOrderList();
   }
 }
 
@@ -769,4 +837,42 @@ function switchView(pageId) {
     sheet.style.display = "none";
     if (cartOpen) toggleCart();
   }
+}
+
+// ========== EASTER EGG - Logo click to open dev page ==========
+function initEasterEgg() {
+  const logoElement = document.getElementById("devEasterEgg");
+  
+  if (!logoElement) {
+    console.log("Logo element not found yet, retrying...");
+    setTimeout(initEasterEgg, 500);
+    return;
+  }
+  
+  let logoClickCount = 0;
+  let logoClickTimer;
+  
+  logoElement.addEventListener("click", () => {
+    logoClickCount++;
+    console.log("Logo clicked:", logoClickCount); // Debug log
+    
+    // Clear the previous timer
+    clearTimeout(logoClickTimer);
+    
+    // Set a new timer to reset count after 2 seconds
+    logoClickTimer = setTimeout(() => {
+      logoClickCount = 0;
+      console.log("Click count reset");
+    }, 2000);
+    
+    // If clicked 3 times, open dev page
+    if (logoClickCount === 3) {
+      logoClickCount = 0;
+      
+      // Switch to dev page
+      switchView('dev');
+    }
+  });
+  
+  console.log("Easter egg initialized!");
 }
