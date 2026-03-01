@@ -8,6 +8,8 @@ let currentStaff = "Nazurah";
 let currentCategory = "all";
 
 // Calculator & Payment state
+// Add this with other state variables near the top
+let paymentMethod = "Cash"; // "cash" or "qr"
 let calcInput = "0";
 let calcPrev = null;
 let calcOp = null;
@@ -87,7 +89,7 @@ const menuItems = [
     image: "keychain.png",
     color: "#E5E7EB",
     category: "merch",
-  }
+  },
 ];
 
 // ========== INITIALIZATION ==========
@@ -136,7 +138,9 @@ window.onload = () => {
   }
 
   // Cart header toggle
-  document.getElementById("cartHeaderToggle").addEventListener("click", toggleCart);
+  document
+    .getElementById("cartHeaderToggle")
+    .addEventListener("click", toggleCart);
 
   // Dark mode toggle
   document.getElementById("darkModeToggle").addEventListener("click", () => {
@@ -149,10 +153,16 @@ window.onload = () => {
   document.getElementById("void-last").addEventListener("click", voidLastItem);
   document.getElementById("clear-order").addEventListener("click", clearOrder);
   document.getElementById("save-sale").addEventListener("click", saveSale);
-  document.getElementById("export-btn").addEventListener("click", exportToExcel);
-  
+  document
+    .getElementById("export-btn")
+    .addEventListener("click", exportToExcel);
+
   document.getElementById("reset-btn").addEventListener("click", () => {
-    if (confirm("Are you sure you want to delete all sales data? This cannot be undone.")) {
+    if (
+      confirm(
+        "Are you sure you want to delete all sales data? This cannot be undone.",
+      )
+    ) {
       allSales = [];
       localStorage.removeItem("churrosSales");
       updateReports();
@@ -165,7 +175,9 @@ window.onload = () => {
     btn.addEventListener("click", () => handleCalcInput(btn.dataset.calc));
   });
 
-  document.getElementById("calc-add-to-cart").addEventListener("click", addCalcToOrder);
+  document
+    .getElementById("calc-add-to-cart")
+    .addEventListener("click", addCalcToOrder);
   document.getElementById("calc-clear").addEventListener("click", () => {
     calcInput = "0";
     calcPrev = null;
@@ -190,9 +202,45 @@ window.onload = () => {
   window.closeModal = closeModal;
   window.calcType = calcType;
   window.addCustomItem = addCustomItem;
-  
+
   // Initialize Easter egg
   setTimeout(initEasterEgg, 1000);
+
+  // Payment method toggle
+  const paymentCashBtn = document.getElementById("payment-cash");
+  const paymentQrBtn = document.getElementById("payment-qr");
+
+  function updatePaymentButtons() {
+    if (paymentCashBtn && paymentQrBtn) {
+      if (paymentMethod === "Cash") {
+        paymentCashBtn.style.background = "var(--primary)";
+        paymentCashBtn.style.color = "white";
+        paymentQrBtn.style.background = "var(--bg-surface)";
+        paymentQrBtn.style.color = "var(--text-main)";
+      } else {
+        paymentQrBtn.style.background = "var(--primary)";
+        paymentQrBtn.style.color = "white";
+        paymentCashBtn.style.background = "var(--bg-surface)";
+        paymentCashBtn.style.color = "var(--text-main)";
+      }
+    }
+  }
+
+  if (paymentCashBtn) {
+    paymentCashBtn.addEventListener("click", () => {
+      paymentMethod = "Cash";
+      updatePaymentButtons();
+    });
+  }
+
+  if (paymentQrBtn) {
+    paymentQrBtn.addEventListener("click", () => {
+      paymentMethod = "QR";
+      updatePaymentButtons();
+    });
+  }
+
+  updatePaymentButtons();
 };
 
 // ========== UI RENDERERS ==========
@@ -212,7 +260,7 @@ function renderMenu() {
   // Then filter by search term if present
   if (searchTerm) {
     filtered = filtered.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm)
+      item.name.toLowerCase().includes(searchTerm),
     );
   }
 
@@ -247,7 +295,10 @@ function renderMenu() {
   });
 
   // Custom Item Card
-  if (!searchTerm && (currentCategory === "all" || currentCategory === "churros")) {
+  if (
+    !searchTerm &&
+    (currentCategory === "all" || currentCategory === "churros")
+  ) {
     const customCard = document.createElement("div");
     customCard.className = "product-card custom-item-card";
     customCard.onclick = () => openModal("customItemModal");
@@ -290,7 +341,7 @@ function updateOrderList() {
         name: item.name,
         price: item.price,
         quantity: 1,
-        indices: [index]
+        indices: [index],
       };
     } else {
       groupedItems[key].quantity++;
@@ -337,9 +388,9 @@ function updateOrderList() {
 
   // Flash effect with rounded corners
   if (currentOrder.length > 0 && !cartOpen) {
-    cartHeader.classList.add('cart-flash');
+    cartHeader.classList.add("cart-flash");
     setTimeout(() => {
-      cartHeader.classList.remove('cart-flash');
+      cartHeader.classList.remove("cart-flash");
     }, 300);
   } else if (currentOrder.length === 0 && cartOpen) {
     toggleCart();
@@ -350,9 +401,9 @@ function updateOrderList() {
 function deleteItemFromOrder(itemName, itemPrice) {
   // Find the index of the item to delete (first occurrence)
   const index = currentOrder.findIndex(
-    (item) => item.name === itemName && item.price === itemPrice
+    (item) => item.name === itemName && item.price === itemPrice,
   );
-  
+
   if (index !== -1) {
     currentOrder.splice(index, 1);
     updateOrderList();
@@ -467,14 +518,41 @@ function handleCalcInput(val) {
 }
 
 // Quick cash buttons - SETS the cash amount (what customer paid)
+// Quick cash buttons - ADDS with visual feedback in calculator
 function setCashAmount(amount) {
-  cashAmount = amount;
-  calcInput = amount.toString();
-  calcPrev = null;
-  calcOp = null;
+  if (cashAmount === null) {
+    // First time pressing cash button
+    cashAmount = amount;
+    calcInput = amount.toString();
+    calcPrev = null;
+    calcOp = null;
+  } else {
+    // Show the addition in calculator hint
+    calcPrev = cashAmount;
+    calcOp = '+';
+    cashAmount += amount;
+    calcInput = cashAmount.toString();
+    
+    // Clear the operation after a short delay
+    setTimeout(() => {
+      calcPrev = null;
+      calcOp = null;
+      updateCalcDisplay();
+    }, 1000);
+  }
+  
   calcReset = false;
   updateCalcDisplay();
   updatePaymentDisplay();
+  
+  // Visual feedback
+  const cashBtn = event?.target;
+  if (cashBtn) {
+    cashBtn.style.transform = "scale(0.95)";
+    setTimeout(() => {
+      cashBtn.style.transform = "scale(1)";
+    }, 100);
+  }
 }
 
 // ADD TO ORDER BUTTON - Now just updates payment display
@@ -483,10 +561,10 @@ function addCalcToOrder() {
     alert("Add items to order first!");
     return;
   }
-  
+
   // This just updates the payment display - doesn't add an item
   updatePaymentDisplay();
-  
+
   // Show confirmation that payment is recorded
   const calcAddBtn = document.getElementById("calc-add-to-cart");
   const originalText = calcAddBtn.textContent;
@@ -517,7 +595,8 @@ function updatePaymentDisplay() {
     } else {
       changeEl.style.color = "var(--success)";
       changeRow.style.color = "var(--text-main)";
-      changeRow.querySelector("span:first-child").textContent = "Change to Return:";
+      changeRow.querySelector("span:first-child").textContent =
+        "Change to Return:";
     }
   }
 }
@@ -558,8 +637,12 @@ function saveSale() {
   const paid = cashAmount || 0;
   const change = Math.max(0, paid - total);
 
-  if (paid < total) {
-    if (!confirm(`Customer still needs to pay RM ${(total - paid).toFixed(2)}. Continue anyway?`)) {
+  if (paymentMethod === "Cash" && paid < total) {
+    if (
+      !confirm(
+        `Customer still needs to pay RM ${(total - paid).toFixed(2)}. Continue anyway?`,
+      )
+    ) {
       return;
     }
   }
@@ -575,6 +658,7 @@ function saveSale() {
     total: total,
     paid: paid,
     change: change,
+    paymentMethod: paymentMethod, // Add payment method
     remarks: remarks,
   };
 
@@ -601,10 +685,19 @@ function saveSale() {
 // ========== RECEIPT FUNCTION ==========
 function generateReceipt(sale) {
   document.getElementById("receiptDateTime").textContent = sale.date;
-  document.getElementById("receiptStaff").textContent = "Served by: " + sale.staff;
+  document.getElementById("receiptStaff").textContent =
+    "Served by: " + sale.staff;
 
   const itemsContainer = document.getElementById("receiptItems");
   itemsContainer.innerHTML = "";
+
+  // Add payment method to receipt
+  itemsContainer.innerHTML += `
+  <div class="receipt-item">
+    <span>Payment</span>
+    <span>${sale.paymentMethod === "Cash" ? "Cash" : "QR Pay"}</span>
+  </div>
+`;
 
   sale.items.forEach((item) => {
     itemsContainer.innerHTML += `
@@ -639,7 +732,8 @@ function generateReceipt(sale) {
     `;
   }
 
-  document.getElementById("receiptTotal").textContent = "RM " + sale.total.toFixed(2);
+  document.getElementById("receiptTotal").textContent =
+    "RM " + sale.total.toFixed(2);
   openModal("receiptModal");
 }
 
@@ -650,7 +744,8 @@ function updateReports() {
 
   const totalAmount = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
 
-  document.getElementById("reportTotalSales").textContent = `RM ${totalAmount.toFixed(2)}`;
+  document.getElementById("reportTotalSales").textContent =
+    `RM ${totalAmount.toFixed(2)}`;
   document.getElementById("reportOrderCount").textContent = todaysSales.length;
 
   const listEl = document.getElementById("reportSalesList");
@@ -691,23 +786,38 @@ function exportToExcel() {
   const todayTotal = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
   const todayCount = todaysSales.length;
 
+  // Calculate payment method totals
+  const cashToday = todaysSales.filter(s => s.paymentMethod === "Cash").reduce((sum, s) => sum + s.total, 0);
+  const qrToday = todaysSales.filter(s => s.paymentMethod === "QR").reduce((sum, s) => sum + s.total, 0);
+
   // Calculate overall totals
   const grandTotal = allSales.reduce((sum, sale) => sum + sale.total, 0);
   const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
   const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
 
-  // Count items by category
-  let totalSingles = 0, totalFamilies = 0, totalSeasonal = 0, totalKeychains = 0, totalDips = 0;
+  // Count items by category - UPDATED with all your menu items
+  let totalSingles = 0, totalFamilies = 0, totalSpecialSingles = 0, totalSpecialFamilies = 0;
+  let totalMilkDips = 0, totalDarkDips = 0, totalCaramelDips = 0, totalSpecialDips = 0;
+  let totalKeychains = 0;
   
   allSales.forEach(sale => {
     sale.items.forEach(item => {
-      if (item.name.includes("Single")) totalSingles++;
-      else if (item.name.includes("Family")) totalFamilies++;
-      else if (item.name.includes("Seasonal")) totalSeasonal++;
-      else if (item.name.includes("Keychain")) totalKeychains++;
-      else if (item.name.includes("Dip")) totalDips++;
+      if (item.name === "Single Set") totalSingles++;
+      else if (item.name === "Family Box") totalFamilies++;
+      else if (item.name === "Special Single Set") totalSpecialSingles++;
+      else if (item.name === "Special Family Box") totalSpecialFamilies++;
+      else if (item.name === "Milk Choco Dip") totalMilkDips++;
+      else if (item.name === "Dark Choco Dip") totalDarkDips++;
+      else if (item.name === "Caramel Dip") totalCaramelDips++;
+      else if (item.name === "Special Dip") totalSpecialDips++;
+      else if (item.name === "Keychain") totalKeychains++;
     });
   });
+
+  // Calculate totals
+  const totalChurros = totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
+  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
+  const totalItems = totalChurros + totalDips + totalKeychains;
 
   // Create CSV header
   let csvContent = "MR. CHURROS POS - SALES REPORT\n";
@@ -717,18 +827,20 @@ function exportToExcel() {
   csvContent += "=== TODAY'S SUMMARY ===\n";
   csvContent += `Date,${today}\n`;
   csvContent += `Total Sales,${todayCount}\n`;
-  csvContent += `Total Revenue,RM ${todayTotal.toFixed(2)}\n\n`;
+  csvContent += `Total Revenue,RM ${todayTotal.toFixed(2)}\n`;
+  csvContent += `Cash Payments,RM ${cashToday.toFixed(2)}\n`;
+  csvContent += `QR Payments,RM ${qrToday.toFixed(2)}\n\n`;
   
   // TODAY'S TRANSACTIONS
   csvContent += "=== TODAY'S TRANSACTIONS ===\n";
-  csvContent += "Time,Items,Total(RM),Paid(RM),Change(RM),Staff,Remarks\n";
+  csvContent += "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
   
   todaysSales.forEach((sale) => {
     const date = new Date(sale.date);
     const timeStr = date.toLocaleTimeString();
     let itemsList = sale.items.map((i) => i.name).join(" + ");
     
-    csvContent += `"${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.staff}","${sale.remarks}"\n`;
+    csvContent += `"${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
   });
   
   // OVERALL SUMMARY
@@ -738,18 +850,37 @@ function exportToExcel() {
   csvContent += `Total Paid,RM ${totalPaid.toFixed(2)}\n`;
   csvContent += `Total Change Given,RM ${totalChange.toFixed(2)}\n\n`;
   
-  // ITEM BREAKDOWN
+  // PAYMENT METHOD BREAKDOWN
+  csvContent += "=== PAYMENT METHOD BREAKDOWN ===\n";
+  const totalCash = allSales.filter(s => s.paymentMethod === "Cash").reduce((sum, s) => sum + s.total, 0);
+  const totalQR = allSales.filter(s => s.paymentMethod === "QR").reduce((sum, s) => sum + s.total, 0);
+  csvContent += `Cash Payments,RM ${totalCash.toFixed(2)}\n`;
+  csvContent += `QR Payments,RM ${totalQR.toFixed(2)}\n\n`;
+  
+  // ITEM BREAKDOWN - UPDATED with all your items
   csvContent += "=== ITEM BREAKDOWN ===\n";
-  csvContent += `Single Sets,${totalSingles}\n`;
-  csvContent += `Family Boxes,${totalFamilies}\n`;
-  csvContent += `Seasonal Sets,${totalSeasonal}\n`;
-  csvContent += `Keychains,${totalKeychains}\n`;
-  csvContent += `Dips,${totalDips}\n`;
-  csvContent += `Total Items,${totalSingles + totalFamilies + totalSeasonal + totalKeychains + totalDips}\n\n`;
+  csvContent += "CHURROS SETS\n";
+  csvContent += `Single Set,${totalSingles}\n`;
+  csvContent += `Family Box,${totalFamilies}\n`;
+  csvContent += `Special Single Set,${totalSpecialSingles}\n`;
+  csvContent += `Special Family Box,${totalSpecialFamilies}\n`;
+  csvContent += `Total Churros Sets,${totalChurros}\n\n`;
+  
+  csvContent += "DIPS\n";
+  csvContent += `Milk Choco Dip,${totalMilkDips}\n`;
+  csvContent += `Dark Choco Dip,${totalDarkDips}\n`;
+  csvContent += `Caramel Dip,${totalCaramelDips}\n`;
+  csvContent += `Special Dip,${totalSpecialDips}\n`;
+  csvContent += `Total Dips,${totalDips}\n\n`;
+  
+  csvContent += "MERCHANDISE\n";
+  csvContent += `Keychain,${totalKeychains}\n\n`;
+  
+  csvContent += `TOTAL ITEMS SOLD,${totalItems}\n\n`;
   
   // ALL TRANSACTIONS HISTORY
   csvContent += "=== ALL TRANSACTIONS HISTORY ===\n";
-  csvContent += "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Staff,Remarks\n";
+  csvContent += "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
   
   allSales.forEach((sale) => {
     const date = new Date(sale.date);
@@ -757,8 +888,8 @@ function exportToExcel() {
     const timeStr = date.toLocaleTimeString();
     let itemsList = sale.items.map((i) => i.name).join(" + ");
     
-    csvContent += `"${dateStr}","${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.staff}","${sale.remarks}"\n`;
-  });
+    csvContent += `"${dateStr}","${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)}," ${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
+  })
 
   // Create and download file
   const blob = new Blob(["\uFEFF" + csvContent], {
@@ -824,11 +955,17 @@ function closeModal(id) {
 }
 
 function switchView(pageId) {
-  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
-  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document
+    .querySelectorAll(".page")
+    .forEach((p) => p.classList.remove("active"));
+  document
+    .querySelectorAll(".nav-btn")
+    .forEach((b) => b.classList.remove("active"));
 
   document.getElementById("page-" + pageId).classList.add("active");
-  document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add("active");
+  document
+    .querySelector(`.nav-btn[data-page="${pageId}"]`)
+    .classList.add("active");
 
   const sheet = document.getElementById("cartSheet");
   if (pageId === "pos" || pageId === "calc") {
@@ -842,37 +979,37 @@ function switchView(pageId) {
 // ========== EASTER EGG - Logo click to open dev page ==========
 function initEasterEgg() {
   const logoElement = document.getElementById("devEasterEgg");
-  
+
   if (!logoElement) {
     console.log("Logo element not found yet, retrying...");
     setTimeout(initEasterEgg, 500);
     return;
   }
-  
+
   let logoClickCount = 0;
   let logoClickTimer;
-  
+
   logoElement.addEventListener("click", () => {
     logoClickCount++;
     console.log("Logo clicked:", logoClickCount); // Debug log
-    
+
     // Clear the previous timer
     clearTimeout(logoClickTimer);
-    
+
     // Set a new timer to reset count after 2 seconds
     logoClickTimer = setTimeout(() => {
       logoClickCount = 0;
       console.log("Click count reset");
     }, 2000);
-    
+
     // If clicked 3 times, open dev page
     if (logoClickCount === 3) {
       logoClickCount = 0;
-      
+
       // Switch to dev page
-      switchView('dev');
+      switchView("dev");
     }
   });
-  
+
   console.log("Easter egg initialized!");
 }
