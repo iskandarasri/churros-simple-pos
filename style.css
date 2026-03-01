@@ -986,3 +986,36 @@ body.dark-mode .receipt {
 .cart-header * {
   transition: color 0.2s ease, background 0.2s ease;
 }
+
+/* Payment Method Buttons */
+.payment-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.payment-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
+}
+
+.payment-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.payment-btn.cash {
+  background: var(--primary);
+  color: white;
+}
+
+.payment-btn.qr {
+  background: var(--bg-surface);
+  color: var(--text-main);
+}
+
