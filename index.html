@@ -283,6 +283,34 @@
         </div>
 
         <div class="cart-footer">
+          <!-- Payment Method Toggle -->
+          <div style="margin-bottom: 16px; display: flex; gap: 8px">
+            <button
+              id="payment-cash"
+              class="btn"
+              style="
+                flex: 1;
+                background: var(--primary);
+                color: white;
+                padding: 12px;
+              "
+            >
+              💵 Cash
+            </button>
+            <button
+              id="payment-qr"
+              class="btn"
+              style="
+                flex: 1;
+                background: var(--bg-surface);
+                color: var(--text-main);
+                border: 1px solid var(--border);
+                padding: 12px;
+              "
+            >
+              📱 QR Pay
+            </button>
+          </div>
           <div class="cart-totals">
             <span>Total</span>
             <span id="order-total-amount">RM 0.00</span>
