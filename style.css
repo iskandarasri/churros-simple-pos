@@ -774,3 +774,215 @@ body.dark-mode .receipt {
   bottom: 60px; /* Sits right above bottom nav */
   z-index: 900; /* Below nav but above content */
 }
+
+/* Developer Page */
+.developer-container {
+  padding: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.dev-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.dev-icon {
+  font-size: 4rem;
+  margin-bottom: 8px;
+}
+
+.dev-card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+}
+
+.dev-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.dev-row:last-child {
+  border-bottom: none;
+}
+
+.dev-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dev-value {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.dev-features {
+  list-style: none;
+  padding: 0;
+}
+
+.dev-features li {
+  padding: 8px 0;
+  color: var(--text-main);
+  border-bottom: 1px dashed var(--border);
+}
+
+.dev-features li:last-child {
+  border-bottom: none;
+}
+
+.dev-footer {
+  text-align: center;
+  margin-top: 24px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Updated Order Item with Delete Button */
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+  position: relative;
+}
+
+.order-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.item-qty {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+  min-width: 40px;
+}
+
+.item-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-main);
+  word-break: break-word;
+  flex: 1;
+}
+
+.item-price {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-right: 8px;
+}
+
+.delete-item-btn {
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.delete-item-btn:hover,
+.delete-item-btn:active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Make cart body scrollable with more space */
+.cart-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: 300px;
+}
+
+/* Ensure product names are visible */
+.product-info h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+  line-height: 1.2;
+  min-height: 2.4em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Better scrolling for main content */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 70px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure product grid has proper spacing */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding-bottom: 20px;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Cart header flash effect - maintains rounded corners */
+.cart-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: 24px 24px 0 0; /* Keep top corners rounded */
+  transition: background-color 0.2s ease;
+}
+
+/* Flash animation class */
+.cart-header.cart-flash {
+  background: var(--primary) !important;
+  color: white !important;
+  border-radius: 24px 24px 0 0; /* Preserve rounded corners */
+}
+
+/* Ensure the child elements also change color during flash */
+.cart-header.cart-flash .cart-badge,
+.cart-header.cart-flash .cart-total-display,
+.cart-header.cart-flash .cart-chevron {
+  color: white !important;
+}
+
+/* Cart badge during flash */
+.cart-header.cart-flash .cart-badge {
+  background: white;
+  color: var(--primary) !important;
+}
+
+/* Smooth transition for all properties */
+.cart-header * {
+  transition: color 0.2s ease, background 0.2s ease;
+}
