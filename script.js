@@ -4,7 +4,7 @@ let allSales = [];
 let darkMode = localStorage.getItem("darkMode") === "true";
 let cartOpen = false;
 let customInputVal = "0";
-let currentStaff = "Nazurah";
+let currentStaff = "Staff 1";
 let currentCategory = "all";
 
 // Calculator & Payment state
@@ -22,7 +22,7 @@ const menuItems = [
     id: 1,
     name: "Single Set",
     price: 7.0,
-    image: "single.png",
+    image: "img/single.png",
     color: "#FEF3C7",
     category: "churros",
   },
@@ -30,7 +30,7 @@ const menuItems = [
     id: 2,
     name: "Family Box",
     price: 35.0,
-    image: "family.png",
+    image: "img/family.png",
     color: "#FDE68A",
     category: "churros",
   },
@@ -38,7 +38,7 @@ const menuItems = [
     id: 3,
     name: "Special Single Set",
     price: 8.0,
-    image: "seasonal_single.png",
+    image: "img/seasonal_single.png",
     color: "#eefbcf",
     category: "churros",
   },
@@ -46,7 +46,7 @@ const menuItems = [
     id: 4,
     name: "Special Family Box",
     price: 36.0,
-    image: "seasonal_family.png",
+    image: "img/seasonal_family.png",
     color: "#eefbcf",
     category: "churros",
   },
@@ -54,7 +54,7 @@ const menuItems = [
     id: 5,
     name: "Milk Choco Dip",
     price: 2.0,
-    image: "milk_choco.png",
+    image: "img/milk_choco.png",
     color: "#e6ae74",
     category: "dips",
   },
@@ -62,7 +62,7 @@ const menuItems = [
     id: 6,
     name: "Dark Choco Dip",
     price: 2.0,
-    image: "dark_choco.png",
+    image: "img/dark_choco.png",
     color: "#a78b78",
     category: "dips",
   },
@@ -70,7 +70,7 @@ const menuItems = [
     id: 7,
     name: "Caramel Dip",
     price: 2.0,
-    image: "caramel.png",
+    image: "img/caramel.png",
     color: "#FEF3C7",
     category: "dips",
   },
@@ -78,7 +78,7 @@ const menuItems = [
     id: 8,
     name: "Special Dip",
     price: 3.0,
-    image: "seasonal_dip.png",
+    image: "img/seasonal_dip.png",
     color: "#cfe9d0",
     category: "dips",
   },
@@ -86,7 +86,7 @@ const menuItems = [
     id: 9,
     name: "Keychain",
     price: 5.0,
-    image: "keychain.png",
+    image: "img/keychain.png",
     color: "#E5E7EB",
     category: "merch",
   },
@@ -110,7 +110,7 @@ window.onload = () => {
   updatePaymentDisplay();
 
   document.getElementById("staffName").addEventListener("input", (e) => {
-    currentStaff = e.target.value || "Nazurah";
+    currentStaff = e.target.value || "Staff 1";
   });
 
   // Category filters
@@ -795,15 +795,9 @@ function exportToExcel() {
   const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
   const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
 
-  // Count items by category - UPDATED with all your menu items
-  let totalSingles = 0,
-    totalFamilies = 0,
-    totalSpecialSingles = 0,
-    totalSpecialFamilies = 0;
-  let totalMilkDips = 0,
-    totalDarkDips = 0,
-    totalCaramelDips = 0,
-    totalSpecialDips = 0;
+  // Count items by category
+  let totalSingles = 0, totalFamilies = 0, totalSpecialSingles = 0, totalSpecialFamilies = 0;
+  let totalMilkDips = 0, totalDarkDips = 0, totalCaramelDips = 0, totalSpecialDips = 0;
   let totalKeychains = 0;
 
   allSales.forEach((sale) => {
@@ -821,10 +815,8 @@ function exportToExcel() {
   });
 
   // Calculate totals
-  const totalChurros =
-    totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
-  const totalDips =
-    totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
+  const totalChurros = totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
+  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
   const totalItems = totalChurros + totalDips + totalKeychains;
 
   // Create CSV header
@@ -841,8 +833,7 @@ function exportToExcel() {
 
   // TODAY'S TRANSACTIONS
   csvContent += "=== TODAY'S TRANSACTIONS ===\n";
-  csvContent +=
-    "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+  csvContent += "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
 
   todaysSales.forEach((sale) => {
     const date = new Date(sale.date);
@@ -870,7 +861,7 @@ function exportToExcel() {
   csvContent += `Cash Payments,RM ${totalCash.toFixed(2)}\n`;
   csvContent += `QR Payments,RM ${totalQR.toFixed(2)}\n\n`;
 
-  // ITEM BREAKDOWN - UPDATED with all your items
+  // ITEM BREAKDOWN
   csvContent += "=== ITEM BREAKDOWN ===\n";
   csvContent += "CHURROS SETS\n";
   csvContent += `Single Set,${totalSingles}\n`;
@@ -893,8 +884,7 @@ function exportToExcel() {
 
   // ALL TRANSACTIONS HISTORY
   csvContent += "=== ALL TRANSACTIONS HISTORY ===\n";
-  csvContent +=
-    "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+  csvContent += "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
 
   allSales.forEach((sale) => {
     const date = new Date(sale.date);
@@ -902,23 +892,31 @@ function exportToExcel() {
     const timeStr = date.toLocaleTimeString();
     let itemsList = sale.items.map((i) => i.name).join(" + ");
 
-    csvContent += `"${dateStr}","${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)}," ${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
+    csvContent += `"${dateStr}","${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
   });
 
-  // Create and download file
-  const blob = new Blob(["\uFEFF" + csvContent], {
-    type: "text/csv;charset=utf-8;",
-  });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  // Create filename
   const filename = `churros_sales_${new Date().toISOString().split("T")[0]}.csv`;
-
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  window.URL.revokeObjectURL(url);
+  
+  // Check if running in Android WebView
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  
+  if (isAndroid && window.Android) {
+    // Use Android interface to save file
+    alert("Saving to Downloads folder...");
+    Android.downloadCSV(csvContent, filename);
+  } else {
+    // Regular browser download using Blob
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
 }
 
 // ========== CUSTOM NUMPAD ==========
