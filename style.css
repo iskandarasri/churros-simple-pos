@@ -627,12 +627,14 @@ body {
   transform: scale(0.95);
 }
 
-/* Manual Payment Input Styles */
+/* Manual Payment Input Styles - FIXED */
 .manual-payment {
   margin-bottom: 16px;
   padding: 12px;
   background: var(--bg-base);
   border-radius: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-input-label {
@@ -646,10 +648,12 @@ body {
   display: flex;
   gap: 8px;
   align-items: center;
+  width: 100%;
 }
 
 .payment-input {
   flex: 1;
+  min-width: 0; /* Prevents flex overflow */
   padding: 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
@@ -657,11 +661,35 @@ body {
   color: var(--text-main);
   font-size: 1rem;
   font-weight: 600;
+  box-sizing: border-box;
 }
 
 .payment-input:focus {
   outline: none;
   border-color: var(--primary);
+}
+
+.payment-input-row .btn-outline {
+  flex-shrink: 0; /* Prevents button from shrinking */
+  padding: 12px 16px !important; /* Override inline style */
+  margin: 0;
+  white-space: nowrap;
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.payment-input-row .btn-outline:active {
+  background: var(--primary-hover);
+  transform: translateY(2px);
+}
+
+/* Dark mode adjustments */
+body.dark-mode .payment-input-row .btn-outline {
+  background: var(--primary);
+  color: white;
 }
 
 /* Cart Remarks Input */
@@ -1147,7 +1175,7 @@ body.dark-mode .remarks-input-cart:focus {
   cursor: pointer;
   transition: all 0.2s;
   flex: 1 1 auto;
-  min-width: 70px;
+  min-width: 65px; /* Slightly smaller to fit 6 buttons */
   box-shadow: 0 2px 0 var(--primary-hover);
 }
 
@@ -1155,6 +1183,23 @@ body.dark-mode .remarks-input-cart:focus {
   transform: translateY(2px);
   box-shadow: none;
   background: var(--primary-hover);
+}
+
+/* Adjust for smaller screens */
+@media (max-width: 380px) {
+  .money-preset-btn {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    min-width: 55px;
+  }
+}
+
+@media (max-width: 320px) {
+  .money-preset-btn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    min-width: 50px;
+  }
 }
 
 /* REMOVE or COMMENT OUT these special rules for RM50 and RM100 */
@@ -1176,10 +1221,13 @@ body.dark-mode .money-preset-btn {
   box-shadow: 0 2px 0 #555;
 }
 
-/* REMOVE these dark mode special rules too */
-/*
-body.dark-mode .money-preset-btn[data-amount="50"],
-body.dark-mode .money-preset-btn[data-amount="100"] {
-  background: #059669;
+/* Remove Dark Mode Button */
+#darkModeToggle {
+  display: none;
 }
-*/
+
+/* Remove Remarks */
+.cart-remarks {
+  display: none;
+}
+
