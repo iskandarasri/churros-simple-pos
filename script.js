@@ -633,13 +633,14 @@ function saveSale() {
   const paid = cashAmount || 0;
   const change = Math.max(0, paid - total);
 
-  if (paymentMethod === "Cash" && paid < total) {
-    if (
-      !confirm(
-        `Customer still needs to pay RM ${(total - paid).toFixed(2)}. Continue anyway?`,
-      )
-    ) {
-      return;
+  // FIXED: Check if payment is insufficient
+  if (paid < total) {
+    const remaining = (total - paid).toFixed(2);
+    const confirmMessage = `Customer still needs to pay RM ${remaining}. Continue anyway?`;
+    
+    // This will show as an Android dialog now
+    if (!confirm(confirmMessage)) {
+      return; // User cancelled
     }
   }
 
@@ -654,7 +655,7 @@ function saveSale() {
     total: total,
     paid: paid,
     change: change,
-    paymentMethod: paymentMethod, // Add payment method
+    paymentMethod: paymentMethod,
     remarks: remarks,
   };
 
@@ -663,6 +664,7 @@ function saveSale() {
 
   generateReceipt(newSale);
 
+  // Clear everything
   currentOrder = [];
   cashAmount = null;
   calcInput = "0";
@@ -1025,4 +1027,5 @@ function initEasterEgg() {
 
   console.log("Easter egg initialized!");
 }
+
 
