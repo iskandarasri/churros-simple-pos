@@ -52,7 +52,7 @@ const menuItems = [
   },
   {
     id: 5,
-    name: "Milk Choco Dip",
+    name: "+ Milk Choco Dip",
     price: 2.0,
     image: "milk_choco.png",
     color: "#e6ae74",
@@ -60,7 +60,7 @@ const menuItems = [
   },
   {
     id: 6,
-    name: "Dark Choco Dip",
+    name: "+ Dark Choco Dip",
     price: 2.0,
     image: "dark_choco.png",
     color: "#a78b78",
@@ -68,7 +68,7 @@ const menuItems = [
   },
   {
     id: 7,
-    name: "Caramel Dip",
+    name: "+ Caramel Dip",
     price: 2.0,
     image: "caramel.png",
     color: "#FEF3C7",
@@ -76,7 +76,7 @@ const menuItems = [
   },
   {
     id: 8,
-    name: "Special Dip",
+    name: "+ Special Dip",
     price: 3.0,
     image: "seasonal_dip.png",
     color: "#cfe9d0",
@@ -1027,5 +1027,6 @@ function initEasterEgg() {
 
   console.log("Easter egg initialized!");
 }
+
 
 
