@@ -117,6 +117,25 @@ body {
   transition: all 0.2s;
 }
 
+.dungun-badge {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(190, 35, 39, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .dungun-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+}
+
 /* ========== MAIN CONTENT ========== */
 .main-content {
   flex: 1;
@@ -348,7 +367,7 @@ body {
   margin-top: 20px;
 }
 
-/* ========== CART SHEET - FIXED SCROLLING ========== */
+/* ========== CART SHEET ========== */
 .cart-sheet {
   position: fixed;
   bottom: 60px;
@@ -414,21 +433,24 @@ body {
   transform: rotate(180deg);
 }
 
-/* FIXED: Scrollable cart body */
+/* Cart body - scrollable */
 .cart-body {
   padding: 16px 20px;
   overflow-y: auto;
   flex: 1;
-  max-height: 40vh;
+  max-height: 35vh;
   min-height: 100px;
 }
 
+/* Cart footer - consolidated */
 .cart-footer {
   padding: 16px 20px 24px 20px;
   background: var(--bg-surface);
   border-top: 1px solid var(--border);
   border-radius: 0 0 0 0;
   flex-shrink: 0;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
 /* Order list styling */
@@ -561,6 +583,108 @@ body {
   background: var(--primary);
   color: white;
   border: 1px solid var(--primary);
+}
+
+/* Notes Preset Styles */
+.notes-preset {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-base);
+  border-radius: 12px;
+}
+
+.notes-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.notes-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.note-preset-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1 1 auto;
+  min-width: 90px;
+}
+
+.note-preset-btn:active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: scale(0.95);
+}
+
+/* Manual Payment Input Styles */
+.manual-payment {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-base);
+  border-radius: 12px;
+}
+
+.payment-input-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.payment-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.payment-input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.payment-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Cart Remarks Input */
+.cart-remarks {
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.remarks-input-cart {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.remarks-input-cart:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(195, 31, 10, 0.1);
 }
 
 /* ========== BUTTONS ========== */
@@ -923,6 +1047,34 @@ body.dark-mode .receipt {
   transition: color 0.2s ease, background 0.2s ease;
 }
 
+/* ========== DARK MODE ADJUSTMENTS ========== */
+body.dark-mode .payment-input {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+body.dark-mode .note-preset-btn {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+body.dark-mode .note-preset-btn:active {
+  background: var(--primary);
+  color: white;
+}
+
+body.dark-mode .remarks-input-cart {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+body.dark-mode .remarks-input-cart:focus {
+  border-color: var(--primary);
+}
+
 /* ========== RESPONSIVE ADJUSTMENTS ========== */
 @media (max-width: 380px) {
   .menu-item-image {
@@ -939,12 +1091,7 @@ body.dark-mode .receipt {
   }
   
   .cart-body {
-    max-height: 35vh;
-    padding: 12px 16px;
-  }
-  
-  .cart-footer {
-    padding: 12px 16px 20px 16px;
+    max-height: 30vh;
   }
   
   .order-item {
@@ -967,3 +1114,72 @@ body.dark-mode .receipt {
     height: 60px;
   }
 }
+
+/* Money Presets Styles */
+.money-presets {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-base);
+  border-radius: 12px;
+}
+
+.money-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.money-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.money-preset-btn {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  padding: 12px 16px;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1 1 auto;
+  min-width: 70px;
+  box-shadow: 0 2px 0 var(--primary-hover);
+}
+
+.money-preset-btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+  background: var(--primary-hover);
+}
+
+/* REMOVE or COMMENT OUT these special rules for RM50 and RM100 */
+/* 
+.money-preset-btn[data-amount="50"],
+.money-preset-btn[data-amount="100"] {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.money-preset-btn[data-amount="50"]:active,
+.money-preset-btn[data-amount="100"]:active {
+  background: #0d9488;
+}
+*/
+
+/* Dark mode adjustments */
+body.dark-mode .money-preset-btn {
+  box-shadow: 0 2px 0 #555;
+}
+
+/* REMOVE these dark mode special rules too */
+/*
+body.dark-mode .money-preset-btn[data-amount="50"],
+body.dark-mode .money-preset-btn[data-amount="100"] {
+  background: #059669;
+}
+*/
