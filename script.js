@@ -16,13 +16,12 @@ let calcOp = null;
 let calcReset = false;
 let cashAmount = null; // Amount customer paid
 
-// Menu Items with custom images
 const menuItems = [
   {
     id: 1,
     name: "Single Set",
     price: 7.0,
-    image: "single.png",
+    image: "img/single.png",
     color: "#FEF3C7",
     category: "churros",
   },
@@ -30,7 +29,7 @@ const menuItems = [
     id: 2,
     name: "Family Box",
     price: 35.0,
-    image: "family.png",
+    image: "img/family.png",
     color: "#FDE68A",
     category: "churros",
   },
@@ -38,7 +37,7 @@ const menuItems = [
     id: 3,
     name: "Special Single Set",
     price: 8.0,
-    image: "seasonal_single.png",
+    image: "img/seasonal_single.png",
     color: "#eefbcf",
     category: "churros",
   },
@@ -46,7 +45,7 @@ const menuItems = [
     id: 4,
     name: "Special Family Box",
     price: 36.0,
-    image: "seasonal_family.png",
+    image: "img/seasonal_family.png",
     color: "#eefbcf",
     category: "churros",
   },
@@ -54,7 +53,7 @@ const menuItems = [
     id: 5,
     name: "+ Milk Choco Dip",
     price: 2.0,
-    image: "milk_choco.png",
+    image: "img/milk_choco.png",
     color: "#e6ae74",
     category: "dips",
   },
@@ -62,7 +61,7 @@ const menuItems = [
     id: 6,
     name: "+ Dark Choco Dip",
     price: 2.0,
-    image: "dark_choco.png",
+    image: "img/dark_choco.png",
     color: "#a78b78",
     category: "dips",
   },
@@ -70,7 +69,7 @@ const menuItems = [
     id: 7,
     name: "+ Caramel Dip",
     price: 2.0,
-    image: "caramel.png",
+    image: "img/caramel.png",
     color: "#FEF3C7",
     category: "dips",
   },
@@ -78,7 +77,7 @@ const menuItems = [
     id: 8,
     name: "+ Special Dip",
     price: 3.0,
-    image: "seasonal_dip.png",
+    image: "img/seasonal_dip.png",
     color: "#cfe9d0",
     category: "dips",
   },
@@ -86,7 +85,7 @@ const menuItems = [
     id: 9,
     name: "Keychain",
     price: 5.0,
-    image: "keychain.png",
+    image: "img/keychain.png",
     color: "#E5E7EB",
     category: "merch",
   },
@@ -122,6 +121,29 @@ window.onload = () => {
       e.target.classList.add("active");
       currentCategory = e.target.dataset.category;
       renderMenu();
+    });
+  });
+
+  // Money Presets - Quick payment amounts
+  document.querySelectorAll(".money-preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const amount = parseFloat(btn.dataset.amount);
+      if (!isNaN(amount) && amount > 0) {
+        // Use the existing setCashAmount function
+        setCashAmount(amount);
+
+        // Also update the manual input field for visibility
+        const manualInput = document.getElementById("manual-paid-amount");
+        if (manualInput) {
+          manualInput.value = amount;
+        }
+
+        // Visual feedback
+        btn.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          btn.style.transform = "scale(1)";
+        }, 100);
+      }
     });
   });
 
@@ -237,6 +259,53 @@ window.onload = () => {
   }
 
   updatePaymentButtons();
+
+  // Quick Notes Preset
+  document.querySelectorAll(".note-preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const note = btn.dataset.note;
+      const remarksInput = document.getElementById("saleRemarks");
+      if (remarksInput) {
+        if (remarksInput.value) {
+          remarksInput.value += ", " + note;
+        } else {
+          remarksInput.value = note;
+        }
+      }
+    });
+  });
+
+  // Manual Payment Input
+  const manualPaidInput = document.getElementById("manual-paid-amount");
+  const applyPaymentBtn = document.getElementById("apply-payment-btn");
+
+  function applyManualPayment() {
+    const amount = parseFloat(manualPaidInput.value);
+    if (!isNaN(amount) && amount >= 0) {
+      cashAmount = amount;
+      calcInput = amount.toString();
+      calcPrev = null;
+      calcOp = null;
+      calcReset = false;
+      updateCalcDisplay();
+      updatePaymentDisplay();
+      manualPaidInput.value = ""; // Clear input after applying
+    } else {
+      alert("Please enter a valid amount");
+    }
+  }
+
+  if (applyPaymentBtn) {
+    applyPaymentBtn.addEventListener("click", applyManualPayment);
+  }
+
+  if (manualPaidInput) {
+    manualPaidInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        applyManualPayment();
+      }
+    });
+  }
 };
 
 // ========== UI RENDERERS ==========
@@ -633,14 +702,13 @@ function saveSale() {
   const paid = cashAmount || 0;
   const change = Math.max(0, paid - total);
 
-  // FIXED: Check if payment is insufficient
-  if (paid < total) {
-    const remaining = (total - paid).toFixed(2);
-    const confirmMessage = `Customer still needs to pay RM ${remaining}. Continue anyway?`;
-    
-    // This will show as an Android dialog now
-    if (!confirm(confirmMessage)) {
-      return; // User cancelled
+  if (paymentMethod === "Cash" && paid < total) {
+    if (
+      !confirm(
+        `Customer still needs to pay RM ${(total - paid).toFixed(2)}. Continue anyway?`,
+      )
+    ) {
+      return;
     }
   }
 
@@ -655,7 +723,7 @@ function saveSale() {
     total: total,
     paid: paid,
     change: change,
-    paymentMethod: paymentMethod,
+    paymentMethod: paymentMethod, // Add payment method
     remarks: remarks,
   };
 
@@ -664,7 +732,6 @@ function saveSale() {
 
   generateReceipt(newSale);
 
-  // Clear everything
   currentOrder = [];
   cashAmount = null;
   calcInput = "0";
@@ -797,32 +864,43 @@ function exportToExcel() {
   const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
   const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
 
-  // Count items by category
-  let totalSingles = 0, totalFamilies = 0, totalSpecialSingles = 0, totalSpecialFamilies = 0;
-  let totalMilkDips = 0, totalDarkDips = 0, totalCaramelDips = 0, totalSpecialDips = 0;
+  // Count items by category - FIXED to properly detect all items
+  let totalSingles = 0,
+    totalFamilies = 0,
+    totalSpecialSingles = 0,
+    totalSpecialFamilies = 0;
+  let totalMilkDips = 0,
+    totalDarkDips = 0,
+    totalCaramelDips = 0,
+    totalSpecialDips = 0;
   let totalKeychains = 0;
 
   allSales.forEach((sale) => {
     sale.items.forEach((item) => {
+      // Log each item for debugging
+      console.log("Counting item:", item.name);
+      
       if (item.name === "Single Set") totalSingles++;
       else if (item.name === "Family Box") totalFamilies++;
       else if (item.name === "Special Single Set") totalSpecialSingles++;
       else if (item.name === "Special Family Box") totalSpecialFamilies++;
-      else if (item.name === "Milk Choco Dip") totalMilkDips++;
-      else if (item.name === "Dark Choco Dip") totalDarkDips++;
-      else if (item.name === "Caramel Dip") totalCaramelDips++;
-      else if (item.name === "Special Dip") totalSpecialDips++;
+      else if (item.name === "+ Milk Choco Dip") totalMilkDips++;
+      else if (item.name === "+ Dark Choco Dip") totalDarkDips++;
+      else if (item.name === "+ Caramel Dip") totalCaramelDips++;
+      else if (item.name === "+ Special Dip") totalSpecialDips++;
       else if (item.name === "Keychain") totalKeychains++;
     });
   });
 
   // Calculate totals
-  const totalChurros = totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
-  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
+  const totalChurros =
+    totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
+  const totalDips =
+    totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
   const totalItems = totalChurros + totalDips + totalKeychains;
 
   // Create CSV header
-  let csvContent = "MR. CHURROS POS - SALES REPORT\n";
+  let csvContent = "MR. CHURROS DUNGUN POS - SALES REPORT\n";
   csvContent += `Generated: ${new Date().toLocaleString()}\n\n`;
 
   // TODAY'S SUMMARY
@@ -835,7 +913,8 @@ function exportToExcel() {
 
   // TODAY'S TRANSACTIONS
   csvContent += "=== TODAY'S TRANSACTIONS ===\n";
-  csvContent += "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+  csvContent +=
+    "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
 
   todaysSales.forEach((sale) => {
     const date = new Date(sale.date);
@@ -863,7 +942,7 @@ function exportToExcel() {
   csvContent += `Cash Payments,RM ${totalCash.toFixed(2)}\n`;
   csvContent += `QR Payments,RM ${totalQR.toFixed(2)}\n\n`;
 
-  // ITEM BREAKDOWN
+  // ITEM BREAKDOWN - Updated to show "+" format
   csvContent += "=== ITEM BREAKDOWN ===\n";
   csvContent += "CHURROS SETS\n";
   csvContent += `Single Set,${totalSingles}\n`;
@@ -872,11 +951,11 @@ function exportToExcel() {
   csvContent += `Special Family Box,${totalSpecialFamilies}\n`;
   csvContent += `Total Churros Sets,${totalChurros}\n\n`;
 
-  csvContent += "DIPS\n";
-  csvContent += `Milk Choco Dip,${totalMilkDips}\n`;
-  csvContent += `Dark Choco Dip,${totalDarkDips}\n`;
-  csvContent += `Caramel Dip,${totalCaramelDips}\n`;
-  csvContent += `Special Dip,${totalSpecialDips}\n`;
+  csvContent += "DIPS (Add-ons)\n";
+  csvContent += `Milk Choco Dip (add-on),${totalMilkDips}\n`;
+  csvContent += `Dark Choco Dip (add-on),${totalDarkDips}\n`;
+  csvContent += `Caramel Dip (add-on),${totalCaramelDips}\n`;
+  csvContent += `Special Dip (add-on),${totalSpecialDips}\n`;
   csvContent += `Total Dips,${totalDips}\n\n`;
 
   csvContent += "MERCHANDISE\n";
@@ -886,7 +965,8 @@ function exportToExcel() {
 
   // ALL TRANSACTIONS HISTORY
   csvContent += "=== ALL TRANSACTIONS HISTORY ===\n";
-  csvContent += "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+  csvContent +=
+    "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
 
   allSales.forEach((sale) => {
     const date = new Date(sale.date);
@@ -899,17 +979,19 @@ function exportToExcel() {
 
   // Create filename
   const filename = `churros_sales_${new Date().toISOString().split("T")[0]}.csv`;
-  
+
   // Check if running in Android WebView
   const isAndroid = /Android/i.test(navigator.userAgent);
-  
+
   if (isAndroid && window.Android) {
     // Use Android interface to save file
     alert("Saving to Downloads folder...");
     Android.downloadCSV(csvContent, filename);
   } else {
     // Regular browser download using Blob
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -1027,6 +1109,3 @@ function initEasterEgg() {
 
   console.log("Easter egg initialized!");
 }
-
-
-
