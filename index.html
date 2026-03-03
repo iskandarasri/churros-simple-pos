@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>Mr. Churros · Simple POS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,23 +18,24 @@
   <body>
     <div class="app-container">
       <!-- HEADER -->
-<header class="header">
-  <div class="logo-wrapper" id="devEasterEgg" style="cursor: pointer">
-    <img src="logo-new.png" alt="Mr. Churros" class="header-logo" />
-    <!-- Text-based DUNGUN badge -->
-    <div class="dungun-badge">DUNGUN</div>
-  </div>
-  <div class="header-actions">
-    <input
-      type="text"
-      id="staffName"
-      class="staff-input"
-      placeholder="Staff"
-      value="Staff 1"
-    />
-    <button id="darkModeToggle" class="btn-icon">🌙</button>
-  </div>
-</header>
+      <header class="header">
+        <div class="logo-wrapper" id="devEasterEgg" style="cursor: pointer">
+          <img src="logo-new.png" alt="Mr. Churros" class="header-logo" />
+          <!-- Text-based DUNGUN badge -->
+          <div class="dungun-badge">DUNGUN</div>
+        </div>
+        <div class="header-actions">
+          <input
+            type="text"
+            id="staffName"
+            class="staff-input"
+            placeholder="Staff"
+            value="Staff 1"
+          />
+          <button id="darkModeToggle" class="btn-icon">🌙</button>
+        </div>
+      </header>
+
       <!-- MAIN CONTENT -->
       <main class="main-content">
         <!-- POS PAGE (Menu) -->
@@ -273,114 +274,114 @@
         </div>
 
         <div class="cart-footer">
-            <!-- MOVED: Remarks Input to top of cart -->
-            <div class="cart-remarks">
-              <input
-                type="text"
-                id="saleRemarks"
-                class="remarks-input-cart"
-                placeholder="Remarks (e.g., Extra churros, No sugar)"
-              />
-            </div>
+          <!-- Remarks Input -->
+          <div class="cart-remarks">
+            <input
+              type="text"
+              id="saleRemarks"
+              class="remarks-input-cart"
+              placeholder="Remarks (e.g., Extra churros, No sugar)"
+            />
+          </div>
 
-            <!-- Payment Method Toggle -->
-            <div class="payment-toggle">
-              <button id="payment-cash" class="payment-btn cash active">💵 Cash</button>
-              <button id="payment-qr" class="payment-btn qr">📱 QR Pay</button>
-            </div>
+          <!-- Payment Method Toggle -->
+          <div class="payment-toggle">
+            <button id="payment-cash" class="payment-btn cash active">💵 Cash</button>
+            <button id="payment-qr" class="payment-btn qr">📱 QR Pay</button>
+          </div>
 
-            <!-- MONEY PRESETS - Quick payment amounts -->
-            <div class="money-presets">
-              <div class="money-label">Quick Payment:</div>
-              <div class="money-buttons">
-                <button class="money-preset-btn" data-amount="5">RM5</button>
-                <button class="money-preset-btn" data-amount="7">RM7</button> <!-- NEW -->
-                <button class="money-preset-btn" data-amount="10">RM10</button>
-                <button class="money-preset-btn" data-amount="20">RM20</button>
-                <button class="money-preset-btn" data-amount="50">RM50</button>
-                <button class="money-preset-btn" data-amount="100">RM100</button>
-              </div>
+          <!-- MONEY PRESETS - Quick payment amounts -->
+          <div class="money-presets">
+            <div class="money-label">Quick Payment:</div>
+            <div class="money-buttons">
+              <button class="money-preset-btn" data-amount="5">RM5</button>
+              <button class="money-preset-btn" data-amount="7">RM7</button>
+              <button class="money-preset-btn" data-amount="10">RM10</button>
+              <button class="money-preset-btn" data-amount="20">RM20</button>
+              <button class="money-preset-btn" data-amount="50">RM50</button>
+              <button class="money-preset-btn" data-amount="100">RM100</button>
             </div>
+          </div>
 
-            <!-- Manual Payment Input -->
-            <div class="manual-payment">
-              <div class="payment-input-label">Customer Paid:</div>
-              <div class="payment-input-row">
-                <input type="number" id="manual-paid-amount" class="payment-input" placeholder="0.00" step="0.01" min="0">
-                <button id="apply-payment-btn" class="btn btn-outline" style="padding: 10px 16px;">Apply</button>
-              </div>
+          <!-- Manual Payment Input -->
+          <div class="manual-payment">
+            <div class="payment-input-label">Customer Paid:</div>
+            <div class="payment-input-row">
+              <input type="number" id="manual-paid-amount" class="payment-input" placeholder="0.00" step="0.01" min="0">
+              <button id="apply-payment-btn" class="btn btn-outline">Apply</button>
             </div>
+          </div>
 
-            <div class="cart-totals">
-              <span>Total</span>
-              <span id="order-total-amount">RM 0.00</span>
+          <div class="cart-totals">
+            <span>Total</span>
+            <span id="order-total-amount">RM 0.00</span>
+          </div>
+
+          <!-- Payment Summary -->
+          <div class="payment-summary">
+            <div class="payment-row">
+              <span>Customer Paid:</span>
+              <span id="paid-amount" style="font-weight: 700; color: var(--primary);">RM 0.00</span>
             </div>
-
-            <!-- Payment Summary -->
-            <div class="payment-summary">
-              <div class="payment-row">
-                <span>Customer Paid:</span>
-                <span id="paid-amount" style="font-weight: 700; color: var(--primary);">RM 0.00</span>
-              </div>
-              <div class="payment-row change-row">
-                <span>Change to Return:</span>
-                <span id="change-amount" style="font-weight: 700;">RM 0.00</span>
-              </div>
+            <div class="payment-row change-row">
+              <span>Change to Return:</span>
+              <span id="change-amount" style="font-weight: 700;">RM 0.00</span>
             </div>
+          </div>
 
-                        <div class="cart-actions">
-              <button id="void-last" class="btn btn-danger">Void Last</button>
-              <button id="clear-order" class="btn btn-outline">Clear All</button>
-            </div>
-            <button id="save-sale" class="btn btn-primary">Pay / Save</button>
-          </div>  <!-- Closes cart-footer -->
-        </div>  <!-- Closes cart-sheet -->
-
-        <!-- BOTTOM NAV - Now correctly placed -->
-        <nav class="bottom-nav">
-          <button class="nav-btn active" data-page="pos">
-            <svg viewBox="0 0 24 24" width="22" height="22">
-              <path
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                stroke="currentColor"
-                fill="none"
-                stroke-width="2"
-              />
-            </svg>
-            Menu
-          </button>
-          <button class="nav-btn" data-page="calc">
-            <svg
-              viewBox="0 0 24 24"
-              width="22"
-              height="22"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-              <line x1="8" y1="6" x2="16" y2="6"></line>
-              <line x1="8" y1="10" x2="16" y2="10"></line>
-              <line x1="8" y1="14" x2="16" y2="14"></line>
-              <line x1="8" y1="18" x2="12" y2="18"></line>
-              <circle cx="16" cy="18" r="1"></circle>
-            </svg>
-            Calc
-          </button>
-          <button class="nav-btn" data-page="reports">
-            <svg viewBox="0 0 24 24" width="22" height="22">
-              <path
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                stroke="currentColor"
-                fill="none"
-                stroke-width="2"
-              />
-            </svg>
-            Reports
-          </button>
-        </nav>
+          <div class="cart-actions">
+            <button id="void-last" class="btn btn-danger">Void Last</button>
+            <button id="clear-order" class="btn btn-outline">Clear All</button>
+          </div>
+          <button id="save-sale" class="btn btn-primary">Pay / Save</button>
+        </div>
       </div>
-      <!-- End of app-container -->
+
+      <!-- BOTTOM NAV -->
+      <nav class="bottom-nav">
+        <button class="nav-btn active" data-page="pos">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+              stroke="currentColor"
+              fill="none"
+              stroke-width="2"
+            />
+          </svg>
+          Menu
+        </button>
+        <button class="nav-btn" data-page="calc">
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+            <line x1="8" y1="6" x2="16" y2="6"></line>
+            <line x1="8" y1="10" x2="16" y2="10"></line>
+            <line x1="8" y1="14" x2="16" y2="14"></line>
+            <line x1="8" y1="18" x2="12" y2="18"></line>
+            <circle cx="16" cy="18" r="1"></circle>
+          </svg>
+          Calc
+        </button>
+        <button class="nav-btn" data-page="reports">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              stroke="currentColor"
+              fill="none"
+              stroke-width="2"
+            />
+          </svg>
+          Reports
+        </button>
+      </nav>
+    </div>
+    <!-- End of app-container -->
 
     <!-- Custom Item Modal -->
     <div class="modal-overlay" id="customItemModal">
@@ -456,7 +457,6 @@
       </div>
     </div>
 
-    <script src="script.js"></script>
     <!-- Custom Alert Modal -->
     <div class="modal-overlay" id="customAlertModal">
       <div class="modal-content" style="max-width: 300px; text-align: center;">
@@ -479,6 +479,7 @@
         </div>
       </div>
     </div>
+
+    <script src="script.js"></script>
   </body>
 </html>
-
