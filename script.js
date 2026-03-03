@@ -21,7 +21,7 @@ const menuItems = [
     id: 1,
     name: "Single Set",
     price: 7.0,
-    image: "single.png",
+    image: "img/single.png",
     color: "#FEF3C7",
     category: "churros",
   },
@@ -29,7 +29,7 @@ const menuItems = [
     id: 2,
     name: "Family Box",
     price: 35.0,
-    image: "family.png",
+    image: "img/family.png",
     color: "#FDE68A",
     category: "churros",
   },
@@ -37,7 +37,7 @@ const menuItems = [
     id: 3,
     name: "Special Single Set",
     price: 8.0,
-    image: "seasonal_single.png",
+    image: "img/seasonal_single.png",
     color: "#eefbcf",
     category: "churros",
   },
@@ -45,7 +45,7 @@ const menuItems = [
     id: 4,
     name: "Special Family Box",
     price: 36.0,
-    image: "seasonal_family.png",
+    image: "img/seasonal_family.png",
     color: "#eefbcf",
     category: "churros",
   },
@@ -53,7 +53,7 @@ const menuItems = [
     id: 5,
     name: "+ Milk Choco Dip",
     price: 2.0,
-    image: "milk_choco.png",
+    image: "img/milk_choco.png",
     color: "#e6ae74",
     category: "dips",
   },
@@ -61,7 +61,7 @@ const menuItems = [
     id: 6,
     name: "+ Dark Choco Dip",
     price: 2.0,
-    image: "dark_choco.png",
+    image: "img/dark_choco.png",
     color: "#a78b78",
     category: "dips",
   },
@@ -69,7 +69,7 @@ const menuItems = [
     id: 7,
     name: "+ Caramel Dip",
     price: 2.0,
-    image: "caramel.png",
+    image: "img/caramel.png",
     color: "#FEF3C7",
     category: "dips",
   },
@@ -77,7 +77,7 @@ const menuItems = [
     id: 8,
     name: "+ Special Dip",
     price: 3.0,
-    image: "seasonal_dip.png",
+    image: "img/seasonal_dip.png",
     color: "#cfe9d0",
     category: "dips",
   },
@@ -85,7 +85,7 @@ const menuItems = [
     id: 9,
     name: "Keychain",
     price: 5.0,
-    image: "keychain.png",
+    image: "img/keychain.png",
     color: "#E5E7EB",
     category: "merch",
   },
@@ -179,16 +179,17 @@ window.onload = () => {
     .getElementById("export-btn")
     .addEventListener("click", exportToExcel);
 
-  document.getElementById("reset-btn").addEventListener("click", () => {
-    if (
-      confirm(
-        "Are you sure you want to delete all sales data? This cannot be undone.",
-      )
-    ) {
+  document.getElementById("reset-btn").addEventListener("click", async () => {
+    const confirmed = await showCustomConfirm(
+      "Are you sure you want to delete all sales data? This cannot be undone.",
+      "Reset All Data",
+      "⚠️"
+    );
+    if (confirmed) {
       allSales = [];
       localStorage.removeItem("churrosSales");
       updateReports();
-      alert("Data reset successful.");
+      await showCustomAlert("Data reset successful.", "Success", "✅");
     }
   });
 
@@ -291,7 +292,7 @@ window.onload = () => {
       updatePaymentDisplay();
       manualPaidInput.value = ""; // Clear input after applying
     } else {
-      alert("Please enter a valid amount");
+      showCustomAlert("Please enter a valid amount", "Invalid Input", "⚠️");
     }
   }
 
@@ -487,7 +488,7 @@ function updateCalcDisplay() {
   }
 }
 
-function handleCalcInput(val) {
+async function handleCalcInput(val) {
   if (val === "C") {
     calcInput = "0";
     calcPrev = null;
@@ -512,7 +513,7 @@ function handleCalcInput(val) {
           break;
         case "/":
           if (current === 0) {
-            alert("Cannot divide by zero");
+            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
             return;
           }
           result = calcPrev / current;
@@ -549,7 +550,7 @@ function handleCalcInput(val) {
           break;
         case "/":
           if (current === 0) {
-            alert("Cannot divide by zero");
+            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
             return;
           }
           result = calcPrev / current;
@@ -621,9 +622,9 @@ function setCashAmount(amount) {
 }
 
 // ADD TO ORDER BUTTON - Now just updates payment display
-function addCalcToOrder() {
+async function addCalcToOrder() {
   if (currentOrder.length === 0) {
-    alert("Add items to order first!");
+    await showCustomAlert("Add items to order first!", "No Items", "🛒");
     return;
   }
 
@@ -679,8 +680,10 @@ function voidLastItem() {
   }
 }
 
-function clearOrder() {
-  if (confirm("Clear current order?")) {
+// Change to async
+async function clearOrder() {
+  const confirmed = await showCustomConfirm("Clear current order?", "Clear Order", "🗑️");
+  if (confirmed) {
     currentOrder = [];
     cashAmount = null;
     calcInput = "0";
@@ -692,9 +695,9 @@ function clearOrder() {
   }
 }
 
-function saveSale() {
+async function saveSale() {
   if (currentOrder.length === 0) {
-    alert("Order is empty!");
+    await showCustomAlert("Order is empty!", "No Order", "🛒");
     return;
   }
 
@@ -703,11 +706,12 @@ function saveSale() {
   const change = Math.max(0, paid - total);
 
   if (paymentMethod === "Cash" && paid < total) {
-    if (
-      !confirm(
-        `Customer still needs to pay RM ${(total - paid).toFixed(2)}. Continue anyway?`,
-      )
-    ) {
+    const confirmed = await showCustomConfirm(
+      `Customer still needs to pay RM ${(total - paid).toFixed(2)}. Continue anyway?`,
+      "Insufficient Payment",
+      "💰"
+    );
+    if (!confirmed) {
       return;
     }
   }
@@ -723,7 +727,7 @@ function saveSale() {
     total: total,
     paid: paid,
     change: change,
-    paymentMethod: paymentMethod, // Add payment method
+    paymentMethod: paymentMethod,
     remarks: remarks,
   };
 
@@ -839,9 +843,9 @@ function updateReports() {
   });
 }
 
-function exportToExcel() {
+async function exportToExcel() {
   if (allSales.length === 0) {
-    alert("No data to export");
+    await showCustomAlert("No data to export", "Export Error", "📊");
     return;
   }
 
@@ -985,7 +989,7 @@ function exportToExcel() {
 
   if (isAndroid && window.Android) {
     // Use Android interface to save file
-    alert("Saving to Downloads folder...");
+    await showCustomAlert("Saving to Downloads folder...", "Download", "📥");
     Android.downloadCSV(csvContent, filename);
   } else {
     // Regular browser download using Blob
@@ -1002,6 +1006,106 @@ function exportToExcel() {
     window.URL.revokeObjectURL(url);
   }
 }
+
+// ========== CUSTOM POPUP SYSTEM ==========
+
+// Custom Alert
+function showCustomAlert(message, title = "Alert", icon = "🔔") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("customAlertModal");
+    const titleEl = document.getElementById("alertTitle");
+    const messageEl = document.getElementById("alertMessage");
+    const iconEl = document.getElementById("alertIcon");
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    iconEl.textContent = icon;
+    
+    modal.classList.add("active");
+    
+    const okBtn = document.getElementById("alertOkBtn");
+    
+    const handleOk = () => {
+      modal.classList.remove("active");
+      cleanup();
+      resolve();
+    };
+    
+    const handleOutsideClick = (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("active");
+        cleanup();
+        resolve();
+      }
+    };
+    
+    const cleanup = () => {
+      okBtn.removeEventListener("click", handleOk);
+      modal.removeEventListener("click", handleOutsideClick);
+    };
+    
+    okBtn.addEventListener("click", handleOk);
+    modal.addEventListener("click", handleOutsideClick);
+  });
+}
+
+// Custom Confirm
+function showCustomConfirm(message, title = "Confirm", icon = "❓") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("customConfirmModal");
+    const titleEl = document.getElementById("confirmTitle");
+    const messageEl = document.getElementById("confirmMessage");
+    const iconEl = document.getElementById("confirmIcon");
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    iconEl.textContent = icon;
+    
+    modal.classList.add("active");
+    
+    const okBtn = document.getElementById("confirmOkBtn");
+    const cancelBtn = document.getElementById("confirmCancelBtn");
+    
+    const handleOk = () => {
+      modal.classList.remove("active");
+      cleanup();
+      resolve(true);
+    };
+    
+    const handleCancel = () => {
+      modal.classList.remove("active");
+      cleanup();
+      resolve(false);
+    };
+    
+    const handleOutsideClick = (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("active");
+        cleanup();
+        resolve(false);
+      }
+    };
+    
+    const cleanup = () => {
+      okBtn.removeEventListener("click", handleOk);
+      cancelBtn.removeEventListener("click", handleCancel);
+      modal.removeEventListener("click", handleOutsideClick);
+    };
+    
+    okBtn.addEventListener("click", handleOk);
+    cancelBtn.addEventListener("click", handleCancel);
+    modal.addEventListener("click", handleOutsideClick);
+  });
+}
+
+// Override native browser popups
+window.alert = function(message) {
+  return showCustomAlert(message);
+};
+
+window.confirm = function(message) {
+  return showCustomConfirm(message);
+};
 
 // ========== CUSTOM NUMPAD ==========
 function calcType(val) {
@@ -1109,4 +1213,3 @@ function initEasterEgg() {
 
   console.log("Easter egg initialized!");
 }
-
