@@ -145,31 +145,128 @@ body {
   }
 }
 
-/* ========== MAIN CONTENT ========== */
+/* ========== FIXED SCROLLING FOR ALL PAGES - iOS COMPATIBLE ========== */
 .main-content {
   flex: 1;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch; /* Essential for iOS smooth scrolling */
+  height: 100%;
   padding: 0;
   margin: 0;
-  height: calc(100vh - 60px - var(--safe-top) - var(--safe-bottom));
 }
 
-/* Page styling */
+/* Page styling with plenty of bottom padding */
 .page {
   display: none;
   padding: 16px;
-  padding-bottom: 80px; /* Extra space at bottom */
+  padding-bottom: 150px; /* Space to see all buttons */
+  min-height: 100%;
   animation: fadeIn 0.3s ease;
+  box-sizing: border-box;
 }
 
 .page.active {
   display: block;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS devices only */
+  .main-content {
+    height: -webkit-fill-available; /* Better height handling on iOS */
+  }
+  
+  .page {
+    padding-bottom: 170px; /* Extra padding for iOS home indicator */
+  }
+  
+  /* Ensure bottom nav doesn't interfere */
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Calculator page specific */
+#page-calc .calculator-container {
+  margin-bottom: 20px;
+}
+
+#page-calc {
+  padding-bottom: 180px; /* Extra space for calculator buttons */
+}
+
+/* Product grid spacing */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding-bottom: 80px; /* Space for last row */
+}
+
+/* Ensure all calculator buttons are visible */
+.calc-keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.calc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+/* Bottom navigation - iOS friendly */
+.bottom-nav {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  background: var(--bg-surface);
+  border-top: 2px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  flex-shrink: 0;
+  margin-top: auto;
+  /* Safe area for iOS */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: content-box;
+}
+
+/* For devices with home indicator (iPhone X and newer) */
+@media (max-width: 480px) {
+  .page {
+    padding-bottom: 160px;
+  }
+  
+  #page-calc {
+    padding-bottom: 190px;
+  }
+  
+  .product-grid {
+    padding-bottom: 90px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 380px) {
+  .page {
+    padding-bottom: 170px;
+  }
+  
+  #page-calc {
+    padding-bottom: 200px;
+  }
+  
+  .product-grid {
+    padding-bottom: 100px;
+  }
 }
 
 /* ========== SEARCH & CATEGORIES ========== */
@@ -1032,6 +1129,7 @@ body.dark-mode .receipt {
 }
 
 .dev-value {
+  text-align: right;
   font-weight: 700;
   color: var(--primary);
 }
@@ -1201,4 +1299,209 @@ body.dark-mode .money-preset-btn {
 
 #customConfirmModal .popup-icon {
   color: var(--primary);
+}
+
+/* ========== PETTY CASH STYLES ========== */
+.petty-cash-section {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+.petty-cash-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-base);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+.petty-quick-add {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.petty-btn {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  padding: 12px 0;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 0 var(--primary-hover);
+}
+
+.petty-btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+  background: var(--primary-hover);
+}
+
+.petty-custom {
+  margin-bottom: 16px;
+}
+
+.petty-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.petty-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--bg-base);
+  color: var(--text-main);
+  font-size: 1rem;
+  outline: none;
+}
+
+.petty-input:focus {
+  border-color: var(--primary);
+}
+
+.petty-button-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.petty-action-btn {
+  padding: 12px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.petty-action-btn.add {
+  background: var(--success);
+  color: white;
+}
+
+.petty-action-btn.add:active {
+  background: #0d9488;
+  transform: scale(0.98);
+}
+
+.petty-action-btn.withdraw {
+  background: var(--danger);
+  color: white;
+}
+
+.petty-action-btn.withdraw:active {
+  background: var(--danger-hover);
+  transform: scale(0.98);
+}
+
+.petty-history {
+  margin-top: 8px;
+}
+
+.petty-history summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 8px;
+  background: var(--bg-base);
+  border-radius: 8px;
+}
+
+.petty-history-list {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--bg-base);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.petty-history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.petty-history-item:last-child {
+  border-bottom: none;
+}
+
+.petty-history-item.add {
+  color: var(--success);
+}
+
+.petty-history-item.withdraw {
+  color: var(--danger);
+}
+
+.petty-history-item .date {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Dark mode adjustments */
+body.dark-mode .petty-cash-section {
+  background: var(--bg-surface);
+}
+
+body.dark-mode .petty-btn {
+  box-shadow: 0 2px 0 #555;
+}
+
+body.dark-mode .petty-history-item {
+  border-color: var(--border);
+}
+
+/* Petty Cash Clear Button */
+.petty-clear-section {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.petty-clear-btn {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--danger);
+  padding: 14px 20px;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  box-shadow: 0 2px 0 var(--danger-hover);
+  opacity: 0.9;
+}
+
+.petty-clear-btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+  background: var(--danger-hover);
+  opacity: 1;
+}
+
+.petty-clear-btn:hover {
+  opacity: 1;
+}
+
+/* Dark mode adjustment */
+body.dark-mode .petty-clear-btn {
+  box-shadow: 0 2px 0 #991b1b;
 }
