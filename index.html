@@ -2,10 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Mr. Churros · Simple POS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,7 +17,7 @@
       <!-- HEADER -->
 <header class="header">
   <div class="logo-wrapper" id="devEasterEgg" style="cursor: pointer">
-    <img src="logo-new.png" alt="Mr. Churros" class="header-logo" />
+    <img src="img/logo-new.png" alt="Mr. Churros" class="header-logo" />
     <!-- Text-based DUNGUN badge -->
     <div class="dungun-badge">DUNGUN</div>
   </div>
@@ -215,25 +212,25 @@
           <div class="developer-container">
             <div class="dev-header">
               <div class="dev-icon"></div>
-              <h2>App Info</h2>
+              <h2>Developer Info</h2>
             </div>
 
             <div class="dev-card">
               <div class="dev-row">
                 <span class="dev-label">App Name:</span>
-                <span class="dev-value">Mr. Churros Dungun POS</span>
+                <span class="dev-value">Mr. Churros Simple POS</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Version:</span>
-                <span class="dev-value">2.1.0-rc.1</span>
+                <span class="dev-value">2.0.0-alpha.1</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Developer:</span>
-                <span class="dev-value">Nazurah and Is</span>
+                <span class="dev-value">Nazurah and Iskandar</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Last Updated:</span>
-                <span class="dev-value">3 March 2026</span>
+                <span class="dev-value">1 March 2026</span>
               </div>
             </div>
 
@@ -245,12 +242,13 @@
                 <li>Delete individual items</li>
                 <li>Payment calculator</li>
                 <li>Daily reports</li>
+                <li>Dark mode</li>
                 <li>CSV (Excel) export</li>
               </ul>
             </div>
 
             <div class="dev-footer">
-              <p>🍫 Made with love for Mr Churros Dungun</p>
+              <p>🍫 Made with love for churros lovers</p>
             </div>
           </div>
         </div>
@@ -306,7 +304,7 @@
               <div class="payment-input-label">Customer Paid:</div>
               <div class="payment-input-row">
                 <input type="number" id="manual-paid-amount" class="payment-input" placeholder="0.00" step="0.01" min="0">
-                <button id="apply-payment-btn" class="btn btn-outline">Apply</button>
+                <button id="apply-payment-btn" class="btn btn-outline" style="padding: 10px 16px;">Apply</button>
               </div>
             </div>
 
@@ -426,7 +424,7 @@
       <div class="modal-content receipt" style="max-width: 320px">
         <div class="receipt-header">
           <div class="receipt-logo">
-            <img src="logo-new.png" alt="Mr. Churros" class="header-logo" />
+            <img src="img/logo-new.png" alt="Mr. Churros" class="header-logo" />
           </div>
           <p style="font-size: 0.8rem; color: #555">
             Thank you for your purchase!
@@ -456,8 +454,27 @@
     </div>
 
     <script src="script.js"></script>
+    <!-- Custom Alert Modal -->
+    <div class="modal-overlay" id="customAlertModal">
+      <div class="modal-content" style="max-width: 300px; text-align: center;">
+        <div class="popup-icon" id="alertIcon">🔔</div>
+        <h3 id="alertTitle" style="margin-bottom: 8px; color: var(--primary);">Alert</h3>
+        <p id="alertMessage" style="margin-bottom: 20px; color: var(--text-main);"></p>
+        <button class="btn btn-primary" id="alertOkBtn" style="width: 100%;">OK</button>
+      </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div class="modal-overlay" id="customConfirmModal">
+      <div class="modal-content" style="max-width: 300px; text-align: center;">
+        <div class="popup-icon" id="confirmIcon">❓</div>
+        <h3 id="confirmTitle" style="margin-bottom: 8px; color: var(--primary);">Confirm</h3>
+        <p id="confirmMessage" style="margin-bottom: 20px; color: var(--text-main);"></p>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-outline" id="confirmCancelBtn" style="flex: 1;">Cancel</button>
+          <button class="btn btn-primary" id="confirmOkBtn" style="flex: 1;">OK</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
-
-
-
