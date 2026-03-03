@@ -164,6 +164,85 @@
             </div>
           </div>
 
+          <!-- ========== PETTY CASH SECTION ========== -->
+          <div class="petty-cash-section">
+            <h3
+              style="
+                margin-bottom: 12px;
+                font-size: 1.2rem;
+                color: var(--primary);
+              "
+            >
+              Petty Cash
+            </h3>
+
+            <!-- Current Petty Cash Balance -->
+            <div class="petty-cash-balance">
+              <span>Current Balance:</span>
+              <span
+                id="pettyCashBalance"
+                style="font-weight: 700; color: var(--primary)"
+                >RM 0.00</span
+              >
+            </div>
+
+            <!-- Quick Add Buttons -->
+            <div class="petty-quick-add">
+              <button class="petty-btn" data-petty="10">+ RM10</button>
+              <button class="petty-btn" data-petty="20">+ RM20</button>
+              <button class="petty-btn" data-petty="50">+ RM50</button>
+              <button class="petty-btn" data-petty="100">+ RM100</button>
+            </div>
+
+            <!-- Custom Add/Withdraw -->
+            <div class="petty-custom">
+              <div class="petty-input-group">
+                <input
+                  type="number"
+                  id="pettyAmount"
+                  class="petty-input"
+                  placeholder="Amount"
+                  step="0.01"
+                  min="0"
+                />
+                <div class="petty-button-group">
+                  <button id="pettyAddBtn" class="petty-action-btn add">
+                    + Add
+                  </button>
+                  <button
+                    id="pettyWithdrawBtn"
+                    class="petty-action-btn withdraw"
+                  >
+                    - Withdraw
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Clear Petty Cash Button -->
+            <div class="petty-clear-section">
+              <button id="pettyClearBtn" class="petty-clear-btn">
+                Clear Petty Cash
+              </button>
+            </div>
+
+            <!-- Transaction History Toggle -->
+            <details class="petty-history">
+              <summary>View History</summary>
+              <div class="petty-history-list" id="pettyHistoryList">
+                <p
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 10px;
+                  "
+                >
+                  No transactions yet
+                </p>
+              </div>
+            </details>
+          </div>
+
           <h3
             style="
               margin-bottom: 12px;
@@ -226,15 +305,19 @@
               </div>
               <div class="dev-row">
                 <span class="dev-label">Version:</span>
-                <span class="dev-value">2.1.0-rc.3</span>
+                <span class="dev-value">2.2.0-rc.3</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Developer:</span>
                 <span class="dev-value">Nazurah and Is</span>
               </div>
               <div class="dev-row">
+                <span class="dev-label">GitHub:</span>
+                <span class="dev-value">@iskandarasri</span>
+              </div>
+              <div class="dev-row">
                 <span class="dev-label">Last Updated:</span>
-                <span class="dev-value">3 March 2026</span>
+                <span class="dev-value">4 March 2026</span>
               </div>
             </div>
 
@@ -246,13 +329,12 @@
                 <li>Delete individual items</li>
                 <li>Payment calculator</li>
                 <li>Daily reports</li>
-                <li>Dark mode</li>
                 <li>CSV (Excel) export</li>
               </ul>
             </div>
 
             <div class="dev-footer">
-              <p>🍫 Made with love for churros lovers</p>
+              <p>🍫 Made with love for Mr Churros Dungun</p>
             </div>
           </div>
         </div>
@@ -286,7 +368,9 @@
 
           <!-- Payment Method Toggle -->
           <div class="payment-toggle">
-            <button id="payment-cash" class="payment-btn cash active">💵 Cash</button>
+            <button id="payment-cash" class="payment-btn cash active">
+              💵 Cash
+            </button>
             <button id="payment-qr" class="payment-btn qr">📱 QR Pay</button>
           </div>
 
@@ -307,8 +391,17 @@
           <div class="manual-payment">
             <div class="payment-input-label">Customer Paid:</div>
             <div class="payment-input-row">
-              <input type="number" id="manual-paid-amount" class="payment-input" placeholder="0.00" step="0.01" min="0">
-              <button id="apply-payment-btn" class="btn btn-outline">Apply</button>
+              <input
+                type="number"
+                id="manual-paid-amount"
+                class="payment-input"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+              />
+              <button id="apply-payment-btn" class="btn btn-outline">
+                Apply
+              </button>
             </div>
           </div>
 
@@ -321,11 +414,15 @@
           <div class="payment-summary">
             <div class="payment-row">
               <span>Customer Paid:</span>
-              <span id="paid-amount" style="font-weight: 700; color: var(--primary);">RM 0.00</span>
+              <span
+                id="paid-amount"
+                style="font-weight: 700; color: var(--primary)"
+                >RM 0.00</span
+              >
             </div>
             <div class="payment-row change-row">
               <span>Change to Return:</span>
-              <span id="change-amount" style="font-weight: 700;">RM 0.00</span>
+              <span id="change-amount" style="font-weight: 700">RM 0.00</span>
             </div>
           </div>
 
@@ -459,23 +556,39 @@
 
     <!-- Custom Alert Modal -->
     <div class="modal-overlay" id="customAlertModal">
-      <div class="modal-content" style="max-width: 300px; text-align: center;">
+      <div class="modal-content" style="max-width: 300px; text-align: center">
         <div class="popup-icon" id="alertIcon">🔔</div>
-        <h3 id="alertTitle" style="margin-bottom: 8px; color: var(--primary);">Alert</h3>
-        <p id="alertMessage" style="margin-bottom: 20px; color: var(--text-main);"></p>
-        <button class="btn btn-primary" id="alertOkBtn" style="width: 100%;">OK</button>
+        <h3 id="alertTitle" style="margin-bottom: 8px; color: var(--primary)">
+          Alert
+        </h3>
+        <p
+          id="alertMessage"
+          style="margin-bottom: 20px; color: var(--text-main)"
+        ></p>
+        <button class="btn btn-primary" id="alertOkBtn" style="width: 100%">
+          OK
+        </button>
       </div>
     </div>
 
     <!-- Custom Confirm Modal -->
     <div class="modal-overlay" id="customConfirmModal">
-      <div class="modal-content" style="max-width: 300px; text-align: center;">
+      <div class="modal-content" style="max-width: 300px; text-align: center">
         <div class="popup-icon" id="confirmIcon">❓</div>
-        <h3 id="confirmTitle" style="margin-bottom: 8px; color: var(--primary);">Confirm</h3>
-        <p id="confirmMessage" style="margin-bottom: 20px; color: var(--text-main);"></p>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn btn-outline" id="confirmCancelBtn" style="flex: 1;">Cancel</button>
-          <button class="btn btn-primary" id="confirmOkBtn" style="flex: 1;">OK</button>
+        <h3 id="confirmTitle" style="margin-bottom: 8px; color: var(--primary)">
+          Confirm
+        </h3>
+        <p
+          id="confirmMessage"
+          style="margin-bottom: 20px; color: var(--text-main)"
+        ></p>
+        <div style="display: flex; gap: 10px">
+          <button class="btn btn-outline" id="confirmCancelBtn" style="flex: 1">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="confirmOkBtn" style="flex: 1">
+            OK
+          </button>
         </div>
       </div>
     </div>
@@ -483,4 +596,3 @@
     <script src="script.js"></script>
   </body>
 </html>
-
