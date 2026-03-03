@@ -12,6 +12,10 @@
   --success: #10b981;
   --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   --sheet-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  
+  /* Safe area insets */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body.dark-mode {
@@ -63,7 +67,7 @@ body {
 .header {
   background: var(--bg-surface);
   padding: 16px 20px;
-  padding-top: max(16px, env(safe-area-inset-top, 16px));
+  padding-top: calc(16px + var(--safe-top));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -141,24 +145,21 @@ body {
   }
 }
 
-/* ========== MAIN CONTENT - FIXED FOR SCROLLING ========== */
-/* Make sure main content doesn't hide behind nav */
+/* ========== MAIN CONTENT ========== */
 .main-content {
   flex: 1;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 0;
   margin: 0;
-  margin-bottom: 60px; /* Add space for navbar */
   height: calc(100vh - 60px - var(--safe-top) - var(--safe-bottom));
 }
-
 
 /* Page styling */
 .page {
   display: none;
   padding: 16px;
-  min-height: 100%;
+  padding-bottom: 80px; /* Extra space at bottom */
   animation: fadeIn 0.3s ease;
 }
 
@@ -293,7 +294,93 @@ body {
   color: var(--primary);
 }
 
-/* ========== BOTTOM NAV ========== */
+/* ========== CALCULATOR PAGE ========== */
+.calculator-container {
+  background: var(--bg-surface);
+  border-radius: 24px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.calc-screen-modern {
+  background: var(--bg-base);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+#calc-result {
+  font-size: 3rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--primary);
+  font-family: "Courier New", monospace;
+  word-wrap: break-word;
+  min-height: 5rem;
+}
+
+.calc-subinfo {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.calc-keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.calc-key {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.calc-key:active {
+  background: var(--primary);
+  color: white;
+  transform: scale(0.95);
+}
+
+.calc-key.operator {
+  background: var(--primary);
+  color: white;
+}
+
+.calc-key.operator:active {
+  background: var(--primary-hover);
+}
+
+.calc-key.equals {
+  background: var(--success);
+  color: white;
+  grid-column: span 2;
+}
+
+.calc-key.clear {
+  background: var(--danger);
+  color: white;
+}
+
+.calc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* ========== BOTTOM NAVIGATION - FIXED ========== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -310,11 +397,10 @@ body {
   align-items: center;
   z-index: 1000;
   /* Safe area padding for notched phones */
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--safe-bottom);
   box-sizing: content-box;
 }
 
-/* Nav buttons */
 .nav-btn {
   display: flex;
   flex-direction: column;
@@ -347,12 +433,11 @@ body {
   stroke-linejoin: round;
 }
 
-/* ========== CART SHEET ========== */
-/* Update cart sheet to sit above navbar */
+/* ========== CART SHEET - FIXED POSITIONING ========== */
 .cart-sheet {
   position: fixed;
-  bottom: 60px; /* Sit right above navbar */
-  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  bottom: 60px; /* Exactly above navbar */
+  bottom: calc(60px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%) translateY(calc(100% - 60px));
   width: 100%;
@@ -369,7 +454,6 @@ body {
 
 .cart-sheet.open {
   transform: translateX(-50%) translateY(0);
-  max-height: 80vh;
 }
 
 .cart-header {
@@ -433,7 +517,7 @@ body {
   overflow-y: auto;
 }
 
-/* Order list styling */
+/* ========== ORDER LIST STYLING ========== */
 .order-list {
   list-style: none;
   margin-bottom: 10px;
@@ -506,7 +590,7 @@ body {
   transform: scale(1.1);
 }
 
-/* Payment summary */
+/* ========== PAYMENT SECTION ========== */
 .payment-summary {
   margin-bottom: 12px;
   padding: 10px;
@@ -521,7 +605,6 @@ body {
   margin-bottom: 4px;
 }
 
-/* Cart totals */
 .cart-totals {
   display: flex;
   justify-content: space-between;
@@ -531,7 +614,6 @@ body {
   color: var(--text-main);
 }
 
-/* Cart actions */
 .cart-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -739,55 +821,7 @@ body.dark-mode .btn-danger {
   background: var(--border);
 }
 
-/* ========== BOTTOM NAV WITH SAFE AREAS ========== */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  background: var(--bg-surface);
-  border-top: 2px solid var(--border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 1000;
-  padding-bottom: var(--safe-bottom);
-  height: calc(60px + var(--safe-bottom));
-  box-sizing: content-box;
-}
-
-.nav-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  flex: 1;
-  height: 100%;
-  justify-content: center;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.nav-btn.active {
-  color: var(--primary);
-}
-
-.nav-btn svg {
-  width: 22px;
-  height: 22px;
-  stroke-width: 2.2;
-  stroke: currentColor;
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* ========== MODALS WITH SAFE AREAS ========== */
+/* ========== MODALS ========== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -820,8 +854,6 @@ body.dark-mode .btn-danger {
   transition: all 0.2s ease;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   position: relative;
-  max-height: calc(90vh - var(--safe-top) - var(--safe-bottom));
-  overflow-y: auto;
 }
 .modal-overlay.active .modal-content {
   transform: scale(1);
@@ -1075,8 +1107,12 @@ body.dark-mode .money-preset-btn {
 }
 
 /* ========== RESPONSIVE ADJUSTMENTS ========== */
-/* Responsive adjustments */
 @media (max-width: 380px) {
+  .menu-item-image {
+    width: 70px;
+    height: 70px;
+  }
+  
   .bottom-nav {
     height: 55px;
   }
@@ -1090,14 +1126,32 @@ body.dark-mode .money-preset-btn {
     height: 20px;
   }
   
-  .main-content {
-    margin-bottom: 55px;
-    height: calc(100vh - 55px - var(--safe-top) - var(--safe-bottom));
-  }
-  
   .cart-sheet {
     bottom: 55px;
-    bottom: calc(55px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(55px + var(--safe-bottom));
+  }
+  
+  .cart-body {
+    max-height: 30vh;
+  }
+  
+  .order-item {
+    padding: 6px 0;
+    font-size: 0.85rem;
+  }
+  
+  .item-name {
+    font-size: 0.85rem;
+  }
+  
+  .item-price {
+    font-size: 0.85rem;
+  }
+  
+  .money-preset-btn {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    min-width: 55px;
   }
 }
 
@@ -1148,5 +1202,3 @@ body.dark-mode .money-preset-btn {
 #customConfirmModal .popup-icon {
   color: var(--primary);
 }
-
-
