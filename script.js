@@ -8,13 +8,16 @@ let currentStaff = "Staff 1";
 let currentCategory = "all";
 
 // Calculator & Payment state
-// Add this with other state variables near the top
-let paymentMethod = "Cash"; // "cash" or "qr"
+let paymentMethod = "Cash";
 let calcInput = "0";
 let calcPrev = null;
 let calcOp = null;
 let calcReset = false;
-let cashAmount = null; // Amount customer paid
+let cashAmount = null;
+
+// Tracking untuk Special Dip Family Box
+let specialBoxActive = false;
+let specialBoxIndex = -1;
 
 const menuItems = [
   {
@@ -41,13 +44,15 @@ const menuItems = [
     color: "#eefbcf",
     category: "churros",
   },
+  // Special Dip untuk Family Box (RM1)
   {
-    id: 4,
-    name: "Special Family Box",
-    price: 36.0,
+    id: 10,
+    name: "+ Special Dip (FB)",
+    price: 1.0,
     image: "seasonal_family.png",
-    color: "#eefbcf",
-    category: "churros",
+    color: "#cfe9d0",
+    category: "dips",
+    isFamilyBoxDip: true,
   },
   {
     id: 5,
@@ -80,6 +85,7 @@ const menuItems = [
     image: "seasonal_dip.png",
     color: "#cfe9d0",
     category: "dips",
+    isSpecialDip: true,
   },
   {
     id: 9,
@@ -124,21 +130,43 @@ window.onload = () => {
     });
   });
 
+  // Petty Cash event listeners
+  document.querySelectorAll('.petty-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const amount = parseFloat(e.target.dataset.petty);
+      addPettyCash(amount);
+    });
+  });
+
+  document.getElementById('pettyAddBtn')?.addEventListener('click', () => {
+    const amount = parseFloat(document.getElementById('pettyAmount').value);
+    if (!isNaN(amount)) {
+      addPettyCash(amount);
+      document.getElementById('pettyAmount').value = '';
+    }
+  });
+
+  document.getElementById('pettyWithdrawBtn')?.addEventListener('click', () => {
+    const amount = parseFloat(document.getElementById('pettyAmount').value);
+    if (!isNaN(amount)) {
+      withdrawPettyCash(amount);
+      document.getElementById('pettyAmount').value = '';
+    }
+  });
+
+  // Initialize petty cash display
+  updatePettyCashDisplay();
+
   // Money Presets - Quick payment amounts
   document.querySelectorAll(".money-preset-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const amount = parseFloat(btn.dataset.amount);
       if (!isNaN(amount) && amount > 0) {
-        // Use the existing setCashAmount function
         setCashAmount(amount);
-
-        // Also update the manual input field for visibility
         const manualInput = document.getElementById("manual-paid-amount");
         if (manualInput) {
           manualInput.value = amount;
         }
-
-        // Visual feedback
         btn.style.transform = "scale(0.95)";
         setTimeout(() => {
           btn.style.transform = "scale(1)";
@@ -158,6 +186,9 @@ window.onload = () => {
       renderMenu();
     });
   }
+
+  // Clear Petty Cash button
+  document.getElementById('pettyClearBtn')?.addEventListener('click', clearPettyCash);
 
   // Cart header toggle
   document
@@ -261,7 +292,7 @@ window.onload = () => {
 
   updatePaymentButtons();
 
-  // Quick Notes Preset
+  // Quick Notes Preset (if elements exist)
   document.querySelectorAll(".note-preset-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const note = btn.dataset.note;
@@ -281,20 +312,21 @@ window.onload = () => {
   const applyPaymentBtn = document.getElementById("apply-payment-btn");
 
   function applyManualPayment() {
-    const amount = parseFloat(manualPaidInput.value);
-    if (!isNaN(amount) && amount >= 0) {
-      cashAmount = amount;
-      calcInput = amount.toString();
-      calcPrev = null;
-      calcOp = null;
-      calcReset = false;
-      updateCalcDisplay();
-      updatePaymentDisplay();
-      manualPaidInput.value = ""; // Clear input after applying
-    } else {
-      showCustomAlert("Please enter a valid amount", "Invalid Input", "⚠️");
-    }
+  const amount = parseFloat(manualPaidInput.value);
+  if (!isNaN(amount) && amount >= 0) {
+    // SET value baru, bukan ADD
+    cashAmount = amount;
+    calcInput = amount.toString();
+    calcPrev = null;
+    calcOp = null;
+    calcReset = false;
+    updateCalcDisplay();
+    updatePaymentDisplay();
+    manualPaidInput.value = ""; // Clear input after applying
+  } else {
+    showCustomAlert("Please enter a valid amount", "Invalid Input", "⚠️");
   }
+}
 
   if (applyPaymentBtn) {
     applyPaymentBtn.addEventListener("click", applyManualPayment);
@@ -317,16 +349,14 @@ function renderMenu() {
 
   grid.innerHTML = "";
 
-  // First filter by category
   let filtered =
     currentCategory === "all"
       ? menuItems
       : menuItems.filter((item) => item.category === currentCategory);
 
-  // Then filter by search term if present
   if (searchTerm) {
     filtered = filtered.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm),
+      item.name.toLowerCase().includes(searchTerm)
     );
   }
 
@@ -346,7 +376,7 @@ function renderMenu() {
   filtered.forEach((item) => {
     const card = document.createElement("div");
     card.className = "product-card";
-    card.onclick = () => addItem(item.name, item.price);
+    card.onclick = () => addItem(item.name, item.price, item);
     card.innerHTML = `
       <div class="product-img" style="background: ${item.color}; display: flex; align-items: center; justify-content: center;">
         <img src="${item.image}" alt="${item.name}" class="menu-item-image" 
@@ -360,7 +390,6 @@ function renderMenu() {
     grid.appendChild(card);
   });
 
-  // Custom Item Card
   if (
     !searchTerm &&
     (currentCategory === "all" || currentCategory === "churros")
@@ -389,6 +418,7 @@ function updateOrderList() {
 
   listEl.innerHTML = "";
   let total = 0;
+  let itemCount = 0;
 
   if (currentOrder.length === 0) {
     listEl.innerHTML = `<li style="text-align:center; color: var(--text-muted); margin-top: 20px; font-size: 0.9rem;">Cart is empty</li>`;
@@ -398,61 +428,131 @@ function updateOrderList() {
     return;
   }
 
-  // Group identical items
-  const groupedItems = {};
+  // First, find Family Box
+  const familyBoxIndex = currentOrder.findIndex(item => item.name === "Family Box");
+  const familyBoxDips = [];
+  const otherItems = [];
+
+  // Separate items
   currentOrder.forEach((item, index) => {
-    const key = `${item.name}_${item.price}`;
-    if (!groupedItems[key]) {
-      groupedItems[key] = {
-        name: item.name,
-        price: item.price,
-        quantity: 1,
-        indices: [index],
-      };
+    if (item.name === "Family Box") {
+      // Handle separately
+    } else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)") {
+      familyBoxDips.push({ ...item, originalIndex: index });
     } else {
-      groupedItems[key].quantity++;
-      groupedItems[key].indices.push(index);
+      otherItems.push({ ...item, originalIndex: index });
     }
   });
 
-  // Calculate total
-  total = currentOrder.reduce((sum, item) => sum + item.price, 0);
+  // Display Family Box if exists
+  if (familyBoxIndex !== -1) {
+    const boxItem = currentOrder[familyBoxIndex];
+    const boxQuantity = boxItem.quantity || 1;
+    
+    // Calculate total dips quantity
+    let totalDipQuantity = 0;
+    familyBoxDips.forEach(dip => {
+      totalDipQuantity += dip.quantity || 1;
+    });
+    
+    const boxTotal = (35.0 * boxQuantity) + (totalDipQuantity * 1.0);
+    total += boxTotal;
+    itemCount += boxQuantity;
 
-  // Render grouped items
-  Object.values(groupedItems).forEach((group) => {
+    const boxLi = document.createElement("li");
+    boxLi.className = "order-item";
+    
+    let dipDisplay = '';
+    if (totalDipQuantity > 0) {
+      dipDisplay = ` (with ${totalDipQuantity} special dip${totalDipQuantity > 1 ? 's' : ''})`;
+    }
+    
+    boxLi.innerHTML = `
+      <div class="order-item-left">
+        <span class="item-qty">${boxQuantity}x</span>
+        <span class="item-name">Family Box${dipDisplay}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="item-price">RM ${boxTotal.toFixed(2)}</span>
+        <button class="delete-item-btn" data-item-index="${familyBoxIndex}" data-item-type="family-box">✕</button>
+      </div>
+    `;
+    listEl.appendChild(boxLi);
+
+    // Display special dips with their own quantities
+    familyBoxDips.forEach((dip, dipIdx) => {
+      const dipQuantity = dip.quantity || 1;
+      const dipLi = document.createElement("li");
+      dipLi.className = "order-item";
+      dipLi.style.paddingLeft = "30px";
+      dipLi.style.fontSize = "0.85rem";
+      dipLi.style.opacity = "0.8";
+      dipLi.style.borderBottom = "none";
+      dipLi.innerHTML = `
+        <div class="order-item-left">
+          <span class="item-qty">${dipQuantity}x</span>
+          <span class="item-name">↳ + Special Dip (FB)</span>
+        </div>
+        <span class="item-price">RM ${(dipQuantity * 1.0).toFixed(2)}</span>
+      `;
+      listEl.appendChild(dipLi);
+    });
+  }
+
+  // Display other items with quantities
+  otherItems.forEach((item) => {
+    const quantity = item.quantity || 1;
+    const itemTotal = item.price;
+    total += itemTotal;
+    itemCount += quantity;
+    
     const li = document.createElement("li");
     li.className = "order-item";
     li.innerHTML = `
       <div class="order-item-left">
-        <span class="item-qty">${group.quantity}x</span>
-        <span class="item-name">${group.name}</span>
+        <span class="item-qty">${quantity}x</span>
+        <span class="item-name">${item.name}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span class="item-price">RM ${(group.price * group.quantity).toFixed(2)}</span>
-        <button class="delete-item-btn" data-item-name="${group.name}" data-item-price="${group.price}">✕</button>
+        <span class="item-price">RM ${itemTotal.toFixed(2)}</span>
+        <button class="delete-item-btn" data-item-index="${item.originalIndex}" data-item-type="regular">✕</button>
       </div>
     `;
     listEl.appendChild(li);
   });
 
-  // Add delete event listeners
+  // Delete button listeners
   document.querySelectorAll(".delete-item-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const itemName = btn.dataset.itemName;
-      const itemPrice = parseFloat(btn.dataset.itemPrice);
-      deleteItemFromOrder(itemName, itemPrice);
+      const index = parseInt(btn.dataset.itemIndex);
+      const type = btn.dataset.itemType;
+      
+      if (type === "family-box") {
+        // Remove the family box and all its dips
+        const newOrder = [];
+        for (let i = 0; i < currentOrder.length; i++) {
+          if (i === index) continue; // Skip the box
+          if (currentOrder[i].isFamilyBoxDip || currentOrder[i].name === "+ Special Dip (FB)") continue; // Skip dips
+          newOrder.push(currentOrder[i]);
+        }
+        currentOrder = newOrder;
+      } else {
+        // Remove regular item
+        currentOrder.splice(index, 1);
+      }
+      
+      updateOrderList();
     });
   });
 
   const formattedTotal = `RM ${total.toFixed(2)}`;
   totalEl.textContent = formattedTotal;
   sheetTotalEl.textContent = formattedTotal;
-  countEl.textContent = `${currentOrder.length} Items`;
+  countEl.textContent = `${itemCount} Items`;
 
   updatePaymentDisplay();
 
-  // Flash effect with rounded corners
   if (currentOrder.length > 0 && !cartOpen) {
     cartHeader.classList.add("cart-flash");
     setTimeout(() => {
@@ -463,11 +563,43 @@ function updateOrderList() {
   }
 }
 
-// New function to delete specific item
+// ========== VOID LAST ITEM FUNCTION (TAMBAH INI) ==========
+function voidLastItem() {
+  if (currentOrder.length === 0) {
+    showCustomAlert("No items to void", "Cart Empty", "🛒");
+    return;
+  }
+
+  // Dapatkan item terakhir
+  const lastItem = currentOrder[currentOrder.length - 1];
+  
+  // Kalau item last ada quantity lebih dari 1, kurangkan quantity
+  if (lastItem.quantity && lastItem.quantity > 1) {
+    lastItem.quantity--;
+    
+    // Update price based on quantity
+    if (lastItem.isFamilyBoxDip || lastItem.name === "+ Special Dip (FB)") {
+      lastItem.price = lastItem.quantity * 1.0;
+    } else if (lastItem.name === "+ Special Dip") {
+      lastItem.price = lastItem.quantity * 3.0;
+    } else {
+      // For other items, assume price is per item
+      const originalPrice = lastItem.price / (lastItem.quantity + 1);
+      lastItem.price = originalPrice * lastItem.quantity;
+    }
+    
+    showCustomAlert("Last item quantity reduced", "Void", "↩️");
+  } else {
+    // Kalau quantity 1 atau takde quantity, buang item terus
+    currentOrder.pop();
+  }
+  
+  updateOrderList();
+}
+
 function deleteItemFromOrder(itemName, itemPrice) {
-  // Find the index of the item to delete (first occurrence)
   const index = currentOrder.findIndex(
-    (item) => item.name === itemName && item.price === itemPrice,
+    (item) => item.name === itemName && item.price === itemPrice
   );
 
   if (index !== -1) {
@@ -476,222 +608,249 @@ function deleteItemFromOrder(itemName, itemPrice) {
   }
 }
 
-// ========== CALCULATOR FUNCTIONS ==========
-function updateCalcDisplay() {
-  document.getElementById("calc-result").textContent = calcInput;
+// ========== PETTY CASH STATE ==========
+let pettyCashBalance = 0;
+let pettyCashHistory = [];
 
-  const hintEl = document.getElementById("calc-operator-hint");
-  if (calcOp && calcPrev !== null) {
-    hintEl.textContent = `${calcPrev} ${calcOp}`;
-  } else {
-    hintEl.textContent = "";
-  }
+try {
+  const savedBalance = localStorage.getItem("pettyCashBalance");
+  if (savedBalance) pettyCashBalance = parseFloat(savedBalance);
+  
+  const savedHistory = localStorage.getItem("pettyCashHistory");
+  if (savedHistory) pettyCashHistory = JSON.parse(savedHistory);
+} catch (e) {
+  console.log("No petty cash data");
 }
 
-async function handleCalcInput(val) {
-  if (val === "C") {
-    calcInput = "0";
-    calcPrev = null;
-    calcOp = null;
-    calcReset = false;
-    cashAmount = null;
-    updatePaymentDisplay();
-  } else if (val === "=") {
-    if (calcPrev !== null && calcOp !== null) {
-      const current = parseFloat(calcInput);
-      let result;
-
-      switch (calcOp) {
-        case "+":
-          result = calcPrev + current;
-          break;
-        case "-":
-          result = calcPrev - current;
-          break;
-        case "*":
-          result = calcPrev * current;
-          break;
-        case "/":
-          if (current === 0) {
-            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
-            return;
-          }
-          result = calcPrev / current;
-          break;
-        default:
-          return;
-      }
-
-      calcInput = result.toString();
-      cashAmount = parseFloat(calcInput); // Set as cash paid
-      calcPrev = null;
-      calcOp = null;
-      calcReset = true;
-      updatePaymentDisplay();
-    }
-  } else if (["+", "-", "*", "/"].includes(val)) {
-    const current = parseFloat(calcInput);
-
-    if (calcPrev === null) {
-      calcPrev = current;
-      calcOp = val;
-      calcReset = true;
-    } else if (calcOp !== null) {
-      let result;
-      switch (calcOp) {
-        case "+":
-          result = calcPrev + current;
-          break;
-        case "-":
-          result = calcPrev - current;
-          break;
-        case "*":
-          result = calcPrev * current;
-          break;
-        case "/":
-          if (current === 0) {
-            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
-            return;
-          }
-          result = calcPrev / current;
-          break;
-        default:
-          return;
-      }
-      calcInput = result.toString();
-      calcPrev = parseFloat(calcInput);
-      calcOp = val;
-      calcReset = true;
-    }
-  } else {
-    // Number or decimal input
-    if (calcReset) {
-      calcInput = val;
-      calcReset = false;
-    } else {
-      if (val === ".") {
-        if (calcInput.includes(".")) return;
-        calcInput = calcInput + ".";
-      } else {
-        calcInput = calcInput === "0" ? val : calcInput + val;
-      }
-    }
-    cashAmount = parseFloat(calcInput); // Update cash amount as user types
-    updatePaymentDisplay();
+// ========== PETTY CASH FUNCTIONS ==========
+function updatePettyCashDisplay() {
+  const balanceEl = document.getElementById("pettyCashBalance");
+  if (balanceEl) {
+    balanceEl.textContent = `RM ${pettyCashBalance.toFixed(2)}`;
   }
-
-  updateCalcDisplay();
+  
+  localStorage.setItem("pettyCashBalance", pettyCashBalance.toString());
+  localStorage.setItem("pettyCashHistory", JSON.stringify(pettyCashHistory));
+  
+  updatePettyCashHistory();
 }
 
-// Quick cash buttons - SETS the cash amount (what customer paid)
-// Quick cash buttons - ADDS with visual feedback in calculator
-function setCashAmount(amount) {
-  if (cashAmount === null) {
-    // First time pressing cash button
-    cashAmount = amount;
-    calcInput = amount.toString();
-    calcPrev = null;
-    calcOp = null;
-  } else {
-    // Show the addition in calculator hint
-    calcPrev = cashAmount;
-    calcOp = "+";
-    cashAmount += amount;
-    calcInput = cashAmount.toString();
-
-    // Clear the operation after a short delay
-    setTimeout(() => {
-      calcPrev = null;
-      calcOp = null;
-      updateCalcDisplay();
-    }, 1000);
-  }
-
-  calcReset = false;
-  updateCalcDisplay();
-  updatePaymentDisplay();
-
-  // Visual feedback
-  const cashBtn = event?.target;
-  if (cashBtn) {
-    cashBtn.style.transform = "scale(0.95)";
-    setTimeout(() => {
-      cashBtn.style.transform = "scale(1)";
-    }, 100);
-  }
-}
-
-// ADD TO ORDER BUTTON - Now just updates payment display
-async function addCalcToOrder() {
-  if (currentOrder.length === 0) {
-    await showCustomAlert("Add items to order first!", "No Items", "🛒");
+function updatePettyCashHistory() {
+  const historyEl = document.getElementById("pettyHistoryList");
+  if (!historyEl) return;
+  
+  if (pettyCashHistory.length === 0) {
+    historyEl.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 10px;">No transactions yet</p>';
     return;
   }
-
-  // This just updates the payment display - doesn't add an item
-  updatePaymentDisplay();
-
-  // Show confirmation that payment is recorded
-  const calcAddBtn = document.getElementById("calc-add-to-cart");
-  const originalText = calcAddBtn.textContent;
-  calcAddBtn.textContent = "✓ Payment Set";
-  setTimeout(() => {
-    calcAddBtn.textContent = originalText;
-  }, 1000);
+  
+  let html = '';
+  [...pettyCashHistory].reverse().slice(0, 15).forEach(trans => {
+    const typeClass = trans.type === 'add' ? 'add' : 'withdraw';
+    const sign = trans.type === 'add' ? '+' : '-';
+    let note = trans.note ? ` <span style="font-size:0.7rem; opacity:0.7;">(${trans.note})</span>` : '';
+    html += `
+      <div class="petty-history-item ${typeClass}">
+        <span>${sign} RM ${trans.amount.toFixed(2)}${note}</span>
+        <span class="date">${trans.date}</span>
+      </div>
+    `;
+  });
+  historyEl.innerHTML = html;
 }
 
-// ========== PAYMENT DISPLAY ==========
-function updatePaymentDisplay() {
-  const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
-  const paid = cashAmount || 0;
-  const change = paid - total;
-
-  const paidEl = document.getElementById("paid-amount");
-  const changeEl = document.getElementById("change-amount");
-  const changeRow = document.querySelector(".change-row");
-
-  if (paidEl && changeEl && changeRow) {
-    paidEl.textContent = `RM ${paid.toFixed(2)}`;
-    changeEl.textContent = `RM ${Math.max(0, change).toFixed(2)}`;
-
-    if (change < 0) {
-      changeEl.style.color = "var(--danger)";
-      changeRow.style.color = "var(--danger)";
-      changeRow.querySelector("span:first-child").textContent = "Still Need:";
-    } else {
-      changeEl.style.color = "var(--success)";
-      changeRow.style.color = "var(--text-main)";
-      changeRow.querySelector("span:first-child").textContent =
-        "Change to Return:";
-    }
+function addPettyCash(amount) {
+  if (amount <= 0) {
+    showCustomAlert("Please enter a valid amount", "Invalid Amount", "⚠️");
+    return;
   }
+  
+  pettyCashBalance += amount;
+  pettyCashHistory.push({
+    type: 'add',
+    amount: amount,
+    date: new Date().toLocaleString()
+  });
+  
+  updatePettyCashDisplay();
+  showCustomAlert(`Added RM ${amount.toFixed(2)} to petty cash`, "Success", "💰");
+}
+
+function withdrawPettyCash(amount) {
+  if (amount <= 0) {
+    showCustomAlert("Please enter a valid amount", "Invalid Amount", "⚠️");
+    return;
+  }
+  
+  if (amount > pettyCashBalance) {
+    showCustomAlert("Insufficient balance", "Error", "❌");
+    return;
+  }
+  
+  pettyCashBalance -= amount;
+  pettyCashHistory.push({
+    type: 'withdraw',
+    amount: amount,
+    date: new Date().toLocaleString()
+  });
+  
+  updatePettyCashDisplay();
+  showCustomAlert(`Withdrew RM ${amount.toFixed(2)} from petty cash`, "Success", "💰");
+}
+
+function clearPettyCash() {
+  if (pettyCashBalance === 0) {
+    showCustomAlert("Petty cash is already empty", "Info", "💰");
+    return;
+  }
+  
+  showCustomConfirm(
+    `Are you sure you want to clear all petty cash (RM ${pettyCashBalance.toFixed(2)})?`,
+    "Clear Petty Cash",
+    "⚠️"
+  ).then((confirmed) => {
+    if (confirmed) {
+      if (pettyCashBalance > 0) {
+        pettyCashHistory.push({
+          type: 'withdraw',
+          amount: pettyCashBalance,
+          date: new Date().toLocaleString(),
+          note: 'Cleared all petty cash'
+        });
+      }
+      
+      pettyCashBalance = 0;
+      localStorage.setItem("pettyCashBalance", "0");
+      localStorage.setItem("pettyCashHistory", JSON.stringify(pettyCashHistory));
+      
+      updatePettyCashDisplay();
+      showCustomAlert("Petty cash cleared successfully", "Success", "✅");
+    }
+  });
 }
 
 // ========== CORE POS LOGIC ==========
-function addItem(name, price) {
-  currentOrder.push({ name, price });
+function addItem(name, price, itemData = {}) {
+  // Check if this is Special Dip for Family Box (RM1)
+  if (name === "+ Special Dip (FB)") {
+    // Check if Family Box exists in order
+    const hasFamilyBox = currentOrder.some(item => 
+      item.name === "Family Box"
+    );
+    
+    if (hasFamilyBox) {
+      // Check if there's already a Special Dip (FB) item
+      const existingDipIndex = currentOrder.findIndex(item => 
+        item.name === "+ Special Dip (FB)" || item.isFamilyBoxDip
+      );
+      
+      if (existingDipIndex !== -1) {
+        // If exists, increase quantity
+        if (!currentOrder[existingDipIndex].quantity) {
+          currentOrder[existingDipIndex].quantity = 2;
+        } else {
+          currentOrder[existingDipIndex].quantity++;
+        }
+        // Update price (quantity * 1.0)
+        currentOrder[existingDipIndex].price = currentOrder[existingDipIndex].quantity * 1.0;
+      } else {
+        // Add new with quantity 1
+        currentOrder.push({
+          name: "+ Special Dip (FB)",
+          price: 1.0,
+          quantity: 1,
+          isFamilyBoxDip: true,
+        });
+      }
+      
+      showCustomAlert("Added Special Dip (RM1) to Family Box", "Success", "✅");
+    } else {
+      showCustomAlert("Please add Family Box first!", "Error", "❌");
+      return;
+    }
+  }
+  // Check if this is regular Special Dip (RM3)
+  else if (name === "+ Special Dip") {
+    // Check if there's already a regular Special Dip item
+    const existingDipIndex = currentOrder.findIndex(item => 
+      item.name === "+ Special Dip" && !item.isFamilyBoxDip
+    );
+    
+    if (existingDipIndex !== -1) {
+      // If exists, increase quantity
+      if (!currentOrder[existingDipIndex].quantity) {
+        currentOrder[existingDipIndex].quantity = 2;
+      } else {
+        currentOrder[existingDipIndex].quantity++;
+      }
+      // Update price (quantity * 3.0)
+      currentOrder[existingDipIndex].price = currentOrder[existingDipIndex].quantity * 3.0;
+    } else {
+      // Add new with quantity 1
+      currentOrder.push({
+        name: "+ Special Dip",
+        price: 3.0,
+        quantity: 1,
+      });
+    }
+  }
+  // Regular items without quantity (or with quantity if needed)
+  else {
+    // Check if this item already exists (for items that should be grouped)
+    const existingItemIndex = currentOrder.findIndex(item => 
+      item.name === name && item.price === price && !item.isFamilyBoxDip
+    );
+    
+    if (existingItemIndex !== -1 && name !== "Family Box" && name !== "Single Set") {
+      // For items that can be grouped (like dips)
+      if (!currentOrder[existingItemIndex].quantity) {
+        currentOrder[existingItemIndex].quantity = 2;
+      } else {
+        currentOrder[existingItemIndex].quantity++;
+      }
+      currentOrder[existingItemIndex].price = currentOrder[existingItemIndex].quantity * price;
+    } else {
+      // Add as new item
+      currentOrder.push({ 
+        name, 
+        price,
+        quantity: 1,
+      });
+    }
+  }
+  
   updateOrderList();
 }
 
-function voidLastItem() {
-  if (currentOrder.length > 0) {
-    currentOrder.pop();
-    updateOrderList();
-  }
-}
-
-// Change to async
 async function clearOrder() {
-  const confirmed = await showCustomConfirm("Clear current order?", "Clear Order", "🗑️");
+  if (currentOrder.length === 0) {
+    showCustomAlert("Cart is already empty", "Info", "🛒");
+    return;
+  }
+  
+  const confirmed = await showCustomConfirm(
+    "Clear entire order?",
+    "Clear Order",
+    "🗑️"
+  );
+  
   if (confirmed) {
     currentOrder = [];
-    cashAmount = null;
+    cashAmount = null;  // Reset cashAmount
     calcInput = "0";
     calcPrev = null;
     calcOp = null;
+    
+    // Reset manual input
+    const manualInput = document.getElementById("manual-paid-amount");
+    if (manualInput) {
+      manualInput.value = "";
+    }
+    
     updateOrderList();
     updateCalcDisplay();
     updatePaymentDisplay();
+    showCustomAlert("Order cleared", "Success", "✅");
   }
 }
 
@@ -736,11 +895,19 @@ async function saveSale() {
 
   generateReceipt(newSale);
 
+  // Reset everything
   currentOrder = [];
-  cashAmount = null;
+  cashAmount = null;  // Reset cashAmount
   calcInput = "0";
   calcPrev = null;
   calcOp = null;
+  
+  // Reset manual input field
+  const manualInput = document.getElementById("manual-paid-amount");
+  if (manualInput) {
+    manualInput.value = "";
+  }
+  
   if (document.getElementById("saleRemarks")) {
     document.getElementById("saleRemarks").value = "";
   }
@@ -748,6 +915,8 @@ async function saveSale() {
   updateOrderList();
   updateReports();
   updateCalcDisplay();
+  updatePaymentDisplay(); // Ini akan set paid-amount balik ke RM 0.00
+  
   if (cartOpen) toggleCart();
 }
 
@@ -760,27 +929,49 @@ function generateReceipt(sale) {
   const itemsContainer = document.getElementById("receiptItems");
   itemsContainer.innerHTML = "";
 
-  // Add payment method to receipt
-  itemsContainer.innerHTML += `
-  <div class="receipt-item">
-    <span>Payment</span>
-    <span>${sale.paymentMethod === "Cash" ? "Cash" : "QR Pay"}</span>
-  </div>
-`;
+  // Group items for cleaner receipt
+  let familyBoxTotal = 0;
+  let familyBoxQuantity = 0;
+  let familyBoxDipsTotal = 0;
+  let familyBoxDipsQuantity = 0;
 
   sale.items.forEach((item) => {
+    if (item.name === "Family Box") {
+      familyBoxQuantity += item.quantity || 1;
+      familyBoxTotal += 35.0 * (item.quantity || 1);
+    } else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)") {
+      familyBoxDipsQuantity += item.quantity || 1;
+      familyBoxDipsTotal += 1.0 * (item.quantity || 1);
+    }
+  });
+
+  // Display Family Box with dips
+  if (familyBoxQuantity > 0) {
     itemsContainer.innerHTML += `
       <div class="receipt-item">
-        <span>1x ${item.name}</span>
-        <span>RM ${item.price.toFixed(2)}</span>
+        <span>${familyBoxQuantity}x Family Box ${familyBoxDipsQuantity > 0 ? `(+${familyBoxDipsQuantity} dip${familyBoxDipsQuantity > 1 ? 's' : ''})` : ''}</span>
+        <span>RM ${(familyBoxTotal + familyBoxDipsTotal).toFixed(2)}</span>
       </div>
     `;
+  }
+
+  // Display other items with quantities
+  sale.items.forEach((item) => {
+    if (item.name !== "Family Box" && !item.isFamilyBoxDip && item.name !== "+ Special Dip (FB)") {
+      const quantity = item.quantity || 1;
+      itemsContainer.innerHTML += `
+        <div class="receipt-item">
+          <span>${quantity}x ${item.name}</span>
+          <span>RM ${item.price.toFixed(2)}</span>
+        </div>
+      `;
+    }
   });
 
   itemsContainer.innerHTML += `
     <div style="border-top: 1px dashed var(--border); margin: 10px 0; padding-top: 10px;"></div>
     <div class="receipt-item">
-      <span>Total</span>
+      <span>Subtotal</span>
       <span>RM ${sale.total.toFixed(2)}</span>
     </div>
     <div class="receipt-item">
@@ -790,6 +981,10 @@ function generateReceipt(sale) {
     <div class="receipt-item">
       <span>Change</span>
       <span>RM ${sale.change.toFixed(2)}</span>
+    </div>
+    <div class="receipt-item">
+      <span>Payment</span>
+      <span>${sale.paymentMethod === "Cash" ? "Cash" : "QR Pay"}</span>
     </div>
   `;
 
@@ -849,13 +1044,11 @@ async function exportToExcel() {
     return;
   }
 
-  // Calculate today's sales
   const today = new Date().toLocaleDateString();
   const todaysSales = allSales.filter((sale) => sale.date.includes(today));
   const todayTotal = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
   const todayCount = todaysSales.length;
 
-  // Calculate payment method totals
   const cashToday = todaysSales
     .filter((s) => s.paymentMethod === "Cash")
     .reduce((sum, s) => sum + s.total, 0);
@@ -863,51 +1056,42 @@ async function exportToExcel() {
     .filter((s) => s.paymentMethod === "QR")
     .reduce((sum, s) => sum + s.total, 0);
 
-  // Calculate overall totals
   const grandTotal = allSales.reduce((sum, sale) => sum + sale.total, 0);
   const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
   const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
 
-  // Count items by category - FIXED to properly detect all items
+  // Count items by category
   let totalSingles = 0,
     totalFamilies = 0,
-    totalSpecialSingles = 0,
-    totalSpecialFamilies = 0;
+    totalSpecialSingles = 0;
   let totalMilkDips = 0,
     totalDarkDips = 0,
     totalCaramelDips = 0,
-    totalSpecialDips = 0;
+    totalSpecialDips = 0,
+    totalFamilyBoxDips = 0;
   let totalKeychains = 0;
 
   allSales.forEach((sale) => {
     sale.items.forEach((item) => {
-      // Log each item for debugging
-      console.log("Counting item:", item.name);
-      
       if (item.name === "Single Set") totalSingles++;
       else if (item.name === "Family Box") totalFamilies++;
       else if (item.name === "Special Single Set") totalSpecialSingles++;
-      else if (item.name === "Special Family Box") totalSpecialFamilies++;
       else if (item.name === "+ Milk Choco Dip") totalMilkDips++;
       else if (item.name === "+ Dark Choco Dip") totalDarkDips++;
       else if (item.name === "+ Caramel Dip") totalCaramelDips++;
       else if (item.name === "+ Special Dip") totalSpecialDips++;
+      else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)") totalFamilyBoxDips++;
       else if (item.name === "Keychain") totalKeychains++;
     });
   });
 
-  // Calculate totals
-  const totalChurros =
-    totalSingles + totalFamilies + totalSpecialSingles + totalSpecialFamilies;
-  const totalDips =
-    totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips;
+  const totalChurros = totalSingles + totalFamilies + totalSpecialSingles;
+  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips + totalFamilyBoxDips;
   const totalItems = totalChurros + totalDips + totalKeychains;
 
-  // Create CSV header
   let csvContent = "MR. CHURROS DUNGUN POS - SALES REPORT\n";
   csvContent += `Generated: ${new Date().toLocaleString()}\n\n`;
 
-  // TODAY'S SUMMARY
   csvContent += "=== TODAY'S SUMMARY ===\n";
   csvContent += `Date,${today}\n`;
   csvContent += `Total Sales,${todayCount}\n`;
@@ -915,10 +1099,8 @@ async function exportToExcel() {
   csvContent += `Cash Payments,RM ${cashToday.toFixed(2)}\n`;
   csvContent += `QR Payments,RM ${qrToday.toFixed(2)}\n\n`;
 
-  // TODAY'S TRANSACTIONS
   csvContent += "=== TODAY'S TRANSACTIONS ===\n";
-  csvContent +=
-    "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+  csvContent += "Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
 
   todaysSales.forEach((sale) => {
     const date = new Date(sale.date);
@@ -928,14 +1110,12 @@ async function exportToExcel() {
     csvContent += `"${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
   });
 
-  // OVERALL SUMMARY
   csvContent += "\n=== OVERALL SUMMARY ===\n";
   csvContent += `Total Transactions,${allSales.length}\n`;
   csvContent += `Total Revenue,RM ${grandTotal.toFixed(2)}\n`;
   csvContent += `Total Paid,RM ${totalPaid.toFixed(2)}\n`;
   csvContent += `Total Change Given,RM ${totalChange.toFixed(2)}\n\n`;
 
-  // PAYMENT METHOD BREAKDOWN
   csvContent += "=== PAYMENT METHOD BREAKDOWN ===\n";
   const totalCash = allSales
     .filter((s) => s.paymentMethod === "Cash")
@@ -946,20 +1126,19 @@ async function exportToExcel() {
   csvContent += `Cash Payments,RM ${totalCash.toFixed(2)}\n`;
   csvContent += `QR Payments,RM ${totalQR.toFixed(2)}\n\n`;
 
-  // ITEM BREAKDOWN - Updated to show "+" format
   csvContent += "=== ITEM BREAKDOWN ===\n";
   csvContent += "CHURROS SETS\n";
   csvContent += `Single Set,${totalSingles}\n`;
   csvContent += `Family Box,${totalFamilies}\n`;
   csvContent += `Special Single Set,${totalSpecialSingles}\n`;
-  csvContent += `Special Family Box,${totalSpecialFamilies}\n`;
   csvContent += `Total Churros Sets,${totalChurros}\n\n`;
 
   csvContent += "DIPS (Add-ons)\n";
-  csvContent += `Milk Choco Dip (add-on),${totalMilkDips}\n`;
-  csvContent += `Dark Choco Dip (add-on),${totalDarkDips}\n`;
-  csvContent += `Caramel Dip (add-on),${totalCaramelDips}\n`;
-  csvContent += `Special Dip (add-on),${totalSpecialDips}\n`;
+  csvContent += `Milk Choco Dip,${totalMilkDips}\n`;
+  csvContent += `Dark Choco Dip,${totalDarkDips}\n`;
+  csvContent += `Caramel Dip,${totalCaramelDips}\n`;
+  csvContent += `Regular Special Dip (RM3),${totalSpecialDips}\n`;
+  csvContent += `Family Box Special Dip (RM1),${totalFamilyBoxDips}\n`;
   csvContent += `Total Dips,${totalDips}\n\n`;
 
   csvContent += "MERCHANDISE\n";
@@ -967,10 +1146,16 @@ async function exportToExcel() {
 
   csvContent += `TOTAL ITEMS SOLD,${totalItems}\n\n`;
 
-  // ALL TRANSACTIONS HISTORY
+  csvContent += "=== PETTY CASH ===\n";
+  csvContent += `Current Balance,RM ${pettyCashBalance.toFixed(2)}\n`;
+  csvContent += "Recent Transactions:\n";
+  pettyCashHistory.slice(-5).reverse().forEach(trans => {
+    csvContent += `${trans.date},${trans.type === 'add' ? '+' : '-'} RM ${trans.amount.toFixed(2)}\n`;
+  });
+  csvContent += "\n";
+
   csvContent += "=== ALL TRANSACTIONS HISTORY ===\n";
-  csvContent +=
-    "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
+  csvContent += "Date,Time,Items,Total(RM),Paid(RM),Change(RM),Payment,Staff,Remarks\n";
 
   allSales.forEach((sale) => {
     const date = new Date(sale.date);
@@ -981,18 +1166,13 @@ async function exportToExcel() {
     csvContent += `"${dateStr}","${timeStr}","${itemsList}",${sale.total.toFixed(2)},${sale.paid.toFixed(2)},${sale.change.toFixed(2)},"${sale.paymentMethod}","${sale.staff}","${sale.remarks}"\n`;
   });
 
-  // Create filename
   const filename = `churros_sales_${new Date().toISOString().split("T")[0]}.csv`;
-
-  // Check if running in Android WebView
   const isAndroid = /Android/i.test(navigator.userAgent);
 
   if (isAndroid && window.Android) {
-    // Use Android interface to save file
     await showCustomAlert("Saving to Downloads folder...", "Download", "📥");
     Android.downloadCSV(csvContent, filename);
   } else {
-    // Regular browser download using Blob
     const blob = new Blob(["\uFEFF" + csvContent], {
       type: "text/csv;charset=utf-8;",
     });
@@ -1007,9 +1187,151 @@ async function exportToExcel() {
   }
 }
 
-// ========== CUSTOM POPUP SYSTEM ==========
+// ========== CALCULATOR FUNCTIONS ==========
+function updateCalcDisplay() {
+  document.getElementById("calc-result").textContent = calcInput;
+  const hintEl = document.getElementById("calc-operator-hint");
+  hintEl.textContent = calcOp && calcPrev !== null ? `${calcPrev} ${calcOp}` : "";
+}
 
-// Custom Alert
+async function handleCalcInput(val) {
+  if (val === "C") {
+    calcInput = "0";
+    calcPrev = null;
+    calcOp = null;
+    calcReset = false;
+    cashAmount = null;
+    updatePaymentDisplay();
+  } else if (val === "=") {
+    if (calcPrev !== null && calcOp !== null) {
+      const current = parseFloat(calcInput);
+      let result;
+      switch (calcOp) {
+        case "+": result = calcPrev + current; break;
+        case "-": result = calcPrev - current; break;
+        case "*": result = calcPrev * current; break;
+        case "/":
+          if (current === 0) {
+            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
+            return;
+          }
+          result = calcPrev / current;
+          break;
+        default: return;
+      }
+      calcInput = result.toString();
+      cashAmount = parseFloat(calcInput);
+      calcPrev = null;
+      calcOp = null;
+      calcReset = true;
+      updatePaymentDisplay();
+    }
+  } else if (["+", "-", "*", "/"].includes(val)) {
+    const current = parseFloat(calcInput);
+    if (calcPrev === null) {
+      calcPrev = current;
+      calcOp = val;
+      calcReset = true;
+    } else if (calcOp !== null) {
+      let result;
+      switch (calcOp) {
+        case "+": result = calcPrev + current; break;
+        case "-": result = calcPrev - current; break;
+        case "*": result = calcPrev * current; break;
+        case "/":
+          if (current === 0) {
+            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
+            return;
+          }
+          result = calcPrev / current;
+          break;
+        default: return;
+      }
+      calcInput = result.toString();
+      calcPrev = parseFloat(calcInput);
+      calcOp = val;
+      calcReset = true;
+    }
+  } else {
+    if (calcReset) {
+      calcInput = val;
+      calcReset = false;
+    } else {
+      if (val === ".") {
+        if (calcInput.includes(".")) return;
+        calcInput += ".";
+      } else {
+        calcInput = calcInput === "0" ? val : calcInput + val;
+      }
+    }
+    cashAmount = parseFloat(calcInput);
+    updatePaymentDisplay();
+  }
+  updateCalcDisplay();
+}
+
+// Quick cash buttons - SETS the cash amount (bukan ADD)
+function setCashAmount(amount) {
+  // SET value baru, gantikan value lama
+  cashAmount = amount;
+  calcInput = amount.toString();
+  calcPrev = null;
+  calcOp = null;
+  calcReset = false;
+  
+  updateCalcDisplay();
+  updatePaymentDisplay();
+
+  // Visual feedback
+  const cashBtn = event?.target;
+  if (cashBtn) {
+    cashBtn.style.transform = "scale(0.95)";
+    setTimeout(() => {
+      cashBtn.style.transform = "scale(1)";
+    }, 100);
+  }
+}
+
+async function addCalcToOrder() {
+  if (currentOrder.length === 0) {
+    await showCustomAlert("Add items to order first!", "No Items", "🛒");
+    return;
+  }
+  updatePaymentDisplay();
+  const calcAddBtn = document.getElementById("calc-add-to-cart");
+  const originalText = calcAddBtn.textContent;
+  calcAddBtn.textContent = "✓ Payment Set";
+  setTimeout(() => {
+    calcAddBtn.textContent = originalText;
+  }, 1000);
+}
+
+function updatePaymentDisplay() {
+  const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
+  const paid = cashAmount || 0;  // Jika cashAmount null, guna 0
+  const change = paid - total;
+
+  const paidEl = document.getElementById("paid-amount");
+  const changeEl = document.getElementById("change-amount");
+  const changeRow = document.querySelector(".change-row");
+
+  if (paidEl && changeEl && changeRow) {
+    paidEl.textContent = `RM ${paid.toFixed(2)}`;
+    changeEl.textContent = `RM ${Math.max(0, change).toFixed(2)}`;
+
+    if (change < 0) {
+      changeEl.style.color = "var(--danger)";
+      changeRow.style.color = "var(--danger)";
+      changeRow.querySelector("span:first-child").textContent = "Still Need:";
+    } else {
+      changeEl.style.color = "var(--success)";
+      changeRow.style.color = "var(--text-main)";
+      changeRow.querySelector("span:first-child").textContent = "Change to Return:";
+    }
+  }
+}
+
+// ========== CUSTOM POPUP SYSTEM ==========
 function showCustomAlert(message, title = "Alert", icon = "🔔") {
   return new Promise((resolve) => {
     const modal = document.getElementById("customAlertModal");
@@ -1049,7 +1371,6 @@ function showCustomAlert(message, title = "Alert", icon = "🔔") {
   });
 }
 
-// Custom Confirm
 function showCustomConfirm(message, title = "Confirm", icon = "❓") {
   return new Promise((resolve) => {
     const modal = document.getElementById("customConfirmModal");
@@ -1098,7 +1419,6 @@ function showCustomConfirm(message, title = "Confirm", icon = "❓") {
   });
 }
 
-// Override native browser popups
 window.alert = function(message) {
   return showCustomAlert(message);
 };
@@ -1155,17 +1475,11 @@ function closeModal(id) {
 }
 
 function switchView(pageId) {
-  document
-    .querySelectorAll(".page")
-    .forEach((p) => p.classList.remove("active"));
-  document
-    .querySelectorAll(".nav-btn")
-    .forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
 
   document.getElementById("page-" + pageId).classList.add("active");
-  document
-    .querySelector(`.nav-btn[data-page="${pageId}"]`)
-    .classList.add("active");
+  document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add("active");
 
   const sheet = document.getElementById("cartSheet");
   if (pageId === "pos" || pageId === "calc") {
@@ -1176,12 +1490,10 @@ function switchView(pageId) {
   }
 }
 
-// ========== EASTER EGG - Logo click to open dev page ==========
+// ========== EASTER EGG ==========
 function initEasterEgg() {
   const logoElement = document.getElementById("devEasterEgg");
-
   if (!logoElement) {
-    console.log("Logo element not found yet, retrying...");
     setTimeout(initEasterEgg, 500);
     return;
   }
@@ -1191,26 +1503,14 @@ function initEasterEgg() {
 
   logoElement.addEventListener("click", () => {
     logoClickCount++;
-    console.log("Logo clicked:", logoClickCount); // Debug log
-
-    // Clear the previous timer
     clearTimeout(logoClickTimer);
-
-    // Set a new timer to reset count after 2 seconds
     logoClickTimer = setTimeout(() => {
       logoClickCount = 0;
-      console.log("Click count reset");
     }, 2000);
 
-    // If clicked 3 times, open dev page
     if (logoClickCount === 3) {
       logoClickCount = 0;
-
-      // Switch to dev page
       switchView("dev");
     }
   });
-
-  console.log("Easter egg initialized!");
 }
-
