@@ -142,15 +142,17 @@ body {
 }
 
 /* ========== MAIN CONTENT - FIXED FOR SCROLLING ========== */
+/* Make sure main content doesn't hide behind nav */
 .main-content {
   flex: 1;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   padding: 0;
   margin: 0;
-  height: calc(100vh - 60px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  min-height: 0;
+  margin-bottom: 60px; /* Add space for navbar */
+  height: calc(100vh - 60px - var(--safe-top) - var(--safe-bottom));
 }
+
 
 /* Page styling */
 .page {
@@ -295,10 +297,11 @@ body {
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
   max-width: 480px;
+  margin: 0 auto;
   height: 60px;
   background: var(--bg-surface);
   border-top: 2px solid var(--border);
@@ -306,23 +309,28 @@ body {
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
+  /* Safe area padding for notched phones */
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-sizing: content-box;
 }
 
+/* Nav buttons */
 .nav-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
   flex: 1;
   height: 100%;
-  justify-content: center;
   cursor: pointer;
   transition: color 0.2s;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .nav-btn.active {
@@ -340,9 +348,10 @@ body {
 }
 
 /* ========== CART SHEET ========== */
+/* Update cart sheet to sit above navbar */
 .cart-sheet {
   position: fixed;
-  bottom: 60px;
+  bottom: 60px; /* Sit right above navbar */
   bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%) translateY(calc(100% - 60px));
@@ -1066,41 +1075,29 @@ body.dark-mode .money-preset-btn {
 }
 
 /* ========== RESPONSIVE ADJUSTMENTS ========== */
+/* Responsive adjustments */
 @media (max-width: 380px) {
-  .menu-item-image {
-    width: 70px;
-    height: 70px;
+  .bottom-nav {
+    height: 55px;
+  }
+  
+  .nav-btn {
+    font-size: 0.7rem;
+  }
+  
+  .nav-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .main-content {
+    margin-bottom: 55px;
+    height: calc(100vh - 55px - var(--safe-top) - var(--safe-bottom));
   }
   
   .cart-sheet {
-    max-height: 65vh;
-  }
-  
-  .cart-sheet.open {
-    max-height: 75vh;
-  }
-  
-  .cart-body {
-    max-height: 30vh;
-  }
-  
-  .order-item {
-    padding: 6px 0;
-    font-size: 0.85rem;
-  }
-  
-  .item-name {
-    font-size: 0.85rem;
-  }
-  
-  .item-price {
-    font-size: 0.85rem;
-  }
-  
-  .money-preset-btn {
-    padding: 10px 12px;
-    font-size: 0.9rem;
-    min-width: 55px;
+    bottom: 55px;
+    bottom: calc(55px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1151,4 +1148,5 @@ body.dark-mode .money-preset-btn {
 #customConfirmModal .popup-icon {
   color: var(--primary);
 }
+
 
