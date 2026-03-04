@@ -164,8 +164,8 @@
             </div>
           </div>
 
-          <!-- ========== PETTY CASH SECTION ========== -->
-          <div class="petty-cash-section">
+          <!-- ========== CASH DRAWER SECTION ========== -->
+          <div class="cash-drawer-section">
             <h3
               style="
                 margin-bottom: 12px;
@@ -173,74 +173,89 @@
                 color: var(--primary);
               "
             >
-              Petty Cash
+              Cash Drawer
             </h3>
 
-            <!-- Current Petty Cash Balance -->
-            <div class="petty-cash-balance">
-              <span>Current Balance:</span>
-              <span
-                id="pettyCashBalance"
-                style="font-weight: 700; color: var(--primary)"
-                >RM 0.00</span
-              >
-            </div>
-
-            <!-- Quick Add Buttons -->
-            <div class="petty-quick-add">
-              <button class="petty-btn" data-petty="10">+ RM10</button>
-              <button class="petty-btn" data-petty="20">+ RM20</button>
-              <button class="petty-btn" data-petty="50">+ RM50</button>
-              <button class="petty-btn" data-petty="100">+ RM100</button>
-            </div>
-
-            <!-- Custom Add/Withdraw -->
-            <div class="petty-custom">
-              <div class="petty-input-group">
-                <input
-                  type="number"
-                  id="pettyAmount"
-                  class="petty-input"
-                  placeholder="Amount"
-                  step="0.01"
-                  min="0"
-                />
-                <div class="petty-button-group">
-                  <button id="pettyAddBtn" class="petty-action-btn add">
-                    + Add
-                  </button>
-                  <button
-                    id="pettyWithdrawBtn"
-                    class="petty-action-btn withdraw"
-                  >
-                    - Withdraw
+            <!-- Starting Cash (Float) - Always editable -->
+            <div class="float-section">
+              <div class="float-row">
+                <span>Starting Cash:</span>
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <input
+                    type="number"
+                    id="startingCashInput"
+                    class="float-input"
+                    value="200"
+                    step="0.01"
+                    min="0"
+                    style="width: 100px"
+                  />
+                  <button id="updateFloatBtn" class="float-save-btn">
+                    Update
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Clear Petty Cash Button -->
-            <div class="petty-clear-section">
-              <button id="pettyClearBtn" class="petty-clear-btn">
-                Clear Petty Cash
-              </button>
+            <!-- Cash Drawer Summary -->
+            <div class="drawer-summary">
+              <div class="drawer-row">
+                <span>Cash Sales:</span>
+                <span
+                  id="cashSalesTotal"
+                  style="font-weight: 700; color: var(--primary)"
+                  >RM 0.00</span
+                >
+              </div>
+              <div class="drawer-row">
+                <span>QR Sales:</span>
+                <span
+                  id="cardSalesTotal"
+                  style="font-weight: 700; color: var(--success)"
+                  >RM 0.00</span
+                >
+              </div>
+              <div class="drawer-row">
+                <span>Cash Refunds:</span>
+                <span
+                  id="cashRefunds"
+                  style="font-weight: 700; color: var(--danger)"
+                  >RM 0.00</span
+                >
+              </div>
+              <div class="drawer-row">
+                <span>Paid In:</span>
+                <span id="paidIn" style="font-weight: 700">RM 0.00</span>
+                <button class="drawer-action-btn" id="paidInBtn">Add</button>
+              </div>
+              <div class="drawer-row">
+                <span>Paid Out:</span>
+                <span id="paidOut" style="font-weight: 700">RM 0.00</span>
+                <button class="drawer-action-btn" id="paidOutBtn">Add</button>
+              </div>
+              <div class="drawer-total">
+                <span>Expected Cash Amount:</span>
+                <span
+                  id="expectedCash"
+                  style="
+                    font-weight: 800;
+                    color: var(--primary);
+                    font-size: 1.2rem;
+                  "
+                  >RM 200.00</span
+                >
+              </div>
             </div>
 
-            <!-- Transaction History Toggle -->
-            <details class="petty-history">
-              <summary>View History</summary>
-              <div class="petty-history-list" id="pettyHistoryList">
-                <p
-                  style="
-                    text-align: center;
-                    color: var(--text-muted);
-                    padding: 10px;
-                  "
-                >
-                  No transactions yet
-                </p>
-              </div>
-            </details>
+            <!-- Cash Actions -->
+            <div class="cash-actions">
+              <button id="closeShiftBtn" class="cash-action-btn primary">
+                Close Shift
+              </button>
+              <button id="resetDrawerBtn" class="cash-action-btn secondary">
+                Reset Drawer
+              </button>
+            </div>
           </div>
 
           <h3
@@ -568,6 +583,49 @@
         <button class="btn btn-primary" id="alertOkBtn" style="width: 100%">
           OK
         </button>
+      </div>
+    </div>
+
+    <!-- Custom Input Modal -->
+    <div class="modal-overlay" id="customInputModal">
+      <div class="modal-content" style="max-width: 320px">
+        <span class="modal-close" onclick="closeModal('customInputModal')"
+          >&times;</span
+        >
+        <h3
+          id="inputModalTitle"
+          style="margin-bottom: 16px; text-align: center; color: var(--primary)"
+        >
+          Enter Amount
+        </h3>
+        <div style="text-align: center; margin-bottom: 10px">
+          <span id="inputModalIcon" style="font-size: 2rem">💰</span>
+        </div>
+        <input
+          type="number"
+          id="inputModalField"
+          class="custom-input"
+          placeholder="0.00"
+          step="0.01"
+          min="0"
+          style="font-size: 1.5rem; text-align: center; font-weight: 600"
+        />
+        <div style="display: flex; gap: 10px; margin-top: 20px">
+          <button
+            class="btn btn-outline"
+            id="inputModalCancelBtn"
+            style="flex: 1"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            id="inputModalConfirmBtn"
+            style="flex: 1"
+          >
+            Confirm
+          </button>
+        </div>
       </div>
     </div>
 
