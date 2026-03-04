@@ -1505,3 +1505,206 @@ body.dark-mode .petty-history-item {
 body.dark-mode .petty-clear-btn {
   box-shadow: 0 2px 0 #991b1b;
 }
+
+/* ========== CASH DRAWER STYLES ========== */
+.cash-drawer-section {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+.float-section {
+  background: var(--bg-base);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.float-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.float-edit-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 8px;
+}
+
+.float-edit-btn:hover {
+  color: var(--primary);
+}
+
+.float-input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  width: 120px;
+  margin-right: 8px;
+}
+
+.float-save-btn, .float-cancel-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.float-save-btn {
+  background: var(--primary);
+  color: white;
+}
+
+.float-cancel-btn {
+  background: var(--bg-base);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+}
+
+.drawer-summary {
+  background: var(--bg-base);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.drawer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.drawer-row:last-child {
+  border-bottom: none;
+}
+
+.drawer-action-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.drawer-action-btn:hover {
+  background: var(--primary-hover);
+}
+
+.drawer-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-surface);
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+}
+
+.cash-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cash-action-btn {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cash-action-btn.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.cash-action-btn.primary:active {
+  background: var(--primary-hover);
+  transform: scale(0.98);
+}
+
+.cash-action-btn.secondary {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+}
+
+.cash-action-btn.secondary:active {
+  background: var(--border);
+  transform: scale(0.98);
+}
+
+/* Dark mode adjustments */
+body.dark-mode .cash-drawer-section {
+  background: var(--bg-surface);
+}
+
+body.dark-mode .float-section,
+body.dark-mode .drawer-summary {
+  background: var(--bg-surface);
+}
+
+/* Update float section for always-visible input */
+.float-section {
+  background: var(--bg-base);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.float-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.float-input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  width: 100px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.float-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.float-save-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.float-save-btn:active {
+  background: var(--primary-hover);
+  transform: scale(0.98);
+}
+
