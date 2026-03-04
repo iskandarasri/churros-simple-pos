@@ -1584,10 +1584,55 @@ body.dark-mode .petty-clear-btn {
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px dashed var(--border);
+  gap: 10px;
 }
 
-.drawer-row:last-child {
-  border-bottom: none;
+.drawer-row span:first-child {
+  flex: 0 0 80px; /* Fixed width for label */
+  color: var(--text-muted);
+}
+
+.drawer-row button {
+  flex: 0 0 auto;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.drawer-row span:last-child {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: right;
+  min-width: 80px;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .drawer-row {
+    gap: 5px;
+  }
+  
+  .drawer-row span:first-child {
+    flex: 0 0 70px;
+    font-size: 0.9rem;
+  }
+  
+  .drawer-row button {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .drawer-row span:last-child {
+    min-width: 70px;
+    font-size: 0.9rem;
+  }
 }
 
 .drawer-action-btn {
@@ -1708,3 +1753,8 @@ body.dark-mode .drawer-summary {
   transform: scale(0.98);
 }
 
+/* Simple fix - just add this */
+#expectedCash {
+  white-space: nowrap !important;
+  display: inline-block !important;
+}
