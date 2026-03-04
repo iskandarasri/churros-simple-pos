@@ -700,29 +700,28 @@ function updateOrderList() {
     countEl.textContent = `0 Items`;
     totalEl.textContent = `RM 0.00`;
     sheetTotalEl.textContent = `RM 0.00`;
+    updatePaymentDisplay();
     return;
   }
 
-  // Group items by name
+  // Group items
   const grouped = {};
   
   currentOrder.forEach((item) => {
     const key = item.name;
     if (!grouped[key]) {
-      grouped[key] = {
-        name: item.name,
-        price: item.price,
-        count: 1,
-        isFamilyBoxDip: item.isFamilyBoxDip || false
+      grouped[key] = { 
+        name: item.name, 
+        price: item.price, 
+        count: item.quantity || 1, 
+        isFamilyBoxDip: item.isFamilyBoxDip || false 
       };
     } else {
-      grouped[key].count++;
+      grouped[key].count += (item.quantity || 1);
     }
   });
 
-  // Separate Family Box and its dips
-  let familyBoxCount = 0;
-  let dipCount = 0;
+  let familyBoxCount = 0, dipCount = 0;
   const otherItems = [];
 
   Object.values(grouped).forEach(item => {
@@ -737,18 +736,14 @@ function updateOrderList() {
 
   // Display Family Box with dips
   if (familyBoxCount > 0) {
-    const boxTotal = 35.0 * familyBoxCount + dipCount * 1.0;
+    const boxTotal = (35.0 * familyBoxCount) + (dipCount * 1.0);
     total += boxTotal;
+    // Add Family Box to item count
     itemCount += familyBoxCount;
 
+    const dipDisplay = dipCount > 0 ? ` (with ${dipCount} special dip${dipCount > 1 ? "s" : ""})` : "";
     const boxLi = document.createElement("li");
     boxLi.className = "order-item";
-    
-    let dipDisplay = "";
-    if (dipCount > 0) {
-      dipDisplay = ` (with ${dipCount} special dip${dipCount > 1 ? "s" : ""})`;
-    }
-
     boxLi.innerHTML = `
       <div class="order-item-left">
         <span class="item-qty">${familyBoxCount}x</span>
@@ -761,8 +756,11 @@ function updateOrderList() {
     `;
     listEl.appendChild(boxLi);
 
-    // Show dips count
+    // Display dips - AND ADD THEM TO ITEM COUNT
     if (dipCount > 0) {
+      // Add dips to item count
+      itemCount += dipCount;
+      
       const dipLi = document.createElement("li");
       dipLi.className = "order-item";
       dipLi.style.paddingLeft = "30px";
@@ -784,7 +782,7 @@ function updateOrderList() {
   otherItems.forEach(item => {
     const itemTotal = item.price * item.count;
     total += itemTotal;
-    itemCount += item.count;
+    itemCount += item.count; // Add to item count
 
     const li = document.createElement("li");
     li.className = "order-item";
@@ -805,27 +803,16 @@ function updateOrderList() {
   document.querySelectorAll(".delete-item-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      
       if (btn.dataset.itemType === "family-box") {
-        // Remove all Family Boxes and dips
         currentOrder = currentOrder.filter(item => 
-          item.name !== "Family Box" && 
-          !item.isFamilyBoxDip && 
-          item.name !== "+ Special Dip (FB)"
+          item.name !== "Family Box" && !item.isFamilyBoxDip && item.name !== "+ Special Dip (FB)"
         );
       } else {
         const itemName = btn.dataset.itemName;
         const itemPrice = parseFloat(btn.dataset.itemPrice);
-        
-        // Find and remove one instance of this item
-        const index = currentOrder.findIndex(
-          item => item.name === itemName && item.price === itemPrice
-        );
-        if (index !== -1) {
-          currentOrder.splice(index, 1);
-        }
+        const index = currentOrder.findIndex(item => item.name === itemName && item.price === itemPrice);
+        if (index !== -1) currentOrder.splice(index, 1);
       }
-      
       updateOrderList();
     });
   });
@@ -833,15 +820,13 @@ function updateOrderList() {
   const formattedTotal = `RM ${total.toFixed(2)}`;
   totalEl.textContent = formattedTotal;
   sheetTotalEl.textContent = formattedTotal;
-  countEl.textContent = `${itemCount} Items`;
+  countEl.textContent = `${itemCount} Items`; // Now includes dips!
 
   updatePaymentDisplay();
 
   if (currentOrder.length > 0 && !cartOpen) {
     cartHeader.classList.add("cart-flash");
-    setTimeout(() => {
-      cartHeader.classList.remove("cart-flash");
-    }, 300);
+    setTimeout(() => cartHeader.classList.remove("cart-flash"), 300);
   } else if (currentOrder.length === 0 && cartOpen) {
     toggleCart();
   }
@@ -926,7 +911,6 @@ function addItem(name, price, itemData = {}) {
         price: 1.0,
         isFamilyBoxDip: true
       });
-      showCustomAlert("Added Special Dip (RM1) to Family Box", "Success", "✅");
     } else {
       showCustomAlert("Please add Family Box first!", "Error", "❌");
       return;
@@ -1328,7 +1312,7 @@ async function exportToExcel() {
   csvContent += `'+ Milk Choco Dip,${totalMilkDips}\n`;
   csvContent += `'+ Dark Choco Dip,${totalDarkDips}\n`;
   csvContent += `'+ Caramel Dip,${totalCaramelDips}\n`;
-  csvContent += `'+ Regular Special Dip,${totalSpecialDips}\n`;
+  csvContent += `'+ Special Dip,${totalSpecialDips}\n`;
   csvContent += `'+ Family Box Special Dip,${totalFamilyBoxDips}\n`;
   csvContent += `Total Dips,${totalDips}\n\n`;
 
