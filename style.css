@@ -1301,211 +1301,6 @@ body.dark-mode .money-preset-btn {
   color: var(--primary);
 }
 
-/* ========== PETTY CASH STYLES ========== */
-.petty-cash-section {
-  background: var(--bg-surface);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 24px;
-  border: 1px solid var(--border);
-  box-shadow: var(--card-shadow);
-}
-
-.petty-cash-balance {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: var(--bg-base);
-  border-radius: 12px;
-  margin-bottom: 16px;
-  font-size: 1.1rem;
-}
-
-.petty-quick-add {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.petty-btn {
-  background: var(--primary);
-  color: white;
-  border: 1px solid var(--primary);
-  padding: 12px 0;
-  border-radius: 30px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 0 var(--primary-hover);
-}
-
-.petty-btn:active {
-  transform: translateY(2px);
-  box-shadow: none;
-  background: var(--primary-hover);
-}
-
-.petty-custom {
-  margin-bottom: 16px;
-}
-
-.petty-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.petty-input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 2px solid var(--border);
-  background: var(--bg-base);
-  color: var(--text-main);
-  font-size: 1rem;
-  outline: none;
-}
-
-.petty-input:focus {
-  border-color: var(--primary);
-}
-
-.petty-button-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.petty-action-btn {
-  padding: 12px;
-  border-radius: 30px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-
-.petty-action-btn.add {
-  background: var(--success);
-  color: white;
-}
-
-.petty-action-btn.add:active {
-  background: #0d9488;
-  transform: scale(0.98);
-}
-
-.petty-action-btn.withdraw {
-  background: var(--danger);
-  color: white;
-}
-
-.petty-action-btn.withdraw:active {
-  background: var(--danger-hover);
-  transform: scale(0.98);
-}
-
-.petty-history {
-  margin-top: 8px;
-}
-
-.petty-history summary {
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  padding: 8px;
-  background: var(--bg-base);
-  border-radius: 8px;
-}
-
-.petty-history-list {
-  max-height: 150px;
-  overflow-y: auto;
-  margin-top: 8px;
-  padding: 8px;
-  background: var(--bg-base);
-  border-radius: 8px;
-  font-size: 0.85rem;
-}
-
-.petty-history-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px;
-  border-bottom: 1px dashed var(--border);
-}
-
-.petty-history-item:last-child {
-  border-bottom: none;
-}
-
-.petty-history-item.add {
-  color: var(--success);
-}
-
-.petty-history-item.withdraw {
-  color: var(--danger);
-}
-
-.petty-history-item .date {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-/* Dark mode adjustments */
-body.dark-mode .petty-cash-section {
-  background: var(--bg-surface);
-}
-
-body.dark-mode .petty-btn {
-  box-shadow: 0 2px 0 #555;
-}
-
-body.dark-mode .petty-history-item {
-  border-color: var(--border);
-}
-
-/* Petty Cash Clear Button */
-.petty-clear-section {
-  margin: 16px 0;
-  text-align: center;
-}
-
-.petty-clear-btn {
-  background: var(--primary);
-  color: white;
-  border: 1px solid var(--danger);
-  padding: 14px 20px;
-  border-radius: 30px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-  box-shadow: 0 2px 0 var(--danger-hover);
-  opacity: 0.9;
-}
-
-.petty-clear-btn:active {
-  transform: translateY(2px);
-  box-shadow: none;
-  background: var(--danger-hover);
-  opacity: 1;
-}
-
-.petty-clear-btn:hover {
-  opacity: 1;
-}
-
-/* Dark mode adjustment */
-body.dark-mode .petty-clear-btn {
-  box-shadow: 0 2px 0 #991b1b;
-}
-
 /* ========== CASH DRAWER STYLES ========== */
 .cash-drawer-section {
   background: var(--bg-surface);
@@ -1529,46 +1324,24 @@ body.dark-mode .petty-clear-btn {
   gap: 10px;
 }
 
-.float-edit-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 4px 8px;
-}
-
-.float-edit-btn:hover {
-  color: var(--primary);
-}
-
 .float-input {
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--bg-surface);
   color: var(--text-main);
-  width: 120px;
+  width: 100px;
   margin-right: 8px;
-}
-
-.float-save-btn, .float-cancel-btn {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  margin-right: 5px;
 }
 
 .float-save-btn {
   background: var(--primary);
   color: white;
-}
-
-.float-cancel-btn {
-  background: var(--bg-base);
-  color: var(--text-main);
-  border: 1px solid var(--border);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .drawer-summary {
@@ -1588,65 +1361,8 @@ body.dark-mode .petty-clear-btn {
 }
 
 .drawer-row span:first-child {
-  flex: 0 0 80px; /* Fixed width for label */
+  flex: 0 0 80px;
   color: var(--text-muted);
-}
-
-.drawer-row button {
-  flex: 0 0 auto;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 16px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.drawer-row span:last-child {
-  flex: 0 0 auto;
-  font-weight: 700;
-  color: var(--text-main);
-  text-align: right;
-  min-width: 80px;
-  white-space: nowrap;
-}
-
-@media (max-width: 380px) {
-  .drawer-row {
-    gap: 5px;
-  }
-  
-  .drawer-row span:first-child {
-    flex: 0 0 70px;
-    font-size: 0.9rem;
-  }
-  
-  .drawer-row button {
-    padding: 4px 12px;
-    font-size: 0.8rem;
-  }
-  
-  .drawer-row span:last-child {
-    min-width: 70px;
-    font-size: 0.9rem;
-  }
-}
-
-.drawer-action-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 12px;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.drawer-action-btn:hover {
-  background: var(--primary-hover);
 }
 
 .drawer-total {
@@ -1681,30 +1397,10 @@ body.dark-mode .petty-clear-btn {
   color: white;
 }
 
-.cash-action-btn.primary:active {
-  background: var(--primary-hover);
-  transform: scale(0.98);
-}
-
 .cash-action-btn.secondary {
   background: var(--bg-surface);
   color: var(--text-main);
   border: 1px solid var(--border);
-}
-
-.cash-action-btn.secondary:active {
-  background: var(--border);
-  transform: scale(0.98);
-}
-
-/* Dark mode adjustments */
-body.dark-mode .cash-drawer-section {
-  background: var(--bg-surface);
-}
-
-body.dark-mode .float-section,
-body.dark-mode .drawer-summary {
-  background: var(--bg-surface);
 }
 
 /* Update float section for always-visible input */
