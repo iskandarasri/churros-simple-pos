@@ -21,10 +21,6 @@ let specialBoxIndex = -1;
 
 // ========== CASH DRAWER STATE ==========
 let startingCash = 200.00; // Default starting cash RM200
-let cashRefunds = 0;
-let paidIn = 0;
-let paidOut = 0;
-let currentShift = null;
 
 const menuItems = [
   {
@@ -115,18 +111,6 @@ function loadStoredData() {
     const savedStartingCash = localStorage.getItem("startingCash");
     if (savedStartingCash) startingCash = parseFloat(savedStartingCash);
     
-    const savedCashRefunds = localStorage.getItem("cashRefunds");
-    if (savedCashRefunds) cashRefunds = parseFloat(savedCashRefunds);
-    
-    const savedPaidIn = localStorage.getItem("paidIn");
-    if (savedPaidIn) paidIn = parseFloat(savedPaidIn);
-    
-    const savedPaidOut = localStorage.getItem("paidOut");
-    if (savedPaidOut) paidOut = parseFloat(savedPaidOut);
-    
-    const savedShift = localStorage.getItem("currentShift");
-    if (savedShift) currentShift = JSON.parse(savedShift);
-    
   } catch (e) {
     console.log("No saved data or error loading:", e);
   }
@@ -206,8 +190,6 @@ window.onload = () => {
   // Cash Drawer event listeners
   document.getElementById("updateFloatBtn")?.addEventListener("click", updateStartingCash);
   document.getElementById("startingCashInput")?.addEventListener("change", updateStartingCash);
-  document.getElementById("paidInBtn")?.addEventListener("click", addPaidIn);
-  document.getElementById("paidOutBtn")?.addEventListener("click", addPaidOut);
   document.getElementById("closeShiftBtn")?.addEventListener("click", closeShift);
   document.getElementById("resetDrawerBtn")?.addEventListener("click", resetDrawer);
 
@@ -301,21 +283,6 @@ window.onload = () => {
 
   updatePaymentButtons();
 
-  // Quick Notes Preset (if elements exist)
-  document.querySelectorAll(".note-preset-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const note = btn.dataset.note;
-      const remarksInput = document.getElementById("saleRemarks");
-      if (remarksInput) {
-        if (remarksInput.value) {
-          remarksInput.value += ", " + note;
-        } else {
-          remarksInput.value = note;
-        }
-      }
-    });
-  });
-
   // Manual Payment Input
   const manualPaidInput = document.getElementById("manual-paid-amount");
   const applyPaymentBtn = document.getElementById("apply-payment-btn");
@@ -376,22 +343,14 @@ function updateCashDrawerDisplay() {
     `RM ${cashSales.toFixed(2)}`;
   document.getElementById("cardSalesTotal").textContent =
     `RM ${cardSales.toFixed(2)}`;
-  document.getElementById("cashRefunds").textContent =
-    `RM ${cashRefunds.toFixed(2)}`;
-  document.getElementById("paidIn").textContent = `RM ${paidIn.toFixed(2)}`;
-  document.getElementById("paidOut").textContent = `RM ${paidOut.toFixed(2)}`;
 
-  // Calculate expected cash: startingCash + cashSales - cashRefunds + paidIn - paidOut
-  const expectedCash =
-    startingCash + cashSales - cashRefunds + paidIn - paidOut;
+  // Calculate expected cash: startingCash + cashSales
+  const expectedCash = startingCash + cashSales;
   document.getElementById("expectedCash").textContent =
     `RM ${expectedCash.toFixed(2)}`;
 
   // Save to localStorage
   localStorage.setItem("startingCash", startingCash.toString());
-  localStorage.setItem("cashRefunds", cashRefunds.toString());
-  localStorage.setItem("paidIn", paidIn.toString());
-  localStorage.setItem("paidOut", paidOut.toString());
 }
 
 // Update starting cash from input
@@ -414,61 +373,6 @@ function updateStartingCash() {
   }
 }
 
-// Paid In / Paid Out with styled modal
-async function addPaidIn() {
-  const amount = await showCustomInputModal(
-    "Enter amount to add (Paid In):",
-    "💰",
-    "0"
-  );
-  
-  if (amount !== null && amount > 0) {
-    paidIn += amount;
-    updateCashDrawerDisplay();
-    showCustomAlert(
-      `Added RM ${amount.toFixed(2)} to drawer`,
-      "Success",
-      "✅"
-    );
-  }
-}
-
-async function addPaidOut() {
-  const amount = await showCustomInputModal(
-    "Enter amount to withdraw (Paid Out):",
-    "💸",
-    "0"
-  );
-  
-  if (amount !== null && amount > 0) {
-    // Check if enough cash in drawer
-    const today = new Date().toLocaleDateString();
-    const todaysSales = allSales.filter((sale) => sale.date.includes(today));
-    const cashSales = todaysSales
-      .filter((s) => s.paymentMethod === "Cash")
-      .reduce((sum, s) => sum + s.total, 0);
-    
-    const currentDrawer = startingCash + cashSales - cashRefunds + paidIn - paidOut;
-    
-    if (amount > currentDrawer) {
-      showCustomAlert(
-        `Insufficient funds! Current drawer: RM ${currentDrawer.toFixed(2)}`,
-        "Error",
-        "❌"
-      );
-      return;
-    }
-    
-    paidOut += amount;
-    updateCashDrawerDisplay();
-    showCustomAlert(
-      `Withdrew RM ${amount.toFixed(2)} from drawer`,
-      "Success",
-      "✅"
-    );
-  }
-}
-
 // Close Shift
 function closeShift() {
   const today = new Date().toLocaleDateString();
@@ -485,8 +389,7 @@ function closeShift() {
     }
   });
 
-  const expectedCash =
-    startingCash + cashSales - cashRefunds + paidIn - paidOut;
+  const expectedCash = startingCash + cashSales;
 
   // Format with proper line breaks
   const shiftReport = 
@@ -498,12 +401,7 @@ STARTING CASH: RM ${startingCash.toFixed(2)}
 
 SALES SUMMARY:
   Cash Sales: RM ${cashSales.toFixed(2)}
-  Card Sales: RM ${cardSales.toFixed(2)}
-
-ADJUSTMENTS:
-  Refunds: RM ${cashRefunds.toFixed(2)}
-  Paid In: RM ${paidIn.toFixed(2)}
-  Paid Out: RM ${paidOut.toFixed(2)}
+  QR Sales: RM ${cardSales.toFixed(2)}
 
 EXPECTED CASH: RM ${expectedCash.toFixed(2)}
 
@@ -516,14 +414,11 @@ leaving RM ${startingCash.toFixed(2)} for next shift.`;
 // Reset Drawer
 function resetDrawer() {
   showCustomConfirm(
-    "Reset cash drawer? This will clear all adjustments (Paid In/Out).",
+    "Reset cash drawer?",
     "Reset Drawer",
     "⚠️"
   ).then((confirmed) => {
     if (confirmed) {
-      cashRefunds = 0;
-      paidIn = 0;
-      paidOut = 0;
       updateCashDrawerDisplay();
       showCustomAlert("Drawer reset successfully", "Success", "✅");
     }
@@ -596,92 +491,6 @@ function renderMenu() {
     `;
     grid.appendChild(customCard);
   }
-}
-
-// Custom Input Modal Function
-function showCustomInputModal(title = "Enter Amount", icon = "💰", defaultValue = "0") {
-  return new Promise((resolve) => {
-    const modal = document.getElementById("customInputModal");
-    
-    if (!modal) {
-      const result = prompt(title, defaultValue);
-      if (result === null) resolve(null);
-      else {
-        const num = parseFloat(result);
-        resolve(isNaN(num) ? null : num);
-      }
-      return;
-    }
-
-    const titleEl = document.getElementById("inputModalTitle");
-    const iconEl = document.getElementById("inputModalIcon");
-    const inputField = document.getElementById("inputModalField");
-    const confirmBtn = document.getElementById("inputModalConfirmBtn");
-    const cancelBtn = document.getElementById("inputModalCancelBtn");
-
-    if (!titleEl || !iconEl || !inputField || !confirmBtn || !cancelBtn) {
-      const result = prompt(title, defaultValue);
-      if (result === null) resolve(null);
-      else {
-        const num = parseFloat(result);
-        resolve(isNaN(num) ? null : num);
-      }
-      return;
-    }
-
-    titleEl.textContent = title;
-    iconEl.textContent = icon;
-    inputField.value = defaultValue;
-    inputField.focus();
-    inputField.select();
-
-    modal.classList.add("active");
-
-    const handleConfirm = () => {
-      const value = parseFloat(inputField.value);
-      modal.classList.remove("active");
-      cleanup();
-      if (!isNaN(value) && value >= 0) {
-        resolve(value);
-      } else {
-        resolve(null);
-      }
-    };
-
-    const handleCancel = () => {
-      modal.classList.remove("active");
-      cleanup();
-      resolve(null);
-    };
-
-    const handleOutsideClick = (e) => {
-      if (e.target === modal) {
-        modal.classList.remove("active");
-        cleanup();
-        resolve(null);
-      }
-    };
-
-    const handleKeyPress = (e) => {
-      if (e.key === "Enter") {
-        handleConfirm();
-      } else if (e.key === "Escape") {
-        handleCancel();
-      }
-    };
-
-    const cleanup = () => {
-      confirmBtn.removeEventListener("click", handleConfirm);
-      cancelBtn.removeEventListener("click", handleCancel);
-      modal.removeEventListener("click", handleOutsideClick);
-      inputField.removeEventListener("keydown", handleKeyPress);
-    };
-
-    confirmBtn.addEventListener("click", handleConfirm);
-    cancelBtn.addEventListener("click", handleCancel);
-    modal.addEventListener("click", handleOutsideClick);
-    inputField.addEventListener("keydown", handleKeyPress);
-  });
 }
 
 function updateOrderList() {
@@ -1030,58 +839,78 @@ async function saveSale() {
   if (cartOpen) toggleCart();
 }
 
-// ========== RECEIPT FUNCTION ==========
+// ========== RECEIPT FUNCTION - FIXED GROUPING ==========
 function generateReceipt(sale) {
   document.getElementById("receiptDateTime").textContent = sale.date;
-  document.getElementById("receiptStaff").textContent =
-    "Served by: " + sale.staff;
+  document.getElementById("receiptStaff").textContent = "Served by: " + sale.staff;
 
   const itemsContainer = document.getElementById("receiptItems");
   itemsContainer.innerHTML = "";
 
-  // Group items for cleaner receipt
-  let familyBoxTotal = 0;
-  let familyBoxQuantity = 0;
-  let familyBoxDipsTotal = 0;
-  let familyBoxDipsQuantity = 0;
-
+  // Group ALL items by name and price
+  const groupedItems = {};
+  
   sale.items.forEach((item) => {
-    if (item.name === "Family Box") {
-      familyBoxQuantity += item.quantity || 1;
-      familyBoxTotal += 35.0 * (item.quantity || 1);
-    } else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)") {
-      familyBoxDipsQuantity += item.quantity || 1;
-      familyBoxDipsTotal += 1.0 * (item.quantity || 1);
+    const key = `${item.name}_${item.price}`;
+    const quantity = item.quantity || 1;
+    
+    if (!groupedItems[key]) {
+      groupedItems[key] = {
+        name: item.name,
+        price: item.price,
+        quantity: quantity,
+        isFamilyBoxDip: item.isFamilyBoxDip || false
+      };
+    } else {
+      groupedItems[key].quantity += quantity;
+    }
+  });
+
+  // Separate Family Box and its dips
+  let familyBoxGroup = null;
+  let familyBoxDips = [];
+  const otherGroups = [];
+
+  Object.values(groupedItems).forEach(group => {
+    if (group.name === "Family Box") {
+      familyBoxGroup = group;
+    } else if (group.isFamilyBoxDip || group.name === "+ Special Dip (FB)") {
+      familyBoxDips.push(group);
+    } else {
+      otherGroups.push(group);
     }
   });
 
   // Display Family Box with dips
-  if (familyBoxQuantity > 0) {
+  if (familyBoxGroup) {
+    const boxQuantity = familyBoxGroup.quantity;
+    let totalDipQuantity = 0;
+    familyBoxDips.forEach(dip => totalDipQuantity += dip.quantity);
+    
+    const boxTotal = (35.0 * boxQuantity) + (totalDipQuantity * 1.0);
+    
     itemsContainer.innerHTML += `
       <div class="receipt-item">
-        <span>${familyBoxQuantity}x Family Box ${familyBoxDipsQuantity > 0 ? `(+${familyBoxDipsQuantity} dip${familyBoxDipsQuantity > 1 ? "s" : ""})` : ""}</span>
-        <span>RM ${(familyBoxTotal + familyBoxDipsTotal).toFixed(2)}</span>
+        <span>${boxQuantity}x Family Box ${totalDipQuantity > 0 ? `(+${totalDipQuantity} dip${totalDipQuantity > 1 ? 's' : ''})` : ''}</span>
+        <span>RM ${boxTotal.toFixed(2)}</span>
       </div>
     `;
   }
 
-  // Display other items with quantities
-  sale.items.forEach((item) => {
-    if (
-      item.name !== "Family Box" &&
-      !item.isFamilyBoxDip &&
-      item.name !== "+ Special Dip (FB)"
-    ) {
-      const quantity = item.quantity || 1;
-      itemsContainer.innerHTML += `
-        <div class="receipt-item">
-          <span>${quantity}x ${item.name}</span>
-          <span>RM ${item.price.toFixed(2)}</span>
-        </div>
-      `;
-    }
+  // Display all other items (grouped)
+  otherGroups.forEach(group => {
+    const quantity = group.quantity;
+    const totalPrice = group.price * quantity;
+    
+    itemsContainer.innerHTML += `
+      <div class="receipt-item">
+        <span>${quantity}x ${group.name}</span>
+        <span>RM ${totalPrice.toFixed(2)}</span>
+      </div>
+    `;
   });
 
+  // Add payment summary
   itemsContainer.innerHTML += `
     <div style="border-top: 1px dashed var(--border); margin: 10px 0; padding-top: 10px;"></div>
     <div class="receipt-item">
@@ -1110,8 +939,7 @@ function generateReceipt(sale) {
     `;
   }
 
-  document.getElementById("receiptTotal").textContent =
-    "RM " + sale.total.toFixed(2);
+  document.getElementById("receiptTotal").textContent = "RM " + sale.total.toFixed(2);
   openModal("receiptModal");
 }
 
@@ -1161,8 +989,23 @@ async function exportToExcel() {
     return;
   }
 
-  const today = new Date().toLocaleDateString();
-  const todaysSales = allSales.filter((sale) => sale.date.includes(today));
+  // Format today's date as dd/mm/yyyy for filtering
+  const today = new Date();
+  const todayDay = String(today.getDate()).padStart(2, '0');
+  const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+  const todayYear = today.getFullYear();
+  const todayFormatted = `${todayDay}/${todayMonth}/${todayYear}`;
+  
+  // Filter today's sales using the formatted date
+  const todaysSales = allSales.filter((sale) => {
+    const saleDate = new Date(sale.date);
+    const saleDay = String(saleDate.getDate()).padStart(2, '0');
+    const saleMonth = String(saleDate.getMonth() + 1).padStart(2, '0');
+    const saleYear = saleDate.getFullYear();
+    const saleDateFormatted = `${saleDay}/${saleMonth}/${saleYear}`;
+    return saleDateFormatted === todayFormatted;
+  });
+  
   const todayTotal = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
   const todayCount = todaysSales.length;
 
@@ -1243,11 +1086,21 @@ async function exportToExcel() {
 
   // HEADER - Excel format
   csvContent += "MR CHURROS DUNGUN POS - SALES REPORT\n";
-  csvContent += `Generated,${escapeCSV(new Date().toLocaleString())}\n\n`;
+  
+  // Format generation date as dd/mm/yyyy
+  const genDay = String(today.getDate()).padStart(2, '0');
+  const genMonth = String(today.getMonth() + 1).padStart(2, '0');
+  const genYear = today.getFullYear();
+  const genHours = String(today.getHours()).padStart(2, '0');
+  const genMinutes = String(today.getMinutes()).padStart(2, '0');
+  const genSeconds = String(today.getSeconds()).padStart(2, '0');
+  const generatedDateTime = `${genDay}/${genMonth}/${genYear} ${genHours}:${genMinutes}:${genSeconds}`;
+  
+  csvContent += `Generated,${escapeCSV(generatedDateTime)}\n\n`;
 
   // TODAY'S SUMMARY
   csvContent += "TODAY'S SUMMARY\n";
-  csvContent += `Date,${escapeCSV(today)}\n`;
+  csvContent += `Date,${escapeCSV(todayFormatted)}\n`;
   csvContent += `Total Sales,${todayCount}\n`;
   csvContent += `Total Revenue,${formatNumber(todayTotal)}\n`;
   csvContent += `Cash Payments,${formatNumber(cashToday)}\n`;
@@ -1255,11 +1108,22 @@ async function exportToExcel() {
 
   // TODAY'S TRANSACTIONS
   csvContent += "TODAY'S TRANSACTIONS\n";
-  csvContent += `Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
+  csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
 
   todaysSales.forEach((sale) => {
     const date = new Date(sale.date);
-    const timeStr = date.toLocaleTimeString();
+    
+    // Format date as dd/mm/yyyy
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const dateStr = `${day}/${month}/${year}`;
+    
+    // Format time
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}:${seconds}`;
     
     // Build items list with quantities
     let itemsList = [];
@@ -1273,6 +1137,7 @@ async function exportToExcel() {
     });
     const itemsString = itemsList.join(" + ");
     
+    csvContent += `${escapeCSV(dateStr)},`;
     csvContent += `${escapeCSV(timeStr)},`;
     csvContent += `${escapeCSV(itemsString)},`;
     csvContent += `${formatNumber(sale.total)},`;
@@ -1325,10 +1190,7 @@ async function exportToExcel() {
   csvContent += "CASH DRAWER\n";
   csvContent += `Starting Cash,${formatNumber(startingCash)}\n`;
   csvContent += `Cash Sales,${formatNumber(cashToday)}\n`;
-  csvContent += `Cash Refunds,${formatNumber(cashRefunds)}\n`;
-  csvContent += `Paid In,${formatNumber(paidIn)}\n`;
-  csvContent += `Paid Out,${formatNumber(paidOut)}\n`;
-  const expectedCash = startingCash + cashToday - cashRefunds + paidIn - paidOut;
+  const expectedCash = startingCash + cashToday;
   csvContent += `Expected Cash,${formatNumber(expectedCash)}\n\n`;
 
   csvContent += "ALL TRANSACTIONS HISTORY\n";
@@ -1336,8 +1198,18 @@ async function exportToExcel() {
 
   allSales.forEach((sale) => {
     const date = new Date(sale.date);
-    const dateStr = date.toLocaleDateString();
-    const timeStr = date.toLocaleTimeString();
+    
+    // Format date as dd/mm/yyyy
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const dateStr = `${day}/${month}/${year}`;
+    
+    // Format time
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}:${seconds}`;
     
     // Build items list with quantities
     let itemsList = [];
@@ -1362,7 +1234,7 @@ async function exportToExcel() {
     csvContent += `${escapeCSV(sale.remarks)}\n`;
   });
 
-  const filename = `churros_sales_${new Date().toISOString().split("T")[0]}.csv`;
+  const filename = `churros_sales_${todayYear}${todayMonth}${todayDay}.csv`;
   const isAndroid = /Android/i.test(navigator.userAgent);
 
   if (isAndroid && window.Android) {
