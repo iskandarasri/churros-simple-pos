@@ -1454,3 +1454,145 @@ body.dark-mode .money-preset-btn {
   white-space: nowrap !important;
   display: inline-block !important;
 }
+
+/* ========== SETTINGS PAGE STYLES ========== */
+.settings-container {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.settings-card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.settings-icon {
+  font-size: 2rem;
+  min-width: 48px;
+  text-align: center;
+}
+
+.settings-info h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.settings-description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.settings-chevron {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  padding: 8px;
+}
+
+.settings-footer {
+  text-align: center;
+  margin-top: 32px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.settings-footer p {
+  margin: 4px 0;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border);
+  transition: 0.3s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* Tablet/Laptop Layout */
+body.tablet-layout .app-container {
+  max-width: 900px;
+}
+
+body.tablet-layout .product-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+body.tablet-layout .bottom-nav {
+  max-width: 900px;
+}
+
+body.tablet-layout .cart-sheet {
+  max-width: 900px;
+}
+
+body.tablet-layout .settings-container {
+  max-width: 800px;
+}
+
+/* Dark mode adjustments */
+body.dark-mode .settings-card {
+  background: var(--bg-surface);
+}
+
+body.dark-mode .settings-description {
+  color: var(--text-muted);
+}
