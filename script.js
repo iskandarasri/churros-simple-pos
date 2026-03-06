@@ -145,6 +145,37 @@ window.onload = () => {
     });
   });
 
+  // Settings page functionality
+  const settingsDarkModeToggle = document.getElementById("settingsDarkModeToggle");
+  if (settingsDarkModeToggle) {
+    settingsDarkModeToggle.checked = darkMode;
+    settingsDarkModeToggle.addEventListener("change", (e) => {
+      darkMode = e.target.checked;
+      localStorage.setItem("darkMode", darkMode);
+      document.body.classList.toggle("dark-mode", darkMode);
+    });
+  }
+
+  // Tablet/Laptop layout toggle
+  const tabletLayoutToggle = document.getElementById("tabletLayoutToggle");
+  if (tabletLayoutToggle) {
+    // Load saved preference
+    const tabletMode = localStorage.getItem("tabletMode") === "true";
+    tabletLayoutToggle.checked = tabletMode;
+    if (tabletMode) document.body.classList.add("tablet-layout");
+    
+    tabletLayoutToggle.addEventListener("change", (e) => {
+      const isTablet = e.target.checked;
+      localStorage.setItem("tabletMode", isTablet);
+      document.body.classList.toggle("tablet-layout", isTablet);
+    });
+  }
+
+  // Developer info link
+  document.getElementById("settingsDevInfo")?.addEventListener("click", () => {
+    switchView("dev");
+  });
+
   // Money Presets - Quick payment amounts
   document.querySelectorAll(".money-preset-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -180,12 +211,17 @@ window.onload = () => {
     .getElementById("cartHeaderToggle")
     .addEventListener("click", toggleCart);
 
-  // Dark mode toggle
+  // Dark mode toggle (header)
   document.getElementById("darkModeToggle").addEventListener("click", () => {
-    darkMode = !darkMode;
-    localStorage.setItem("darkMode", darkMode);
-    document.body.classList.toggle("dark-mode", darkMode);
-  });
+  darkMode = !darkMode;
+  localStorage.setItem("darkMode", darkMode);
+  document.body.classList.toggle("dark-mode", darkMode);
+  
+  // Sync settings toggle if exists
+  if (settingsDarkModeToggle) {
+    settingsDarkModeToggle.checked = darkMode;
+  }
+});
 
   // Cash Drawer event listeners
   document.getElementById("updateFloatBtn")?.addEventListener("click", updateStartingCash);
@@ -983,6 +1019,7 @@ function updateReports() {
   });
 }
 
+// ========== FIXED EXPORT TO CSV WITH PROPER GROUPING ==========
 async function exportToExcel() {
   if (allSales.length === 0) {
     await showCustomAlert("No data to export", "Export Error", "📊");
@@ -1020,41 +1057,45 @@ async function exportToExcel() {
   const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
   const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
 
-  // Count items by category
-  let totalSingles = 0,
-    totalFamilies = 0,
-    totalSpecialSingles = 0;
-  let totalMilkDips = 0,
-    totalDarkDips = 0,
-    totalCaramelDips = 0,
-    totalSpecialDips = 0,
-    totalFamilyBoxDips = 0;
+  // Count items by category (with grouping)
+  let totalSingles = 0, totalFamilies = 0, totalSpecialSingles = 0;
+  let totalMilkDips = 0, totalDarkDips = 0, totalCaramelDips = 0, totalSpecialDips = 0, totalFamilyBoxDips = 0;
   let totalKeychains = 0;
 
   allSales.forEach((sale) => {
+    // Group items within each sale
+    const saleGroups = {};
+    
     sale.items.forEach((item) => {
-      const quantity = item.quantity || 1;
+      const itemName = item.name;
       
-      if (item.name === "Single Set") totalSingles += quantity;
-      else if (item.name === "Family Box") totalFamilies += quantity;
-      else if (item.name === "Special Single Set") totalSpecialSingles += quantity;
-      else if (item.name === "+ Milk Choco Dip") totalMilkDips += quantity;
-      else if (item.name === "+ Dark Choco Dip") totalDarkDips += quantity;
-      else if (item.name === "+ Caramel Dip") totalCaramelDips += quantity;
-      else if (item.name === "+ Special Dip") totalSpecialDips += quantity;
-      else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)")
-        totalFamilyBoxDips += quantity;
-      else if (item.name === "Keychain") totalKeychains += quantity;
+      if (!saleGroups[itemName]) {
+        saleGroups[itemName] = {
+          name: itemName,
+          count: 1,
+          isFamilyBoxDip: item.isFamilyBoxDip || false
+        };
+      } else {
+        saleGroups[itemName].count += 1;
+      }
+    });
+
+    // Count the grouped items
+    Object.values(saleGroups).forEach(item => {
+      if (item.name === "Single Set") totalSingles += item.count;
+      else if (item.name === "Family Box") totalFamilies += item.count;
+      else if (item.name === "Special Single Set") totalSpecialSingles += item.count;
+      else if (item.name === "+ Milk Choco Dip") totalMilkDips += item.count;
+      else if (item.name === "+ Dark Choco Dip") totalDarkDips += item.count;
+      else if (item.name === "+ Caramel Dip") totalCaramelDips += item.count;
+      else if (item.name === "+ Special Dip") totalSpecialDips += item.count;
+      else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)") totalFamilyBoxDips += item.count;
+      else if (item.name === "Keychain") totalKeychains += item.count;
     });
   });
 
   const totalChurros = totalSingles + totalFamilies + totalSpecialSingles;
-  const totalDips =
-    totalMilkDips +
-    totalDarkDips +
-    totalCaramelDips +
-    totalSpecialDips +
-    totalFamilyBoxDips;
+  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips + totalFamilyBoxDips;
   const totalItems = totalChurros + totalDips + totalKeychains;
 
   // Use comma delimiter for Excel (standard CSV)
@@ -1063,31 +1104,24 @@ async function exportToExcel() {
   // Helper function to escape CSV fields for Excel
   const escapeCSV = (str) => {
     if (str === null || str === undefined) return "";
-    // Replace any potential formula characters
     let cleaned = str.toString();
-    // If string starts with =, +, -, @, add a single quote to prevent formula execution
     if (cleaned.startsWith('=') || cleaned.startsWith('+') || 
         cleaned.startsWith('-') || cleaned.startsWith('@')) {
       cleaned = "'" + cleaned;
     }
-    // If contains delimiter, quotes, or newlines, wrap in quotes
     if (cleaned.includes(delimiter) || cleaned.includes('"') || cleaned.includes('\n')) {
       return '"' + cleaned.replace(/"/g, '""') + '"';
     }
     return cleaned;
   };
 
-  // Helper for numbers (always use dot as decimal separator)
-  const formatNumber = (num) => {
-    return num.toFixed(2);
-  };
+  const formatNumber = (num) => num.toFixed(2);
 
   let csvContent = "";
 
-  // HEADER - Excel format
+  // HEADER
   csvContent += "MR CHURROS DUNGUN POS - SALES REPORT\n";
   
-  // Format generation date as dd/mm/yyyy
   const genDay = String(today.getDate()).padStart(2, '0');
   const genMonth = String(today.getMonth() + 1).padStart(2, '0');
   const genYear = today.getFullYear();
@@ -1112,29 +1146,35 @@ async function exportToExcel() {
 
   todaysSales.forEach((sale) => {
     const date = new Date(sale.date);
-    
-    // Format date as dd/mm/yyyy
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     const dateStr = `${day}/${month}/${year}`;
-    
-    // Format time
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
     const timeStr = `${hours}:${minutes}:${seconds}`;
     
-    // Build items list with quantities
-    let itemsList = [];
+    // FIXED: Group items within this sale
+    const groupedItems = {};
     sale.items.forEach((item) => {
-      const qty = item.quantity || 1;
-      if (qty > 1) {
-        itemsList.push(`${qty}x ${item.name}`);
+      const itemName = item.name;
+      
+      if (!groupedItems[itemName]) {
+        groupedItems[itemName] = 1;
       } else {
-        itemsList.push(item.name);
+        groupedItems[itemName] += 1;
       }
     });
+    
+    // Build items list with grouped quantities
+    let itemsList = [];
+    // Sort items alphabetically for consistent output
+    const sortedItems = Object.entries(groupedItems).sort((a, b) => a[0].localeCompare(b[0]));
+    
+    for (const [itemName, count] of sortedItems) {
+      itemsList.push(`${count}x ${itemName}`);
+    }
     const itemsString = itemsList.join(" + ");
     
     csvContent += `${escapeCSV(dateStr)},`;
@@ -1145,7 +1185,7 @@ async function exportToExcel() {
     csvContent += `${formatNumber(sale.change)},`;
     csvContent += `${escapeCSV(sale.paymentMethod)},`;
     csvContent += `${escapeCSV(sale.staff)},`;
-    csvContent += `${escapeCSV(sale.remarks)}\n`;
+    csvContent += `${escapeCSV(sale.remarks || '')}\n`;
   });
 
   csvContent += "\nOVERALL SUMMARY\n";
@@ -1172,8 +1212,6 @@ async function exportToExcel() {
   csvContent += `Total Churros Sets,${totalChurros}\n\n`;
 
   csvContent += "DIPS (Add-ons)\n";
-  // For Excel, add a single quote before + signs to prevent formula errors
-  // The quote won't show in the cell
   csvContent += `'+ Milk Choco Dip,${totalMilkDips}\n`;
   csvContent += `'+ Dark Choco Dip,${totalDarkDips}\n`;
   csvContent += `'+ Caramel Dip,${totalCaramelDips}\n`;
@@ -1183,10 +1221,8 @@ async function exportToExcel() {
 
   csvContent += "MERCHANDISE\n";
   csvContent += `Keychain,${totalKeychains}\n\n`;
-
   csvContent += `TOTAL ITEMS SOLD,${totalItems}\n\n`;
 
-  // CASH DRAWER
   csvContent += "CASH DRAWER\n";
   csvContent += `Starting Cash,${formatNumber(startingCash)}\n`;
   csvContent += `Cash Sales,${formatNumber(cashToday)}\n`;
@@ -1198,29 +1234,35 @@ async function exportToExcel() {
 
   allSales.forEach((sale) => {
     const date = new Date(sale.date);
-    
-    // Format date as dd/mm/yyyy
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     const dateStr = `${day}/${month}/${year}`;
-    
-    // Format time
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
     const timeStr = `${hours}:${minutes}:${seconds}`;
     
-    // Build items list with quantities
-    let itemsList = [];
+    // FIXED: Group items within this sale
+    const groupedItems = {};
     sale.items.forEach((item) => {
-      const qty = item.quantity || 1;
-      if (qty > 1) {
-        itemsList.push(`${qty}x ${item.name}`);
+      const itemName = item.name;
+      
+      if (!groupedItems[itemName]) {
+        groupedItems[itemName] = 1;
       } else {
-        itemsList.push(item.name);
+        groupedItems[itemName] += 1;
       }
     });
+    
+    // Build items list with grouped quantities
+    let itemsList = [];
+    // Sort items alphabetically for consistent output
+    const sortedItems = Object.entries(groupedItems).sort((a, b) => a[0].localeCompare(b[0]));
+    
+    for (const [itemName, count] of sortedItems) {
+      itemsList.push(`${count}x ${itemName}`);
+    }
     const itemsString = itemsList.join(" + ");
     
     csvContent += `${escapeCSV(dateStr)},`;
@@ -1231,7 +1273,7 @@ async function exportToExcel() {
     csvContent += `${formatNumber(sale.change)},`;
     csvContent += `${escapeCSV(sale.paymentMethod)},`;
     csvContent += `${escapeCSV(sale.staff)},`;
-    csvContent += `${escapeCSV(sale.remarks)}\n`;
+    csvContent += `${escapeCSV(sale.remarks || '')}\n`;
   });
 
   const filename = `churros_sales_${todayYear}${todayMonth}${todayDay}.csv`;
@@ -1241,7 +1283,6 @@ async function exportToExcel() {
     await showCustomAlert("Saving to Downloads folder...", "Download", "📥");
     Android.downloadCSV(csvContent, filename);
   } else {
-    // For desktop Excel, use standard CSV with UTF-8 BOM
     const blob = new Blob(["\uFEFF" + csvContent], { 
       type: "text/csv;charset=utf-8", 
     });
