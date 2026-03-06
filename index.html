@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <title>Mr. Churros Dungun· Simple POS</title>
+    <title>Mr. Churros Dungun · Simple POS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -287,6 +287,66 @@
           </div>
         </div>
 
+        <!-- SETTINGS PAGE (New) -->
+        <div id="page-settings" class="page">
+          <div class="settings-container">
+            <h2 style="margin-bottom: 20px; font-size: 1.5rem; color: var(--primary);">
+              Settings
+            </h2>
+
+            <!-- Dark Mode Toggle -->
+            <div class="settings-card">
+              <div class="settings-row">
+                <div class="settings-info">
+                  <div>
+                    <h3>Dark Mode</h3>
+                    <p class="settings-description">Switch between light and dark theme</p>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="settingsDarkModeToggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Tablet/Laptop Layout Toggle -->
+            <div class="settings-card">
+              <div class="settings-row">
+                <div class="settings-info">
+                  <div>
+                    <h3>Tablet / Laptop Layout</h3>
+                    <p class="settings-description">Switch to wider layout for larger screens</p>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="tabletLayoutToggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Developer Info -->
+            <div class="settings-card">
+              <div class="settings-row" style="cursor: pointer;" id="settingsDevInfo">
+                <div class="settings-info">
+                  <div>
+                    <h3>App Info</h3>
+                    <p class="settings-description">View app version and developer details</p>
+                  </div>
+                </div>
+                <span class="settings-chevron">›</span>
+              </div>
+            </div>
+
+            <!-- App Info Footer -->
+            <div class="settings-footer">
+              <p>Mr. Churros Dungun POS</p>
+              <p>Version 2.2.0-rc.3</p>
+            </div>
+          </div>
+        </div>
+
         <!-- DEVELOPER PAGE -->
         <div id="page-dev" class="page">
           <div class="developer-container">
@@ -321,11 +381,11 @@
             <div class="dev-card">
               <h3 style="margin-bottom: 10px">Features</h3>
               <ul class="dev-features">
-                <li>Web-based app</li>
                 <li>Multi-page POS System</li>
+                <li>Item quantity grouping</li>
+                <li>Delete individual items</li>
                 <li>Payment calculator</li>
                 <li>Daily reports</li>
-                <li>Petty cash</li>
                 <li>CSV (Excel) export</li>
               </ul>
             </div>
@@ -433,7 +493,7 @@
 
       <!-- BOTTOM NAV -->
       <nav class="bottom-nav">
-        <button class="nav-btn active" data-page="pos">
+        <button class="nav-btn" data-page="pos">
           <svg viewBox="0 0 24 24" width="22" height="22">
             <path
               d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
@@ -473,6 +533,14 @@
           </svg>
           Reports
         </button>
+        <button class="nav-btn" data-page="settings">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+          <circle cx="19" cy="12" r="1.5" fill="currentColor"/>
+          <circle cx="5" cy="12" r="1.5" fill="currentColor"/>
+        </svg>
+        More
+      </button>
       </nav>
     </div>
     <!-- End of app-container -->
@@ -593,4 +661,3 @@
     <script src="script.js"></script>
   </body>
 </html>
-
