@@ -212,12 +212,13 @@ window.onload = () => {
       const pageId = btn.dataset.page;
       switchView(pageId);
       
-      // If switching to daily page, refresh the updates list
+      // Refresh daily list when switching to daily page
       if (pageId === 'daily') {
+        // Small delay to ensure DOM is ready
         setTimeout(() => {
           loadDailyUpdates();
           updateDailyUpdatesList();
-        }, 100);
+        }, 50);
       }
     });
   });
@@ -932,14 +933,28 @@ function updateDailyUpdatesList() {
     return;
   }
   
-  // Get today's date in the format used by the app
+  // Get today's date in the SAME format used when saving (dd/mm/yyyy)
   const today = new Date();
-  const todayDateString = today.toLocaleDateString();
-  console.log("Today's date:", todayDateString);
+  const todayDay = String(today.getDate()).padStart(2, '0');
+  const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+  const todayYear = today.getFullYear();
+  const todayDateStr = `${todayDay}/${todayMonth}/${todayYear}`;
   
-  // Filter updates that include today's date
-  const todaysUpdates = dailyUpdates.filter(u => u.date.includes(todayDateString)).reverse();
-  console.log("Filtered today's updates:", todaysUpdates);
+  console.log("Today's date for filtering:", todayDateStr);
+  
+  // Filter updates that match today's date
+  const todaysUpdates = dailyUpdates.filter(update => {
+    if (!update || !update.date) return false;
+    
+    try {
+      // Extract the date part (format: "dd/mm/yyyy, hh:mm:ss")
+      const updateDatePart = update.date.split(',')[0].trim();
+      return updateDatePart === todayDateStr;
+    } catch (e) {
+      console.log("Error parsing update date:", e);
+      return false;
+    }
+  }).reverse();
   
   listEl.innerHTML = "";
   
@@ -949,30 +964,34 @@ function updateDailyUpdatesList() {
   }
   
   todaysUpdates.forEach(update => {
-    const time = update.date.split(", ")[1] || update.date;
+    // Extract time part (HH:MM)
+    let timeStr = "--:--";
+    try {
+      const timeParts = update.date.split(',')[1]?.trim() || "";
+      timeStr = timeParts.substring(0, 5); // Get HH:MM only
+    } catch (e) {}
+    
     let items = [];
     
-    // Count restock items (only those with value > 0)
+    // Count restock items
     if (update.restock) {
       const restockCount = Object.values(update.restock).filter(v => v > 0).length;
       if (restockCount > 0) items.push(`${restockCount} restock items`);
     }
     
-    if (update.expenses && update.expenses.length > 0) items.push(`${update.expenses.length} expenses`);
-    if (update.requests && update.requests.length > 0) items.push(`${update.requests.length} requests`);
+    if (update.expenses?.length > 0) items.push(`${update.expenses.length} expenses`);
+    if (update.requests?.length > 0) items.push(`${update.requests.length} requests`);
     
     const itemText = items.join(', ') || 'No items';
     
     const div = document.createElement('div');
     div.className = 'update-item';
     div.innerHTML = `
-      <span class="update-time">${time}</span>
+      <span class="update-time">${timeStr}</span>
       <span class="update-desc">${update.pic || 'Staff'} - ${itemText}</span>
     `;
     listEl.appendChild(div);
   });
-  
-  console.log("List updated successfully");
 }
 
 // ========== SAVE DAILY UPDATE ==========
@@ -1030,9 +1049,9 @@ function saveDailyUpdate() {
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
-  
-  const formattedDate = `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
 
+  const formattedDate = `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+ 
   const newUpdate = {
     id: Date.now(),
     date: formattedDate,
