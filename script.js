@@ -30,6 +30,57 @@ let startingCash = 200.00; // Default starting cash RM200
 // ========== DAILY UPDATE STATE ==========
 let dailyUpdates = [];
 
+// ========== CONSISTENT DATE FORMATTING ==========
+function getCurrentFormattedDate() {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
+  return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+}
+
+function parseDateFromString(dateString) {
+  // Default to current date
+  const now = new Date();
+  let day = now.getDate();
+  let month = now.getMonth() + 1;
+  let year = now.getFullYear();
+  let hours = 0;
+  let minutes = 0;
+  let seconds = 0;
+  
+  try {
+    if (dateString) {
+      // Split date and time
+      const parts = dateString.split(', ');
+      if (parts.length >= 1) {
+        // Parse date part (dd/mm/yyyy)
+        const dateParts = parts[0].split('/');
+        if (dateParts.length === 3) {
+          day = parseInt(dateParts[0], 10);
+          month = parseInt(dateParts[1], 10);
+          year = parseInt(dateParts[2], 10);
+        }
+      }
+      
+      if (parts.length >= 2) {
+        // Parse time part (hh:mm:ss)
+        const timeParts = parts[1].split(':');
+        if (timeParts.length >= 1) hours = parseInt(timeParts[0], 10);
+        if (timeParts.length >= 2) minutes = parseInt(timeParts[1], 10);
+        if (timeParts.length >= 3) seconds = parseInt(timeParts[2], 10);
+      }
+    }
+  } catch (e) {
+    console.log("Error parsing date:", e);
+  }
+  
+  return { day, month, year, hours, minutes, seconds };
+}
+
 const menuItems = [
   {
     id: 1,
@@ -424,49 +475,11 @@ async function exportToExcel() {
   const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
   const todayYear = today.getFullYear();
   const todayFormatted = `${todayDay}/${todayMonth}/${todayYear}`;
-  
-  // Helper function to safely parse dates
-  function safeParseDate(dateString) {
-    if (!dateString) return null;
-    
-    try {
-      // Try to parse the date string
-      // Handle format like "3/11/2025, 14:30:25" or "3/11/2025, 14:30"
-      const parts = dateString.split(/[,/ :]+/);
-      
-      if (parts.length >= 3) {
-        // For Malaysian format (DD/MM/YYYY)
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parseInt(parts[2], 10);
-        
-        // Check if valid
-        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-          return new Date(year, month, day);
-        }
-      }
-      
-      // Fallback to standard parsing
-      const date = new Date(dateString);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
-    } catch (e) {
-      console.log("Date parsing error:", e);
-    }
-    
-    return null;
-  }
 
   // Filter today's sales using the formatted date
   const todaysSales = allSales.filter((sale) => {
-    const saleDate = safeParseDate(sale.date);
-    if (!saleDate) return false;
-    
-    const saleDay = String(saleDate.getDate()).padStart(2, '0');
-    const saleMonth = String(saleDate.getMonth() + 1).padStart(2, '0');
-    const saleYear = saleDate.getFullYear();
-    const saleDateFormatted = `${saleDay}/${saleMonth}/${saleYear}`;
+    const { day, month, year } = parseDateFromString(sale.date);
+    const saleDateFormatted = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
     return saleDateFormatted === todayFormatted;
   });
   
@@ -577,15 +590,9 @@ async function exportToExcel() {
   csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
 
   todaysSales.forEach((sale) => {
-    const saleDate = safeParseDate(sale.date) || new Date();
-    const day = String(saleDate.getDate()).padStart(2, '0');
-    const month = String(saleDate.getMonth() + 1).padStart(2, '0');
-    const year = saleDate.getFullYear();
-    const dateStr = `${day}/${month}/${year}`;
-    const hours = String(saleDate.getHours()).padStart(2, '0');
-    const minutes = String(saleDate.getMinutes()).padStart(2, '0');
-    const seconds = String(saleDate.getSeconds()).padStart(2, '0');
-    const timeStr = `${hours}:${minutes}:${seconds}`;
+    const { day, month, year, hours, minutes, seconds } = parseDateFromString(sale.date);
+    const dateStr = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
     // Group items within this sale
     const groupedItems = {};
@@ -665,15 +672,9 @@ async function exportToExcel() {
   csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
 
   allSales.forEach((sale) => {
-    const saleDate = safeParseDate(sale.date) || new Date();
-    const day = String(saleDate.getDate()).padStart(2, '0');
-    const month = String(saleDate.getMonth() + 1).padStart(2, '0');
-    const year = saleDate.getFullYear();
-    const dateStr = `${day}/${month}/${year}`;
-    const hours = String(saleDate.getHours()).padStart(2, '0');
-    const minutes = String(saleDate.getMinutes()).padStart(2, '0');
-    const seconds = String(saleDate.getSeconds()).padStart(2, '0');
-    const timeStr = `${hours}:${minutes}:${seconds}`;
+    const { day, month, year, hours, minutes, seconds } = parseDateFromString(sale.date);
+    const dateStr = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
     // Group items within this sale
     const groupedItems = {};
@@ -933,7 +934,7 @@ function updateDailyUpdatesList() {
   
   // Get today's date in the format used by the app
   const today = new Date();
-  const todayDateString = today.toLocaleDateString("en-GB");
+  const todayDateString = today.toLocaleDateString();
   console.log("Today's date:", todayDateString);
   
   // Filter updates that include today's date
@@ -1030,10 +1031,7 @@ function saveDailyUpdate() {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   
-  // Use toLocaleDateString for the date part to match other functions
-  const datePart = now.toLocaleDateString("en-GB");
-  const timePart = `${hours}:${minutes}:${seconds}`;
-  const formattedDate = `${datePart}, ${timePart}`;
+  const formattedDate = `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
 
   const newUpdate = {
     id: Date.now(),
@@ -1077,59 +1075,6 @@ function clearDailyForm() {
   
   // Reset PIC
   document.getElementById("daily-pic").value = currentStaff || "Staff 1";
-}
-
-// ========== UPDATE DAILY UPDATES LIST ==========
-function updateDailyUpdatesList() {
-  console.log("Updating daily updates list...");
-  
-  const listEl = document.getElementById("daily-updates-list");
-  if (!listEl) {
-    console.error("Daily updates list element not found!");
-    return;
-  }
-  
-  // Get today's date in the format used by the app
-  const today = new Date();
-  const todayDateString = today.toLocaleDateString("en-GB");
-  console.log("Today's date:", todayDateString);
-  
-  // Filter updates that include today's date
-  const todaysUpdates = dailyUpdates.filter(u => u.date.includes(todayDateString)).reverse();
-  console.log("Filtered today's updates:", todaysUpdates);
-  
-  listEl.innerHTML = "";
-  
-  if (todaysUpdates.length === 0) {
-    listEl.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No updates yet today.</p>';
-    return;
-  }
-  
-  todaysUpdates.forEach(update => {
-    const time = update.date.split(", ")[1] || update.date;
-    let items = [];
-    
-    // Count restock items (only those with value > 0)
-    if (update.restock) {
-      const restockCount = Object.values(update.restock).filter(v => v > 0).length;
-      if (restockCount > 0) items.push(`${restockCount} restock items`);
-    }
-    
-    if (update.expenses && update.expenses.length > 0) items.push(`${update.expenses.length} expenses`);
-    if (update.requests && update.requests.length > 0) items.push(`${update.requests.length} requests`);
-    
-    const itemText = items.join(', ') || 'No items';
-    
-    const div = document.createElement('div');
-    div.className = 'update-item';
-    div.innerHTML = `
-      <span class="update-time">${time}</span>
-      <span class="update-desc">${update.pic || 'Staff'} - ${itemText}</span>
-    `;
-    listEl.appendChild(div);
-  });
-  
-  console.log("List updated successfully");
 }
 
 // ========== CASH DRAWER FUNCTIONS ==========
@@ -1614,9 +1559,12 @@ async function saveSale() {
   const staff = document.getElementById("staffName").value || "Staff";
   const remarks = document.getElementById("saleRemarks")?.value || "";
 
+  // Use consistent date format
+  const formattedDate = getCurrentFormattedDate();
+
   const newSale = {
     id: Date.now(),
-    date: new Date().toLocaleString(),
+    date: formattedDate,
     staff: staff,
     items: [...currentOrder],
     total: total,
@@ -1654,28 +1602,6 @@ async function saveSale() {
 
   if (cartOpen) toggleCart();
 }
-
-// ========== LOAD DAILY UPDATES ==========
-function loadDailyUpdates() {
-  console.log("Loading daily updates...");
-  try {
-    const saved = localStorage.getItem("dailyUpdates");
-    if (saved) {
-      dailyUpdates = JSON.parse(saved);
-      console.log("Loaded daily updates:", dailyUpdates);
-    } else {
-      console.log("No daily updates found");
-      dailyUpdates = [];
-    }
-  } catch (e) {
-    console.error("Error loading daily updates:", e);
-    dailyUpdates = [];
-  }
-  
-  // Always update the list after loading
-  updateDailyUpdatesList();
-}
-
 
 // ========== RECEIPT FUNCTION - FIXED GROUPING ==========
 function generateReceipt(sale) {
@@ -1819,365 +1745,6 @@ function updateReports() {
     `;
     listEl.appendChild(li);
   });
-}
-
-// ========== EXPORT TO CSV WITH PROPER GROUPING ==========
-async function exportToExcel() {
-  if (allSales.length === 0) {
-    await showCustomAlert("No data to export", "Export Error", "📊");
-    return;
-  }
-
-  // Format today's date as dd/mm/yyyy for filtering
-  const today = new Date();
-  const todayDay = String(today.getDate()).padStart(2, '0');
-  const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
-  const todayYear = today.getFullYear();
-  const todayFormatted = `${todayDay}/${todayMonth}/${todayYear}`;
-  
-  // Filter today's sales using the formatted date
-  const todaysSales = allSales.filter((sale) => {
-    const saleDate = new Date(sale.date);
-    const saleDay = String(saleDate.getDate()).padStart(2, '0');
-    const saleMonth = String(saleDate.getMonth() + 1).padStart(2, '0');
-    const saleYear = saleDate.getFullYear();
-    const saleDateFormatted = `${saleDay}/${saleMonth}/${saleYear}`;
-    return saleDateFormatted === todayFormatted;
-  });
-  
-  const todayTotal = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
-  const todayCount = todaysSales.length;
-
-  const cashToday = todaysSales
-    .filter((s) => s.paymentMethod === "Cash")
-    .reduce((sum, s) => sum + s.total, 0);
-  const qrToday = todaysSales
-    .filter((s) => s.paymentMethod === "QR")
-    .reduce((sum, s) => sum + s.total, 0);
-
-  const grandTotal = allSales.reduce((sum, sale) => sum + sale.total, 0);
-  const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
-  const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
-
-  // Count items by category (with grouping)
-  let totalSingles = 0, totalFamilies = 0, totalSpecialSingles = 0;
-  let totalMilkDips = 0, totalDarkDips = 0, totalCaramelDips = 0, totalSpecialDips = 0, totalFamilyBoxDips = 0;
-  let totalKeychains = 0;
-
-  allSales.forEach((sale) => {
-    // Group items within each sale
-    const saleGroups = {};
-    
-    sale.items.forEach((item) => {
-      const itemName = item.name;
-      
-      if (!saleGroups[itemName]) {
-        saleGroups[itemName] = {
-          name: itemName,
-          count: 1,
-          isFamilyBoxDip: item.isFamilyBoxDip || false
-        };
-      } else {
-        saleGroups[itemName].count += 1;
-      }
-    });
-
-    // Count the grouped items
-    Object.values(saleGroups).forEach(item => {
-      if (item.name === "Single Set") totalSingles += item.count;
-      else if (item.name === "Family Box") totalFamilies += item.count;
-      else if (item.name === "Special Single Set") totalSpecialSingles += item.count;
-      else if (item.name === "+ Milk Choco Dip") totalMilkDips += item.count;
-      else if (item.name === "+ Dark Choco Dip") totalDarkDips += item.count;
-      else if (item.name === "+ Caramel Dip") totalCaramelDips += item.count;
-      else if (item.name === "+ Special Dip") totalSpecialDips += item.count;
-      else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)") totalFamilyBoxDips += item.count;
-      else if (item.name === "Keychain") totalKeychains += item.count;
-    });
-  });
-
-  const totalChurros = totalSingles + totalFamilies + totalSpecialSingles;
-  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips + totalFamilyBoxDips;
-  const totalItems = totalChurros + totalDips + totalKeychains;
-
-  // Use comma delimiter for Excel (standard CSV)
-  const delimiter = ",";
-  
-  // Helper function to escape CSV fields for Excel
-  const escapeCSV = (str) => {
-    if (str === null || str === undefined) return "";
-    let cleaned = str.toString();
-    if (cleaned.startsWith('=') || cleaned.startsWith('+') || 
-        cleaned.startsWith('-') || cleaned.startsWith('@')) {
-      cleaned = "'" + cleaned;
-    }
-    if (cleaned.includes(delimiter) || cleaned.includes('"') || cleaned.includes('\n')) {
-      return '"' + cleaned.replace(/"/g, '""') + '"';
-    }
-    return cleaned;
-  };
-
-  const formatNumber = (num) => num.toFixed(2);
-
-  let csvContent = "";
-
-  // HEADER
-  csvContent += "MR CHURROS DUNGUN POS - SALES REPORT\n";
-  
-  const genDay = String(today.getDate()).padStart(2, '0');
-  const genMonth = String(today.getMonth() + 1).padStart(2, '0');
-  const genYear = today.getFullYear();
-  const genHours = String(today.getHours()).padStart(2, '0');
-  const genMinutes = String(today.getMinutes()).padStart(2, '0');
-  const genSeconds = String(today.getSeconds()).padStart(2, '0');
-  const generatedDateTime = `${genDay}/${genMonth}/${genYear} ${genHours}:${genMinutes}:${genSeconds}`;
-  
-  csvContent += `Generated,${escapeCSV(generatedDateTime)}\n\n`;
-
-  // TODAY'S SUMMARY
-  csvContent += "TODAY'S SUMMARY\n";
-  csvContent += `Date,${escapeCSV(todayFormatted)}\n`;
-  csvContent += `Total Sales,${todayCount}\n`;
-  csvContent += `Total Revenue,${formatNumber(todayTotal)}\n`;
-  csvContent += `Cash Payments,${formatNumber(cashToday)}\n`;
-  csvContent += `QR Payments,${formatNumber(qrToday)}\n\n`;
-
-  // ========== PRODUCTION SUMMARY ==========
-  csvContent += "TODAY PRODUCTION SUMMARY\n";
-  csvContent += `Total KG Sold,${totalKgSold.toFixed(2)}\n`;
-  csvContent += `Unsold/Defect (PCS),${unsoldDefect}\n\n`;
-
-  // TODAY'S TRANSACTIONS
-  csvContent += "TODAY'S TRANSACTIONS\n";
-  csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
-
-  todaysSales.forEach((sale) => {
-    const date = new Date(sale.date);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const dateStr = `${day}/${month}/${year}`;
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    const timeStr = `${hours}:${minutes}:${seconds}`;
-    
-    // Group items within this sale
-    const groupedItems = {};
-    sale.items.forEach((item) => {
-      const itemName = item.name;
-      
-      if (!groupedItems[itemName]) {
-        groupedItems[itemName] = 1;
-      } else {
-        groupedItems[itemName] += 1;
-      }
-    });
-    
-    // Build items list with grouped quantities
-    let itemsList = [];
-    // Sort items alphabetically for consistent output
-    const sortedItems = Object.entries(groupedItems).sort((a, b) => a[0].localeCompare(b[0]));
-    
-    for (const [itemName, count] of sortedItems) {
-      itemsList.push(`${count}x ${itemName}`);
-    }
-    const itemsString = itemsList.join(" + ");
-    
-    csvContent += `${escapeCSV(dateStr)},`;
-    csvContent += `${escapeCSV(timeStr)},`;
-    csvContent += `${escapeCSV(itemsString)},`;
-    csvContent += `${formatNumber(sale.total)},`;
-    csvContent += `${formatNumber(sale.paid)},`;
-    csvContent += `${formatNumber(sale.change)},`;
-    csvContent += `${escapeCSV(sale.paymentMethod)},`;
-    csvContent += `${escapeCSV(sale.staff)},`;
-    csvContent += `${escapeCSV(sale.remarks || '')}\n`;
-  });
-
-  csvContent += "\nOVERALL SUMMARY\n";
-  csvContent += `Total Transactions,${allSales.length}\n`;
-  csvContent += `Total Revenue,${formatNumber(grandTotal)}\n`;
-  csvContent += `Total Paid,${formatNumber(totalPaid)}\n`;
-  csvContent += `Total Change Given,${formatNumber(totalChange)}\n\n`;
-
-  csvContent += "PAYMENT METHOD BREAKDOWN\n";
-  const totalCash = allSales
-    .filter((s) => s.paymentMethod === "Cash")
-    .reduce((sum, s) => sum + s.total, 0);
-  const totalQR = allSales
-    .filter((s) => s.paymentMethod === "QR")
-    .reduce((sum, s) => sum + s.total, 0);
-  csvContent += `Cash Payments,${formatNumber(totalCash)}\n`;
-  csvContent += `QR Payments,${formatNumber(totalQR)}\n\n`;
-
-  csvContent += "ITEM BREAKDOWN\n";
-  csvContent += "CHURROS SETS\n";
-  csvContent += `Single Set,${totalSingles}\n`;
-  csvContent += `Family Box,${totalFamilies}\n`;
-  csvContent += `Special Single Set,${totalSpecialSingles}\n`;
-  csvContent += `Total Churros Sets,${totalChurros}\n\n`;
-
-  csvContent += "DIPS (Add-ons)\n";
-  csvContent += `'+ Milk Choco Dip,${totalMilkDips}\n`;
-  csvContent += `'+ Dark Choco Dip,${totalDarkDips}\n`;
-  csvContent += `'+ Caramel Dip,${totalCaramelDips}\n`;
-  csvContent += `'+ Special Dip,${totalSpecialDips}\n`;
-  csvContent += `'+ Family Box Special Dip,${totalFamilyBoxDips}\n`;
-  csvContent += `Total Dips,${totalDips}\n\n`;
-
-  csvContent += "MERCHANDISE\n";
-  csvContent += `Keychain,${totalKeychains}\n\n`;
-  csvContent += `TOTAL ITEMS SOLD,${totalItems}\n\n`;
-
-  csvContent += "CASH DRAWER\n";
-  csvContent += `Starting Cash,${formatNumber(startingCash)}\n`;
-  csvContent += `Cash Sales,${formatNumber(cashToday)}\n`;
-  const expectedCash = startingCash + cashToday;
-  csvContent += `Expected Cash,${formatNumber(expectedCash)}\n\n`;
-
-  csvContent += "ALL TRANSACTIONS HISTORY\n";
-  csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
-
-  allSales.forEach((sale) => {
-    const date = new Date(sale.date);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const dateStr = `${day}/${month}/${year}`;
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    const timeStr = `${hours}:${minutes}:${seconds}`;
-    
-    // Group items within this sale
-    const groupedItems = {};
-    sale.items.forEach((item) => {
-      const itemName = item.name;
-      
-      if (!groupedItems[itemName]) {
-        groupedItems[itemName] = 1;
-      } else {
-        groupedItems[itemName] += 1;
-      }
-    });
-    
-    // Build items list with grouped quantities
-    let itemsList = [];
-    // Sort items alphabetically for consistent output
-    const sortedItems = Object.entries(groupedItems).sort((a, b) => a[0].localeCompare(b[0]));
-    
-    for (const [itemName, count] of sortedItems) {
-      itemsList.push(`${count}x ${itemName}`);
-    }
-    const itemsString = itemsList.join(" + ");
-    
-    csvContent += `${escapeCSV(dateStr)},`;
-    csvContent += `${escapeCSV(timeStr)},`;
-    csvContent += `${escapeCSV(itemsString)},`;
-    csvContent += `${formatNumber(sale.total)},`;
-    csvContent += `${formatNumber(sale.paid)},`;
-    csvContent += `${formatNumber(sale.change)},`;
-    csvContent += `${escapeCSV(sale.paymentMethod)},`;
-    csvContent += `${escapeCSV(sale.staff)},`;
-    csvContent += `${escapeCSV(sale.remarks || '')}\n`;
-  });
-
-  // ========== DAILY UPDATES - Dalam bentuk list (vertical) ==========
-  csvContent += "\nDAILY UPDATES\n";
-  
-  const todaysUpdates = dailyUpdates.filter((update) => {
-    const updateDate = new Date(update.date);
-    const updateDay = String(updateDate.getDate()).padStart(2, '0');
-    const updateMonth = String(updateDate.getMonth() + 1).padStart(2, '0');
-    const updateYear = updateDate.getFullYear();
-    const updateDateFormatted = `${updateDay}/${updateMonth}/${updateYear}`;
-    return updateDateFormatted === todayFormatted;
-  });
-
-  if (todaysUpdates.length === 0) {
-    csvContent += "No daily updates today.\n\n";
-  } else {
-    todaysUpdates.forEach((update, index) => {
-      const date = new Date(update.date);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const dateStr = `${day}/${month}/${year}`;
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const timeStr = `${hours}:${minutes}`;
-
-      csvContent += `\n--- UPDATE #${index + 1}: ${dateStr} ${timeStr} ---\n`;
-      csvContent += `PIC: ${update.pic}\n`;
-      csvContent += `Outlet: ${update.outlet}\n`;
-      
-      // Restock items
-      csvContent += `\n>> RESTOCK CHECKLIST:\n`;
-      const restockItems = [
-        { name: "TEPUNG", value: update.restock.tepung },
-        { name: "PASTE", value: update.restock.paste },
-        { name: "DIPPING CUP", value: update.restock.dippingCup },
-        { name: "FAMILY BOX", value: update.restock.familybox },
-        { name: "PAPER BAG", value: update.restock.paperBag },
-        { name: "MILK CHOC", value: update.restock.milkChoc },
-        { name: "DARK CHOC", value: update.restock.darkChoc },
-        { name: "CARAMEL", value: update.restock.caramel },
-        { name: "MINYAK", value: update.restock.minyak },
-        { name: "CINNAMON SUGAR", value: update.restock.cinamon },
-        { name: "TISU KERING", value: update.restock.tisuKering },
-        { name: "TISU BASAH", value: update.restock.tisuBasah },
-        { name: "PLASTIK KECIL", value: update.restock.plastikKecil },
-        { name: "PLASTIK BESAR", value: update.restock.plastikBesar || 0 },
-        { name: "GLOVE L", value: update.restock.gloveL || 0 },
-        { name: "GLOVE S", value: update.restock.gloveS || 0 }
-      ];
-      
-      restockItems.forEach(item => {
-        if (item.value > 0) {
-          csvContent += `  ${item.name}: ${item.value} PCS\n`;
-        }
-      });
-
-      // Expenses
-      if (update.expenses.length > 0) {
-        csvContent += `\n>> EXPENSES:\n`;
-        update.expenses.forEach(exp => {
-          csvContent += `  ${exp.desc}: RM ${exp.amount.toFixed(2)}\n`;
-        });
-      }
-
-      // Requests
-      if (update.requests.length > 0) {
-        csvContent += `\n>> REQUESTS:\n`;
-        update.requests.forEach(req => {
-          csvContent += `  ${req.desc}: ${req.qty} PCS\n`;
-        });
-      }
-      
-      csvContent += `\n${'-'.repeat(30)}\n`;
-    });
-  }
-
-  const filename = `churros_sales_${todayYear}${todayMonth}${todayDay}.csv`;
-  const isAndroid = /Android/i.test(navigator.userAgent);
-
-  if (isAndroid && window.Android) {
-    await showCustomAlert("Saving to Downloads folder...", "Download", "📥");
-    Android.downloadCSV(csvContent, filename);
-  } else {
-    const blob = new Blob(["\uFEFF" + csvContent], { 
-      type: "text/csv;charset=utf-8", 
-    });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  }
 }
 
 // ========== CALCULATOR FUNCTIONS ==========
@@ -2549,7 +2116,3 @@ function initEasterEgg() {
     }
   });
 }
-
-
-
-
