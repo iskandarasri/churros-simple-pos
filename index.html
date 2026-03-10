@@ -147,6 +147,172 @@
           </div>
         </div>
 
+        <!-- DAILY UPDATE PAGE -->
+        <div id="page-daily" class="page">
+          <div class="daily-container">
+            <h2 style="margin-bottom: 20px; font-size: 1.5rem; color: var(--text-main);">
+              Daily Update
+            </h2>
+
+            <!-- Restock Checklist -->
+            <div class="daily-card">
+              <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 1rem">RESTOCK CHECKLIST</h3>
+              
+              <div class="restock-grid">
+                <div class="restock-item">
+                  <span>TEPUNG</span>
+                  <input type="number" id="restock-tepung" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>PASTE</span>
+                  <input type="number" id="restock-paste" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>DIPPING CUP</span>
+                  <input type="number" id="restock-dipping-cup" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>FAMILY BOX</span>
+                  <input type="number" id="restock-familybox" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>PAPER BAG</span>
+                  <input type="number" id="restock-paper-bag" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>MILK CHOC</span>
+                  <input type="number" id="restock-milk-choc" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>DARK CHOC</span>
+                  <input type="number" id="restock-dark-choc" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>CARAMEL</span>
+                  <input type="number" id="restock-caramel" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>MINYAK</span>
+                  <input type="number" id="restock-minyak" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>CINNAMON SUGAR</span>
+                  <input type="number" id="restock-cinamon" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>TISU KERING</span>
+                  <input type="number" id="restock-tisu-kering" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>TISU BASAH</span>
+                  <input type="number" id="restock-tisu-basah" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>PLASTIK KECIL</span>
+                  <input type="number" id="restock-plastik-kecil" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>PLASTIK BESAR (FB)</span>
+                  <input type="number" id="restock-plastik-besar" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>GLOVE L</span>
+                  <input type="number" id="restock-glove-l" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+                <div class="restock-item">
+                  <span>GLOVE S</span>
+                  <input type="number" id="restock-glove-s" class="restock-input" min="0" value="0" placeholder="PCS">
+                </div>
+              </div>
+            </div>
+
+            <!-- EXPENSES -->
+            <div class="daily-card">
+              <div class="section-header">
+                <h3>EXPENSES</h3>
+                <span class="header-qty">Amount (RM)</span>
+              </div>
+              
+              <div class="expense-grid">
+                <div class="expense-row">
+                  <input type="text" id="expense-1-desc" class="expense-desc" placeholder="e.g., Minyak goreng" value="">
+                  <input type="number" id="expense-1-amount" class="expense-amount" min="0" value="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="expense-row">
+                  <input type="text" id="expense-2-desc" class="expense-desc" placeholder="e.g., Gula" value="">
+                  <input type="number" id="expense-2-amount" class="expense-amount" min="0" value="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="expense-row">
+                  <input type="text" id="expense-3-desc" class="expense-desc" placeholder="e.g., Tepung" value="">
+                  <input type="number" id="expense-3-amount" class="expense-amount" min="0" value="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="expense-row">
+                  <input type="text" id="expense-4-desc" class="expense-desc" placeholder="e.g., Susu" value="">
+                  <input type="number" id="expense-4-amount" class="expense-amount" min="0" value="0" step="0.01" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+
+            <!-- REQUEST -->
+            <div class="daily-card">
+              <div class="section-header">
+                <h3>REQUEST</h3>
+                <span class="header-qty">Quantity (PCS)</span>
+              </div>
+              
+              <div class="request-grid">
+                <div class="request-row">
+                  <input type="text" id="request-1-desc" class="request-desc" placeholder="e.g., Dipping cup" value="">
+                  <input type="number" id="request-1-qty" class="request-qty" min="0" value="0" placeholder="0">
+                </div>
+                <div class="request-row">
+                  <input type="text" id="request-2-desc" class="request-desc" placeholder="e.g., Paper bag" value="">
+                  <input type="number" id="request-2-qty" class="request-qty" min="0" value="0" placeholder="0">
+                </div>
+                <div class="request-row">
+                  <input type="text" id="request-3-desc" class="request-desc" placeholder="e.g., Plastik" value="">
+                  <input type="number" id="request-3-qty" class="request-qty" min="0" value="0" placeholder="0">
+                </div>
+                <div class="request-row">
+                  <input type="text" id="request-4-desc" class="request-desc" placeholder="e.g., Tisu" value="">
+                  <input type="number" id="request-4-qty" class="request-qty" min="0" value="0" placeholder="0">
+                </div>
+              </div>
+            </div>
+
+            <!-- Person In Charge -->
+            <div class="daily-card">
+              <div class="pic-row">
+                <div style="flex: 1;">
+                  <label class="daily-label">PERSON IN CHARGE</label>
+                  <input type="text" id="daily-pic" class="daily-input" placeholder="Staff name" value="Staff 1">
+                </div>
+                <div style="flex: 1;">
+                  <label class="daily-label">OUTLET</label>
+                  <select id="daily-outlet" class="daily-select">
+                    <option value="DUNGUN">DUNGUN</option>
+                    <option value="BALAI BESAR">BALAI BESAR</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="daily-actions">
+              <button id="save-daily-update" class="btn btn-primary">📝 Save</button>
+              <button id="clear-daily" class="btn btn-outline">🔄 Clear Form</button>
+            </div>
+
+            <!-- History -->
+            <div class="daily-card">
+              <h3 style="margin-bottom: 15px; color: var(--text-main);">Recent Updates</h3>
+              <div id="daily-updates-list" class="updates-list">
+                <p style="text-align: center; color: var(--text-muted);">No updates yet today.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- REPORTS PAGE -->
         <div id="page-reports" class="page">
           <h2 style="margin-bottom: 16px; font-size: 1.4rem">
@@ -240,6 +406,49 @@
             </div>
           </div>
 
+          <!-- Production Summary Section -->
+          <div class="cash-drawer-section">
+            <h3 style="margin-bottom: 12px; font-size: 1.2rem; color: var(--primary);">
+              Production Summary
+            </h3>
+
+            <!-- Total KG Sold -->
+            <div class="float-section">
+              <div class="float-row">
+                <span>Total KG Sold (KG):</span>
+                <div>
+                  <input
+                    type="number"
+                    id="totalKgSold"
+                    class="production-input"
+                    value="0"
+                    step="0.1"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Unsold / Defect -->
+            <div class="float-section">
+              <div class="float-row">
+                <span>Unsold/Defect (PCS):</span>
+                <div>
+                  <input
+                    type="number"
+                    id="unsoldDefect"
+                    class="production-input"
+                    value="0"
+                    step="1"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <h3
             style="
               margin-bottom: 12px;
@@ -287,7 +496,7 @@
           </div>
         </div>
 
-        <!-- SETTINGS PAGE (New) -->
+        <!-- SETTINGS PAGE -->
         <div id="page-settings" class="page">
           <div class="settings-container">
             <h2 style="margin-bottom: 20px; font-size: 1.5rem; color: var(--primary);">
@@ -374,7 +583,7 @@
               </div>
               <div class="dev-row">
                 <span class="dev-label">Last Updated:</span>
-                <span class="dev-value">9 March 2026</span>
+                <span class="dev-value">10 March 2026</span>
               </div>
             </div>
 
@@ -382,6 +591,7 @@
               <h3 style="margin-bottom: 10px">Features</h3>
               <ul class="dev-features">
                 <li>Multi-page POS System</li>
+                <li>Restock items form</li>
                 <li>Item quantity grouping</li>
                 <li>Delete individual items</li>
                 <li>Payment calculator</li>
@@ -522,6 +732,16 @@
           </svg>
           Calc
         </button>
+        <button class="nav-btn" data-page="daily">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path>
+          </svg>
+          Daily
+        </button>
         <button class="nav-btn" data-page="reports">
           <svg viewBox="0 0 24 24" width="22" height="22">
             <path
@@ -534,13 +754,13 @@
           Reports
         </button>
         <button class="nav-btn" data-page="settings">
-        <svg viewBox="0 0 24 24" width="22" height="22">
-          <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-          <circle cx="19" cy="12" r="1.5" fill="currentColor"/>
-          <circle cx="5" cy="12" r="1.5" fill="currentColor"/>
-        </svg>
-        More
-      </button>
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+            <circle cx="19" cy="12" r="1.5" fill="currentColor"/>
+            <circle cx="5" cy="12" r="1.5" fill="currentColor"/>
+          </svg>
+          More
+        </button>
       </nav>
     </div>
     <!-- End of app-container -->
@@ -661,4 +881,3 @@
     <script src="script.js"></script>
   </body>
 </html>
-
