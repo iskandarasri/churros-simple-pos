@@ -933,7 +933,7 @@ function updateDailyUpdatesList() {
   
   // Get today's date in the format used by the app
   const today = new Date();
-  const todayDateString = today.toLocaleDateString();
+  const todayDateString = today.toLocaleDateString("en-GB");
   console.log("Today's date:", todayDateString);
   
   // Filter updates that include today's date
@@ -1091,7 +1091,7 @@ function updateDailyUpdatesList() {
   
   // Get today's date in the format used by the app
   const today = new Date();
-  const todayDateString = today.toLocaleDateString();
+  const todayDateString = today.toLocaleDateString("en-GB");
   console.log("Today's date:", todayDateString);
   
   // Filter updates that include today's date
@@ -2549,6 +2549,7 @@ function initEasterEgg() {
     }
   });
 }
+
 
 
 
