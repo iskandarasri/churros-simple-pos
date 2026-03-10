@@ -155,6 +155,22 @@ window.onload = () => {
     defectInput.addEventListener("input", debouncedAutoSave);
   }
 
+  // Navigation
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const pageId = btn.dataset.page;
+      switchView(pageId);
+      
+      // If switching to daily page, refresh the updates list
+      if (pageId === 'daily') {
+        setTimeout(() => {
+          loadDailyUpdates();
+          updateDailyUpdatesList();
+        }, 100);
+      }
+    });
+  });
+
   // Category filters
   document.querySelectorAll(".cat-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -470,8 +486,84 @@ function debounce(func, delay) {
 // Create debounced version of autoSave
 const debouncedAutoSave = debounce(autoSaveProduction, 500);
 
-// ========== DAILY UPDATE FUNCTIONS ==========
+// ========== LOAD DAILY UPDATES ==========
+function loadDailyUpdates() {
+  console.log("Loading daily updates...");
+  try {
+    const saved = localStorage.getItem("dailyUpdates");
+    if (saved) {
+      dailyUpdates = JSON.parse(saved);
+      console.log("Loaded daily updates:", dailyUpdates);
+    } else {
+      console.log("No daily updates found");
+      dailyUpdates = [];
+    }
+  } catch (e) {
+    console.error("Error loading daily updates:", e);
+    dailyUpdates = [];
+  }
+  
+  // Always update the list after loading
+  updateDailyUpdatesList();
+}
+
+// ========== UPDATE DAILY UPDATES LIST ==========
+function updateDailyUpdatesList() {
+  console.log("Updating daily updates list...");
+  
+  const listEl = document.getElementById("daily-updates-list");
+  if (!listEl) {
+    console.error("Daily updates list element not found!");
+    return;
+  }
+  
+  // Get today's date in the format used by the app
+  const today = new Date();
+  const todayDateString = today.toLocaleDateString();
+  console.log("Today's date:", todayDateString);
+  
+  // Filter updates that include today's date
+  const todaysUpdates = dailyUpdates.filter(u => u.date.includes(todayDateString)).reverse();
+  console.log("Filtered today's updates:", todaysUpdates);
+  
+  listEl.innerHTML = "";
+  
+  if (todaysUpdates.length === 0) {
+    listEl.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No updates yet today.</p>';
+    return;
+  }
+  
+  todaysUpdates.forEach(update => {
+    const time = update.date.split(", ")[1] || update.date;
+    let items = [];
+    
+    // Count restock items (only those with value > 0)
+    if (update.restock) {
+      const restockCount = Object.values(update.restock).filter(v => v > 0).length;
+      if (restockCount > 0) items.push(`${restockCount} restock items`);
+    }
+    
+    if (update.expenses && update.expenses.length > 0) items.push(`${update.expenses.length} expenses`);
+    if (update.requests && update.requests.length > 0) items.push(`${update.requests.length} requests`);
+    
+    const itemText = items.join(', ') || 'No items';
+    
+    const div = document.createElement('div');
+    div.className = 'update-item';
+    div.innerHTML = `
+      <span class="update-time">${time}</span>
+      <span class="update-desc">${update.pic || 'Staff'} - ${itemText}</span>
+    `;
+    listEl.appendChild(div);
+  });
+  
+  console.log("List updated successfully");
+}
+
+// ========== SAVE DAILY UPDATE ==========
 function saveDailyUpdate() {
+  console.log("Saving daily update...");
+  
   // Get restock values
   const restockData = {
     tepung: parseInt(document.getElementById("restock-tepung")?.value) || 0,
@@ -515,15 +607,31 @@ function saveDailyUpdate() {
   const pic = document.getElementById("daily-pic")?.value || "Staff";
   const outlet = document.getElementById("daily-outlet")?.value || "DUNGUN";
 
+  // Create date in a consistent format
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  // Use toLocaleDateString for the date part to match other functions
+  const datePart = now.toLocaleDateString();
+  const timePart = `${hours}:${minutes}:${seconds}`;
+  const formattedDate = `${datePart}, ${timePart}`;
+
   const newUpdate = {
     id: Date.now(),
-    date: new Date().toLocaleString(),
+    date: formattedDate,
     pic: pic,
     outlet: outlet,
     restock: restockData,
     expenses: expenses,
     requests: requests
   };
+
+  console.log("New update:", newUpdate);
 
   dailyUpdates.push(newUpdate);
   localStorage.setItem("dailyUpdates", JSON.stringify(dailyUpdates));
@@ -557,12 +665,24 @@ function clearDailyForm() {
   document.getElementById("daily-pic").value = currentStaff || "Staff 1";
 }
 
+// ========== UPDATE DAILY UPDATES LIST ==========
 function updateDailyUpdatesList() {
-  const today = new Date().toLocaleDateString();
-  const todaysUpdates = dailyUpdates.filter(u => u.date.includes(today)).reverse();
+  console.log("Updating daily updates list...");
   
   const listEl = document.getElementById("daily-updates-list");
-  if (!listEl) return;
+  if (!listEl) {
+    console.error("Daily updates list element not found!");
+    return;
+  }
+  
+  // Get today's date in the format used by the app
+  const today = new Date();
+  const todayDateString = today.toLocaleDateString();
+  console.log("Today's date:", todayDateString);
+  
+  // Filter updates that include today's date
+  const todaysUpdates = dailyUpdates.filter(u => u.date.includes(todayDateString)).reverse();
+  console.log("Filtered today's updates:", todaysUpdates);
   
   listEl.innerHTML = "";
   
@@ -575,11 +695,14 @@ function updateDailyUpdatesList() {
     const time = update.date.split(", ")[1] || update.date;
     let items = [];
     
-    // Count restock items
-    const restockCount = Object.values(update.restock).filter(v => v > 0).length;
-    if (restockCount > 0) items.push(`${restockCount} restock items`);
-    if (update.expenses.length > 0) items.push(`${update.expenses.length} expenses`);
-    if (update.requests.length > 0) items.push(`${update.requests.length} requests`);
+    // Count restock items (only those with value > 0)
+    if (update.restock) {
+      const restockCount = Object.values(update.restock).filter(v => v > 0).length;
+      if (restockCount > 0) items.push(`${restockCount} restock items`);
+    }
+    
+    if (update.expenses && update.expenses.length > 0) items.push(`${update.expenses.length} expenses`);
+    if (update.requests && update.requests.length > 0) items.push(`${update.requests.length} requests`);
     
     const itemText = items.join(', ') || 'No items';
     
@@ -587,10 +710,12 @@ function updateDailyUpdatesList() {
     div.className = 'update-item';
     div.innerHTML = `
       <span class="update-time">${time}</span>
-      <span class="update-desc">${update.pic} - ${itemText}</span>
+      <span class="update-desc">${update.pic || 'Staff'} - ${itemText}</span>
     `;
     listEl.appendChild(div);
   });
+  
+  console.log("List updated successfully");
 }
 
 // ========== CASH DRAWER FUNCTIONS ==========
@@ -1118,13 +1243,25 @@ async function saveSale() {
 
 // ========== LOAD DAILY UPDATES ==========
 function loadDailyUpdates() {
+  console.log("Loading daily updates...");
   try {
     const saved = localStorage.getItem("dailyUpdates");
-    if (saved) dailyUpdates = JSON.parse(saved);
+    if (saved) {
+      dailyUpdates = JSON.parse(saved);
+      console.log("Loaded daily updates:", dailyUpdates);
+    } else {
+      console.log("No daily updates found");
+      dailyUpdates = [];
+    }
   } catch (e) {
-    console.log("No daily updates data");
+    console.error("Error loading daily updates:", e);
+    dailyUpdates = [];
   }
+  
+  // Always update the list after loading
+  updateDailyUpdatesList();
 }
+
 
 // ========== RECEIPT FUNCTION - FIXED GROUPING ==========
 function generateReceipt(sale) {
