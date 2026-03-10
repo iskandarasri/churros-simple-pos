@@ -19,8 +19,16 @@ let cashAmount = null;
 let specialBoxActive = false;
 let specialBoxIndex = -1;
 
+// ========== PRODUCTION SUMMARY STATE ==========
+let totalKgSold = 0;
+let unsoldDefect = 0;
+let productionData = [];
+
 // ========== CASH DRAWER STATE ==========
 let startingCash = 200.00; // Default starting cash RM200
+
+// ========== DAILY UPDATE STATE ==========
+let dailyUpdates = [];
 
 const menuItems = [
   {
@@ -128,10 +136,24 @@ window.onload = () => {
   updateCalcDisplay();
   updatePaymentDisplay();
   updateCashDrawerDisplay();
+  loadDailyUpdates();
+  loadProductionData();
 
   document.getElementById("staffName").addEventListener("input", (e) => {
     currentStaff = e.target.value || "Staff 1";
   });
+
+  // Add auto-save listeners for production inputs
+  const kgInput = document.getElementById("totalKgSold");
+  const defectInput = document.getElementById("unsoldDefect");
+
+  if (kgInput) {
+    kgInput.addEventListener("input", debouncedAutoSave);
+  }
+
+  if (defectInput) {
+    defectInput.addEventListener("input", debouncedAutoSave);
+  }
 
   // Category filters
   document.querySelectorAll(".cat-btn").forEach((btn) => {
@@ -170,6 +192,13 @@ window.onload = () => {
       document.body.classList.toggle("tablet-layout", isTablet);
     });
   }
+
+  // Add daily update event listeners
+  document.getElementById("save-daily-update")?.addEventListener("click", saveDailyUpdate);
+  document.getElementById("clear-daily")?.addEventListener("click", clearDailyForm);
+  
+  // Update daily list when switching to daily page
+  updateDailyUpdatesList();
 
   // Developer info link
   document.getElementById("settingsDevInfo")?.addEventListener("click", () => {
@@ -245,8 +274,22 @@ window.onload = () => {
     );
     if (confirmed) {
       allSales = [];
+      dailyUpdates = [];
+      productionData = [];
       localStorage.removeItem("churrosSales");
+      localStorage.removeItem("dailyUpdates");
+      localStorage.removeItem("productionData");
       updateReports();
+      updateDailyUpdatesList();
+      
+      // Reset production input fields
+      const kgInput = document.getElementById("totalKgSold");
+      const defectInput = document.getElementById("unsoldDefect");
+      if (kgInput) kgInput.value = "0";
+      if (defectInput) defectInput.value = "0";
+      totalKgSold = 0;
+      unsoldDefect = 0;
+      
       await showCustomAlert("Data reset successful.", "Success", "✅");
     }
   });
@@ -351,6 +394,204 @@ window.onload = () => {
     });
   }
 };
+
+// ========== PRODUCTION SUMMARY FUNCTIONS ==========
+function loadProductionData() {
+  try {
+    const saved = localStorage.getItem("productionData");
+    if (saved) productionData = JSON.parse(saved);
+    
+    // Load today's data if exists
+    const today = new Date().toLocaleDateString();
+    const todayData = productionData.find(d => d.date === today);
+    if (todayData) {
+      totalKgSold = todayData.totalKg || 0;
+      unsoldDefect = todayData.unsoldDefect || 0;
+      
+      // Update input fields
+      const kgInput = document.getElementById("totalKgSold");
+      const defectInput = document.getElementById("unsoldDefect");
+      
+      if (kgInput) kgInput.value = totalKgSold;
+      if (defectInput) defectInput.value = unsoldDefect;
+    }
+  } catch (e) {
+    console.log("No production data");
+  }
+}
+
+// Auto-save function that saves to localStorage
+function autoSaveProduction() {
+  const kgInput = document.getElementById("totalKgSold");
+  const defectInput = document.getElementById("unsoldDefect");
+  
+  if (!kgInput || !defectInput) return;
+  
+  totalKgSold = parseFloat(kgInput.value) || 0;
+  unsoldDefect = parseInt(defectInput.value) || 0;
+  
+  const today = new Date().toLocaleDateString();
+  
+  // Find if today's data exists
+  const existingIndex = productionData.findIndex(d => d.date === today);
+  
+  const todayData = {
+    date: today,
+    totalKg: totalKgSold,
+    unsoldDefect: unsoldDefect
+  };
+  
+  if (existingIndex >= 0) {
+    productionData[existingIndex] = todayData;
+  } else {
+    productionData.push(todayData);
+  }
+  
+  localStorage.setItem("productionData", JSON.stringify(productionData));
+  
+  // Optional visual feedback
+  kgInput.style.borderColor = "var(--success)";
+  defectInput.style.borderColor = "var(--success)";
+  setTimeout(() => {
+    kgInput.style.borderColor = "";
+    defectInput.style.borderColor = "";
+  }, 300);
+}
+
+// Debounce function to prevent too many saves while typing
+function debounce(func, delay) {
+  let timeout;
+  return function() {
+    clearTimeout(timeout);
+    timeout = setTimeout(func, delay);
+  };
+}
+
+// Create debounced version of autoSave
+const debouncedAutoSave = debounce(autoSaveProduction, 500);
+
+// ========== DAILY UPDATE FUNCTIONS ==========
+function saveDailyUpdate() {
+  // Get restock values
+  const restockData = {
+    tepung: parseInt(document.getElementById("restock-tepung")?.value) || 0,
+    paste: parseInt(document.getElementById("restock-paste")?.value) || 0,
+    dippingCup: parseInt(document.getElementById("restock-dipping-cup")?.value) || 0,
+    familybox: parseInt(document.getElementById("restock-familybox")?.value) || 0,
+    paperBag: parseInt(document.getElementById("restock-paper-bag")?.value) || 0,
+    milkChoc: parseInt(document.getElementById("restock-milk-choc")?.value) || 0,
+    darkChoc: parseInt(document.getElementById("restock-dark-choc")?.value) || 0,
+    caramel: parseInt(document.getElementById("restock-caramel")?.value) || 0,
+    minyak: parseInt(document.getElementById("restock-minyak")?.value) || 0,
+    cinamon: parseInt(document.getElementById("restock-cinamon")?.value) || 0,
+    tisuKering: parseInt(document.getElementById("restock-tisu-kering")?.value) || 0,
+    tisuBasah: parseInt(document.getElementById("restock-tisu-basah")?.value) || 0,
+    plastikKecil: parseInt(document.getElementById("restock-plastik-kecil")?.value) || 0,
+    plastikBesar: parseInt(document.getElementById("restock-plastik-besar")?.value) || 0,
+    gloveL: parseInt(document.getElementById("restock-glove-l")?.value) || 0,
+    gloveS: parseInt(document.getElementById("restock-glove-s")?.value) || 0,
+  };
+
+  // Get expenses
+  const expenses = [];
+  for (let i = 1; i <= 4; i++) {
+    const desc = document.getElementById(`expense-${i}-desc`)?.value;
+    const amount = parseFloat(document.getElementById(`expense-${i}-amount`)?.value) || 0;
+    if (desc && desc.trim() !== '' && amount > 0) {
+      expenses.push({ desc: desc.trim(), amount });
+    }
+  }
+
+  // Get requests
+  const requests = [];
+  for (let i = 1; i <= 4; i++) {
+    const desc = document.getElementById(`request-${i}-desc`)?.value;
+    const qty = parseInt(document.getElementById(`request-${i}-qty`)?.value) || 0;
+    if (desc && desc.trim() !== '' && qty > 0) {
+      requests.push({ desc: desc.trim(), qty });
+    }
+  }
+
+  const pic = document.getElementById("daily-pic")?.value || "Staff";
+  const outlet = document.getElementById("daily-outlet")?.value || "DUNGUN";
+
+  const newUpdate = {
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+    pic: pic,
+    outlet: outlet,
+    restock: restockData,
+    expenses: expenses,
+    requests: requests
+  };
+
+  dailyUpdates.push(newUpdate);
+  localStorage.setItem("dailyUpdates", JSON.stringify(dailyUpdates));
+
+  // Clear form
+  clearDailyForm();
+  
+  // Update list
+  updateDailyUpdatesList();
+  
+  showCustomAlert("Daily update saved!", "Success", "✅");
+}
+
+function clearDailyForm() {
+  // Clear restock inputs
+  document.querySelectorAll('.restock-input').forEach(input => input.value = '0');
+  
+  // Clear expense inputs
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById(`expense-${i}-desc`).value = '';
+    document.getElementById(`expense-${i}-amount`).value = '0';
+  }
+  
+  // Clear request inputs
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById(`request-${i}-desc`).value = '';
+    document.getElementById(`request-${i}-qty`).value = '0';
+  }
+  
+  // Reset PIC
+  document.getElementById("daily-pic").value = currentStaff || "Staff 1";
+}
+
+function updateDailyUpdatesList() {
+  const today = new Date().toLocaleDateString();
+  const todaysUpdates = dailyUpdates.filter(u => u.date.includes(today)).reverse();
+  
+  const listEl = document.getElementById("daily-updates-list");
+  if (!listEl) return;
+  
+  listEl.innerHTML = "";
+  
+  if (todaysUpdates.length === 0) {
+    listEl.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No updates yet today.</p>';
+    return;
+  }
+  
+  todaysUpdates.forEach(update => {
+    const time = update.date.split(", ")[1] || update.date;
+    let items = [];
+    
+    // Count restock items
+    const restockCount = Object.values(update.restock).filter(v => v > 0).length;
+    if (restockCount > 0) items.push(`${restockCount} restock items`);
+    if (update.expenses.length > 0) items.push(`${update.expenses.length} expenses`);
+    if (update.requests.length > 0) items.push(`${update.requests.length} requests`);
+    
+    const itemText = items.join(', ') || 'No items';
+    
+    const div = document.createElement('div');
+    div.className = 'update-item';
+    div.innerHTML = `
+      <span class="update-time">${time}</span>
+      <span class="update-desc">${update.pic} - ${itemText}</span>
+    `;
+    listEl.appendChild(div);
+  });
+}
 
 // ========== CASH DRAWER FUNCTIONS ==========
 function updateCashDrawerDisplay() {
@@ -875,6 +1116,16 @@ async function saveSale() {
   if (cartOpen) toggleCart();
 }
 
+// ========== LOAD DAILY UPDATES ==========
+function loadDailyUpdates() {
+  try {
+    const saved = localStorage.getItem("dailyUpdates");
+    if (saved) dailyUpdates = JSON.parse(saved);
+  } catch (e) {
+    console.log("No daily updates data");
+  }
+}
+
 // ========== RECEIPT FUNCTION - FIXED GROUPING ==========
 function generateReceipt(sale) {
   document.getElementById("receiptDateTime").textContent = sale.date;
@@ -1019,7 +1270,7 @@ function updateReports() {
   });
 }
 
-// ========== FIXED EXPORT TO CSV WITH PROPER GROUPING ==========
+// ========== EXPORT TO CSV WITH PROPER GROUPING ==========
 async function exportToExcel() {
   if (allSales.length === 0) {
     await showCustomAlert("No data to export", "Export Error", "📊");
@@ -1140,6 +1391,11 @@ async function exportToExcel() {
   csvContent += `Cash Payments,${formatNumber(cashToday)}\n`;
   csvContent += `QR Payments,${formatNumber(qrToday)}\n\n`;
 
+  // ========== PRODUCTION SUMMARY ==========
+  csvContent += "TODAY PRODUCTION SUMMARY\n";
+  csvContent += `Total KG Sold,${totalKgSold.toFixed(2)}\n`;
+  csvContent += `Unsold/Defect (PCS),${unsoldDefect}\n\n`;
+
   // TODAY'S TRANSACTIONS
   csvContent += "TODAY'S TRANSACTIONS\n";
   csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
@@ -1155,7 +1411,7 @@ async function exportToExcel() {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     const timeStr = `${hours}:${minutes}:${seconds}`;
     
-    // FIXED: Group items within this sale
+    // Group items within this sale
     const groupedItems = {};
     sale.items.forEach((item) => {
       const itemName = item.name;
@@ -1243,7 +1499,7 @@ async function exportToExcel() {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     const timeStr = `${hours}:${minutes}:${seconds}`;
     
-    // FIXED: Group items within this sale
+    // Group items within this sale
     const groupedItems = {};
     sale.items.forEach((item) => {
       const itemName = item.name;
@@ -1275,6 +1531,82 @@ async function exportToExcel() {
     csvContent += `${escapeCSV(sale.staff)},`;
     csvContent += `${escapeCSV(sale.remarks || '')}\n`;
   });
+
+  // ========== DAILY UPDATES - Dalam bentuk list (vertical) ==========
+  csvContent += "\nDAILY UPDATES\n";
+  
+  const todaysUpdates = dailyUpdates.filter((update) => {
+    const updateDate = new Date(update.date);
+    const updateDay = String(updateDate.getDate()).padStart(2, '0');
+    const updateMonth = String(updateDate.getMonth() + 1).padStart(2, '0');
+    const updateYear = updateDate.getFullYear();
+    const updateDateFormatted = `${updateDay}/${updateMonth}/${updateYear}`;
+    return updateDateFormatted === todayFormatted;
+  });
+
+  if (todaysUpdates.length === 0) {
+    csvContent += "No daily updates today.\n\n";
+  } else {
+    todaysUpdates.forEach((update, index) => {
+      const date = new Date(update.date);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const dateStr = `${day}/${month}/${year}`;
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const timeStr = `${hours}:${minutes}`;
+
+      csvContent += `\n--- UPDATE #${index + 1}: ${dateStr} ${timeStr} ---\n`;
+      csvContent += `PIC: ${update.pic}\n`;
+      csvContent += `Outlet: ${update.outlet}\n`;
+      
+      // Restock items
+      csvContent += `\n>> RESTOCK CHECKLIST:\n`;
+      const restockItems = [
+        { name: "TEPUNG", value: update.restock.tepung },
+        { name: "PASTE", value: update.restock.paste },
+        { name: "DIPPING CUP", value: update.restock.dippingCup },
+        { name: "FAMILYBOX", value: update.restock.familybox },
+        { name: "PAPER BAG", value: update.restock.paperBag },
+        { name: "MILK CHOC", value: update.restock.milkChoc },
+        { name: "DARK CHOC", value: update.restock.darkChoc },
+        { name: "CARAMEL", value: update.restock.caramel },
+        { name: "MINYAK", value: update.restock.minyak },
+        { name: "CINAMON SUGAR", value: update.restock.cinamon },
+        { name: "TISU KERING", value: update.restock.tisuKering },
+        { name: "TISU BASAH", value: update.restock.tisuBasah },
+        { name: "PLASTIK KECIL", value: update.restock.plastikKecil },
+        { name: "PLASTIK BESAR", value: update.restock.plastikBesar || 0 },
+        { name: "GLOVE L", value: update.restock.gloveL || 0 },
+        { name: "GLOVE S", value: update.restock.gloveS || 0 }
+      ];
+      
+      restockItems.forEach(item => {
+        if (item.value > 0) {
+          csvContent += `  ${item.name}: ${item.value} PCS\n`;
+        }
+      });
+
+      // Expenses
+      if (update.expenses.length > 0) {
+        csvContent += `\n>> EXPENSES:\n`;
+        update.expenses.forEach(exp => {
+          csvContent += `  ${exp.desc}: RM ${exp.amount.toFixed(2)}\n`;
+        });
+      }
+
+      // Requests
+      if (update.requests.length > 0) {
+        csvContent += `\n>> REQUESTS:\n`;
+        update.requests.forEach(req => {
+          csvContent += `  ${req.desc}: ${req.qty} PCS\n`;
+        });
+      }
+      
+      csvContent += `\n${'-'.repeat(30)}\n`;
+    });
+  }
 
   const filename = `churros_sales_${todayYear}${todayMonth}${todayDay}.csv`;
   const isAndroid = /Android/i.test(navigator.userAgent);
