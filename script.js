@@ -42,6 +42,14 @@ function getCurrentFormattedDate() {
   return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
 }
 
+function getTodayDateString() {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 function parseDateFromString(dateString) {
   // Default to current date
   const now = new Date();
@@ -848,9 +856,9 @@ function loadProductionData() {
     const saved = localStorage.getItem("productionData");
     if (saved) productionData = JSON.parse(saved);
     
-    // Load today's data if exists
-    const today = new Date().toLocaleDateString();
-    const todayData = productionData.find(d => d.date === today);
+    // Load today's data if exists - use consistent format
+    const todayDateStr = getTodayDateString();
+    const todayData = productionData.find(d => d.date === todayDateStr);
     if (todayData) {
       totalKgSold = todayData.totalKg || 0;
       unsoldDefect = todayData.unsoldDefect || 0;
@@ -877,13 +885,13 @@ function autoSaveProduction() {
   totalKgSold = parseFloat(kgInput.value) || 0;
   unsoldDefect = parseInt(defectInput.value) || 0;
   
-  const today = new Date().toLocaleDateString();
+  const todayDateStr = getTodayDateString();
   
   // Find if today's data exists
-  const existingIndex = productionData.findIndex(d => d.date === today);
+  const existingIndex = productionData.findIndex(d => d.date === todayDateStr);
   
   const todayData = {
-    date: today,
+    date: todayDateStr,
     totalKg: totalKgSold,
     unsoldDefect: unsoldDefect
   };
@@ -949,11 +957,7 @@ function updateDailyUpdatesList() {
   }
   
   // Get today's date in the SAME format used when saving (dd/mm/yyyy)
-  const today = new Date();
-  const todayDay = String(today.getDate()).padStart(2, '0');
-  const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
-  const todayYear = today.getFullYear();
-  const todayDateStr = `${todayDay}/${todayMonth}/${todayYear}`;
+  const todayDateStr = getTodayDateString();
   
   console.log("Today's date for filtering:", todayDateStr);
   
@@ -1057,15 +1061,7 @@ function saveDailyUpdate() {
   const outlet = document.getElementById("daily-outlet")?.value || "DUNGUN";
 
   // Create date in a consistent format
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-
-  const formattedDate = `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+  const formattedDate = getCurrentFormattedDate();
  
   const newUpdate = {
     id: Date.now(),
@@ -1113,12 +1109,34 @@ function clearDailyForm() {
 
 // ========== CASH DRAWER FUNCTIONS ==========
 function updateCashDrawerDisplay() {
+  console.log("Updating cash drawer display...");
+  
   // Check if elements exist
   if (!document.getElementById("startingCashInput")) return;
   
-  // Get today's sales
-  const today = new Date().toLocaleDateString();
-  const todaysSales = allSales.filter((sale) => sale.date.includes(today));
+  // Get today's date in the format used in sales data (dd/mm/yyyy)
+  const todayDateStr = getTodayDateString();
+  
+  console.log("Today's date:", todayDateStr);
+  
+  // Force reload sales data to ensure we have latest
+  loadStoredData();
+  
+  // Filter today's sales by comparing date strings
+  const todaysSales = allSales.filter(sale => {
+    if (!sale || !sale.date) return false;
+    
+    try {
+      // Extract date part from sale.date (format: "dd/mm/yyyy, hh:mm:ss")
+      const saleDatePart = sale.date.split(',')[0].trim();
+      return saleDatePart === todayDateStr;
+    } catch (e) {
+      console.log("Error parsing sale date:", e);
+      return false;
+    }
+  });
+  
+  console.log("Today's sales for cash drawer:", todaysSales);
 
   // Calculate cash sales and card sales
   let cashSales = 0;
@@ -1132,20 +1150,21 @@ function updateCashDrawerDisplay() {
     }
   });
 
+  console.log("Cash sales:", cashSales, "QR sales:", cardSales);
+
   // Update display
   document.getElementById("startingCashInput").value = startingCash.toFixed(2);
-  document.getElementById("cashSalesTotal").textContent =
-    `RM ${cashSales.toFixed(2)}`;
-  document.getElementById("cardSalesTotal").textContent =
-    `RM ${cardSales.toFixed(2)}`;
+  document.getElementById("cashSalesTotal").textContent = `RM ${cashSales.toFixed(2)}`;
+  document.getElementById("cardSalesTotal").textContent = `RM ${cardSales.toFixed(2)}`;
 
   // Calculate expected cash: startingCash + cashSales
   const expectedCash = startingCash + cashSales;
-  document.getElementById("expectedCash").textContent =
-    `RM ${expectedCash.toFixed(2)}`;
+  document.getElementById("expectedCash").textContent = `RM ${expectedCash.toFixed(2)}`;
 
   // Save to localStorage
   localStorage.setItem("startingCash", startingCash.toString());
+  
+  console.log("Cash drawer updated. Expected cash:", expectedCash);
 }
 
 // Update starting cash from input
@@ -1170,8 +1189,16 @@ function updateStartingCash() {
 
 // Close Shift
 function closeShift() {
-  const today = new Date().toLocaleDateString();
-  const todaysSales = allSales.filter((sale) => sale.date.includes(today));
+  const todayDateStr = getTodayDateString();
+  const todaysSales = allSales.filter((sale) => {
+    if (!sale || !sale.date) return false;
+    try {
+      const saleDatePart = sale.date.split(',')[0].trim();
+      return saleDatePart === todayDateStr;
+    } catch (e) {
+      return false;
+    }
+  });
 
   let cashSales = 0;
   let cardSales = 0;
@@ -1190,7 +1217,7 @@ function closeShift() {
   const shiftReport = 
 `SHIFT CLOSING REPORT
 ====================
-Date: ${today}
+Date: ${todayDateStr}
 
 STARTING CASH: RM ${startingCash.toFixed(2)}
 
@@ -1755,11 +1782,7 @@ function updateReports() {
   loadStoredData();
   
   // Get today's date in the format used in sales data (dd/mm/yyyy)
-  const today = new Date();
-  const todayDay = String(today.getDate()).padStart(2, '0');
-  const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
-  const todayYear = today.getFullYear();
-  const todayDateStr = `${todayDay}/${todayMonth}/${todayYear}`;
+  const todayDateStr = getTodayDateString();
   
   console.log("Today's date:", todayDateStr);
   console.log("All sales:", allSales);
