@@ -411,6 +411,420 @@ window.onload = () => {
   }
 };
 
+// ========== EXPORT TO CSV WITH PROPER GROUPING ==========
+async function exportToExcel() {
+  if (allSales.length === 0 && dailyUpdates.length === 0) {
+    await showCustomAlert("No data to export", "Export Error", "📊");
+    return;
+  }
+
+  // Format today's date as dd/mm/yyyy for filtering
+  const today = new Date();
+  const todayDay = String(today.getDate()).padStart(2, '0');
+  const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+  const todayYear = today.getFullYear();
+  const todayFormatted = `${todayDay}/${todayMonth}/${todayYear}`;
+  
+  // Helper function to safely parse dates
+  function safeParseDate(dateString) {
+    if (!dateString) return null;
+    
+    try {
+      // Try to parse the date string
+      // Handle format like "3/11/2025, 14:30:25" or "3/11/2025, 14:30"
+      const parts = dateString.split(/[,/ :]+/);
+      
+      if (parts.length >= 3) {
+        // For Malaysian format (DD/MM/YYYY)
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        
+        // Check if valid
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+          return new Date(year, month, day);
+        }
+      }
+      
+      // Fallback to standard parsing
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    } catch (e) {
+      console.log("Date parsing error:", e);
+    }
+    
+    return null;
+  }
+
+  // Filter today's sales using the formatted date
+  const todaysSales = allSales.filter((sale) => {
+    const saleDate = safeParseDate(sale.date);
+    if (!saleDate) return false;
+    
+    const saleDay = String(saleDate.getDate()).padStart(2, '0');
+    const saleMonth = String(saleDate.getMonth() + 1).padStart(2, '0');
+    const saleYear = saleDate.getFullYear();
+    const saleDateFormatted = `${saleDay}/${saleMonth}/${saleYear}`;
+    return saleDateFormatted === todayFormatted;
+  });
+  
+  const todayTotal = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
+  const todayCount = todaysSales.length;
+
+  const cashToday = todaysSales
+    .filter((s) => s.paymentMethod === "Cash")
+    .reduce((sum, s) => sum + s.total, 0);
+  const qrToday = todaysSales
+    .filter((s) => s.paymentMethod === "QR")
+    .reduce((sum, s) => sum + s.total, 0);
+
+  const grandTotal = allSales.reduce((sum, sale) => sum + sale.total, 0);
+  const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
+  const totalChange = allSales.reduce((sum, sale) => sum + sale.change, 0);
+
+  // Count items by category (with grouping)
+  let totalSingles = 0, totalFamilies = 0, totalSpecialSingles = 0;
+  let totalMilkDips = 0, totalDarkDips = 0, totalCaramelDips = 0, totalSpecialDips = 0, totalFamilyBoxDips = 0;
+  let totalKeychains = 0;
+
+  allSales.forEach((sale) => {
+    // Group items within each sale
+    const saleGroups = {};
+    
+    sale.items.forEach((item) => {
+      const itemName = item.name;
+      
+      if (!saleGroups[itemName]) {
+        saleGroups[itemName] = {
+          name: itemName,
+          count: 1,
+          isFamilyBoxDip: item.isFamilyBoxDip || false
+        };
+      } else {
+        saleGroups[itemName].count += 1;
+      }
+    });
+
+    // Count the grouped items
+    Object.values(saleGroups).forEach(item => {
+      if (item.name === "Single Set") totalSingles += item.count;
+      else if (item.name === "Family Box") totalFamilies += item.count;
+      else if (item.name === "Special Single Set") totalSpecialSingles += item.count;
+      else if (item.name === "+ Milk Choco Dip") totalMilkDips += item.count;
+      else if (item.name === "+ Dark Choco Dip") totalDarkDips += item.count;
+      else if (item.name === "+ Caramel Dip") totalCaramelDips += item.count;
+      else if (item.name === "+ Special Dip") totalSpecialDips += item.count;
+      else if (item.isFamilyBoxDip || item.name === "+ Special Dip (FB)") totalFamilyBoxDips += item.count;
+      else if (item.name === "Keychain") totalKeychains += item.count;
+    });
+  });
+
+  const totalChurros = totalSingles + totalFamilies + totalSpecialSingles;
+  const totalDips = totalMilkDips + totalDarkDips + totalCaramelDips + totalSpecialDips + totalFamilyBoxDips;
+  const totalItems = totalChurros + totalDips + totalKeychains;
+
+  // Use comma delimiter for Excel (standard CSV)
+  const delimiter = ",";
+  
+  // Helper function to escape CSV fields for Excel
+  const escapeCSV = (str) => {
+    if (str === null || str === undefined) return "";
+    let cleaned = str.toString();
+    if (cleaned.startsWith('=') || cleaned.startsWith('+') || 
+        cleaned.startsWith('-') || cleaned.startsWith('@')) {
+      cleaned = "'" + cleaned;
+    }
+    if (cleaned.includes(delimiter) || cleaned.includes('"') || cleaned.includes('\n')) {
+      return '"' + cleaned.replace(/"/g, '""') + '"';
+    }
+    return cleaned;
+  };
+
+  const formatNumber = (num) => num.toFixed(2);
+
+  let csvContent = "";
+
+  // HEADER
+  csvContent += "MR CHURROS DUNGUN POS - SALES REPORT\n";
+  
+  const genDay = String(today.getDate()).padStart(2, '0');
+  const genMonth = String(today.getMonth() + 1).padStart(2, '0');
+  const genYear = today.getFullYear();
+  const genHours = String(today.getHours()).padStart(2, '0');
+  const genMinutes = String(today.getMinutes()).padStart(2, '0');
+  const genSeconds = String(today.getSeconds()).padStart(2, '0');
+  const generatedDateTime = `${genDay}/${genMonth}/${genYear} ${genHours}:${genMinutes}:${genSeconds}`;
+  
+  csvContent += `Generated,${escapeCSV(generatedDateTime)}\n\n`;
+
+  // TODAY'S SUMMARY
+  csvContent += "TODAY'S SUMMARY\n";
+  csvContent += `Date,${escapeCSV(todayFormatted)}\n`;
+  csvContent += `Total Sales,${todayCount}\n`;
+  csvContent += `Total Revenue,${formatNumber(todayTotal)}\n`;
+  csvContent += `Cash Payments,${formatNumber(cashToday)}\n`;
+  csvContent += `QR Payments,${formatNumber(qrToday)}\n\n`;
+
+  // ========== PRODUCTION SUMMARY ==========
+  csvContent += "TODAY PRODUCTION SUMMARY\n";
+  csvContent += `Total KG Sold,${totalKgSold.toFixed(2)}\n`;
+  csvContent += `Unsold/Defect (PCS),${unsoldDefect}\n\n`;
+
+  // TODAY'S TRANSACTIONS
+  csvContent += "TODAY'S TRANSACTIONS\n";
+  csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
+
+  todaysSales.forEach((sale) => {
+    const saleDate = safeParseDate(sale.date) || new Date();
+    const day = String(saleDate.getDate()).padStart(2, '0');
+    const month = String(saleDate.getMonth() + 1).padStart(2, '0');
+    const year = saleDate.getFullYear();
+    const dateStr = `${day}/${month}/${year}`;
+    const hours = String(saleDate.getHours()).padStart(2, '0');
+    const minutes = String(saleDate.getMinutes()).padStart(2, '0');
+    const seconds = String(saleDate.getSeconds()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}:${seconds}`;
+    
+    // Group items within this sale
+    const groupedItems = {};
+    sale.items.forEach((item) => {
+      const itemName = item.name;
+      
+      if (!groupedItems[itemName]) {
+        groupedItems[itemName] = 1;
+      } else {
+        groupedItems[itemName] += 1;
+      }
+    });
+    
+    // Build items list with grouped quantities
+    let itemsList = [];
+    // Sort items alphabetically for consistent output
+    const sortedItems = Object.entries(groupedItems).sort((a, b) => a[0].localeCompare(b[0]));
+    
+    for (const [itemName, count] of sortedItems) {
+      itemsList.push(`${count}x ${itemName}`);
+    }
+    const itemsString = itemsList.join(" + ");
+    
+    csvContent += `${escapeCSV(dateStr)},`;
+    csvContent += `${escapeCSV(timeStr)},`;
+    csvContent += `${escapeCSV(itemsString)},`;
+    csvContent += `${formatNumber(sale.total)},`;
+    csvContent += `${formatNumber(sale.paid)},`;
+    csvContent += `${formatNumber(sale.change)},`;
+    csvContent += `${escapeCSV(sale.paymentMethod)},`;
+    csvContent += `${escapeCSV(sale.staff)},`;
+    csvContent += `${escapeCSV(sale.remarks || '')}\n`;
+  });
+
+  csvContent += "\nOVERALL SUMMARY\n";
+  csvContent += `Total Transactions,${allSales.length}\n`;
+  csvContent += `Total Revenue,${formatNumber(grandTotal)}\n`;
+  csvContent += `Total Paid,${formatNumber(totalPaid)}\n`;
+  csvContent += `Total Change Given,${formatNumber(totalChange)}\n\n`;
+
+  csvContent += "PAYMENT METHOD BREAKDOWN\n";
+  const totalCash = allSales
+    .filter((s) => s.paymentMethod === "Cash")
+    .reduce((sum, s) => sum + s.total, 0);
+  const totalQR = allSales
+    .filter((s) => s.paymentMethod === "QR")
+    .reduce((sum, s) => sum + s.total, 0);
+  csvContent += `Cash Payments,${formatNumber(totalCash)}\n`;
+  csvContent += `QR Payments,${formatNumber(totalQR)}\n\n`;
+
+  csvContent += "ITEM BREAKDOWN\n";
+  csvContent += "CHURROS SETS\n";
+  csvContent += `Single Set,${totalSingles}\n`;
+  csvContent += `Family Box,${totalFamilies}\n`;
+  csvContent += `Special Single Set,${totalSpecialSingles}\n`;
+  csvContent += `Total Churros Sets,${totalChurros}\n\n`;
+
+  csvContent += "DIPS (Add-ons)\n";
+  csvContent += `'+ Milk Choco Dip,${totalMilkDips}\n`;
+  csvContent += `'+ Dark Choco Dip,${totalDarkDips}\n`;
+  csvContent += `'+ Caramel Dip,${totalCaramelDips}\n`;
+  csvContent += `'+ Special Dip,${totalSpecialDips}\n`;
+  csvContent += `'+ Family Box Special Dip,${totalFamilyBoxDips}\n`;
+  csvContent += `Total Dips,${totalDips}\n\n`;
+
+  csvContent += "MERCHANDISE\n";
+  csvContent += `Keychain,${totalKeychains}\n\n`;
+  csvContent += `TOTAL ITEMS SOLD,${totalItems}\n\n`;
+
+  csvContent += "CASH DRAWER\n";
+  csvContent += `Starting Cash,${formatNumber(startingCash)}\n`;
+  csvContent += `Cash Sales,${formatNumber(cashToday)}\n`;
+  const expectedCash = startingCash + cashToday;
+  csvContent += `Expected Cash,${formatNumber(expectedCash)}\n\n`;
+
+  csvContent += "ALL TRANSACTIONS HISTORY\n";
+  csvContent += `Date,Time,Items,Total (RM),Paid (RM),Change (RM),Payment,Staff,Remarks\n`;
+
+  allSales.forEach((sale) => {
+    const saleDate = safeParseDate(sale.date) || new Date();
+    const day = String(saleDate.getDate()).padStart(2, '0');
+    const month = String(saleDate.getMonth() + 1).padStart(2, '0');
+    const year = saleDate.getFullYear();
+    const dateStr = `${day}/${month}/${year}`;
+    const hours = String(saleDate.getHours()).padStart(2, '0');
+    const minutes = String(saleDate.getMinutes()).padStart(2, '0');
+    const seconds = String(saleDate.getSeconds()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}:${seconds}`;
+    
+    // Group items within this sale
+    const groupedItems = {};
+    sale.items.forEach((item) => {
+      const itemName = item.name;
+      
+      if (!groupedItems[itemName]) {
+        groupedItems[itemName] = 1;
+      } else {
+        groupedItems[itemName] += 1;
+      }
+    });
+    
+    // Build items list with grouped quantities
+    let itemsList = [];
+    const sortedItems = Object.entries(groupedItems).sort((a, b) => a[0].localeCompare(b[0]));
+    
+    for (const [itemName, count] of sortedItems) {
+      itemsList.push(`${count}x ${itemName}`);
+    }
+    const itemsString = itemsList.join(" + ");
+    
+    csvContent += `${escapeCSV(dateStr)},`;
+    csvContent += `${escapeCSV(timeStr)},`;
+    csvContent += `${escapeCSV(itemsString)},`;
+    csvContent += `${formatNumber(sale.total)},`;
+    csvContent += `${formatNumber(sale.paid)},`;
+    csvContent += `${formatNumber(sale.change)},`;
+    csvContent += `${escapeCSV(sale.paymentMethod)},`;
+    csvContent += `${escapeCSV(sale.staff)},`;
+    csvContent += `${escapeCSV(sale.remarks || '')}\n`;
+  });
+
+  // ========== DAILY UPDATES - Dalam bentuk list (vertical) ==========
+  csvContent += "\nDAILY UPDATES\n";
+  
+  // Filter daily updates by comparing date strings directly
+  const todaysUpdates = dailyUpdates.filter((update) => {
+    if (!update || !update.date) return false;
+    
+    try {
+      // Extract the date part from update.date (format: "dd/mm/yyyy, hh:mm:ss")
+      const updateDatePart = update.date.split(',')[0].trim();
+      
+      // Compare with today's formatted date
+      return updateDatePart === todayFormatted;
+    } catch (e) {
+      console.log("Error filtering daily update:", e);
+      return false;
+    }
+  });
+
+  if (todaysUpdates.length === 0) {
+    csvContent += "No daily updates today.\n\n";
+  } else {
+    todaysUpdates.forEach((update, index) => {
+      // Extract time from update.date
+      let timeStr = "";
+      try {
+        const timeParts = update.date.split(',')[1]?.trim() || "";
+        timeStr = timeParts.substring(0, 5); // Get HH:MM only
+      } catch (e) {
+        timeStr = "--:--";
+      }
+
+      csvContent += `\n--- UPDATE #${index + 1}: ${todayFormatted} ${timeStr} ---\n`;
+      csvContent += `PIC: ${update.pic || 'Staff'}\n`;
+      csvContent += `Outlet: ${update.outlet || 'DUNGUN'}\n`;
+      
+      // Restock items
+      csvContent += `\n>> RESTOCK CHECKLIST:\n`;
+      if (update.restock) {
+        const restockItems = [
+          { name: "TEPUNG", value: update.restock.tepung },
+          { name: "PASTE", value: update.restock.paste },
+          { name: "DIPPING CUP", value: update.restock.dippingCup },
+          { name: "FAMILY BOX", value: update.restock.familybox },
+          { name: "PAPER BAG", value: update.restock.paperBag },
+          { name: "MILK CHOC", value: update.restock.milkChoc },
+          { name: "DARK CHOC", value: update.restock.darkChoc },
+          { name: "CARAMEL", value: update.restock.caramel },
+          { name: "MINYAK", value: update.restock.minyak },
+          { name: "CINNAMON SUGAR", value: update.restock.cinamon },
+          { name: "TISU KERING", value: update.restock.tisuKering },
+          { name: "TISU BASAH", value: update.restock.tisuBasah },
+          { name: "PLASTIK KECIL", value: update.restock.plastikKecil },
+          { name: "PLASTIK BESAR", value: update.restock.plastikBesar || 0 },
+          { name: "GLOVE L", value: update.restock.gloveL || 0 },
+          { name: "GLOVE S", value: update.restock.gloveS || 0 }
+        ];
+        
+        let hasRestock = false;
+        restockItems.forEach(item => {
+          if (item.value && item.value > 0) {
+            csvContent += `  ${item.name}: ${item.value} PCS\n`;
+            hasRestock = true;
+          }
+        });
+        
+        if (!hasRestock) {
+          csvContent += `  No restock items\n`;
+        }
+      } else {
+        csvContent += `  No restock data\n`;
+      }
+
+      // Expenses
+      if (update.expenses && update.expenses.length > 0) {
+        csvContent += `\n>> EXPENSES:\n`;
+        update.expenses.forEach(exp => {
+          if (exp.desc && exp.amount > 0) {
+            csvContent += `  ${exp.desc}: RM ${exp.amount.toFixed(2)}\n`;
+          }
+        });
+      }
+
+      // Requests
+      if (update.requests && update.requests.length > 0) {
+        csvContent += `\n>> REQUESTS:\n`;
+        update.requests.forEach(req => {
+          if (req.desc && req.qty > 0) {
+            csvContent += `  ${req.desc}: ${req.qty} PCS\n`;
+          }
+        });
+      }
+      
+      csvContent += `\n${'-'.repeat(30)}\n`;
+    });
+  }
+
+  const filename = `churros_sales_${todayYear}${todayMonth}${todayDay}.csv`;
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  if (isAndroid && window.Android) {
+    await showCustomAlert("Saving to Downloads folder...", "Download", "📥");
+    Android.downloadCSV(csvContent, filename);
+  } else {
+    const blob = new Blob(["\uFEFF" + csvContent], { 
+      type: "text/csv;charset=utf-8", 
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+}
+
 // ========== PRODUCTION SUMMARY FUNCTIONS ==========
 function loadProductionData() {
   try {
@@ -2135,4 +2549,5 @@ function initEasterEgg() {
     }
   });
 }
+
 
