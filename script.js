@@ -1031,7 +1031,7 @@ function saveDailyUpdate() {
   const seconds = String(now.getSeconds()).padStart(2, '0');
   
   // Use toLocaleDateString for the date part to match other functions
-  const datePart = now.toLocaleDateString();
+  const datePart = now.toLocaleDateString("en-GB");
   const timePart = `${hours}:${minutes}:${seconds}`;
   const formattedDate = `${datePart}, ${timePart}`;
 
@@ -2549,5 +2549,6 @@ function initEasterEgg() {
     }
   });
 }
+
 
 
