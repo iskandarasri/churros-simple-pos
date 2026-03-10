@@ -138,28 +138,20 @@ body {
   white-space: nowrap;
 }
 
-@media (max-width: 380px) {
-  .dungun-badge {
-    font-size: 0.75rem;
-    padding: 3px 8px;
-  }
-}
-
 /* ========== FIXED SCROLLING FOR ALL PAGES - iOS COMPATIBLE ========== */
 .main-content {
   flex: 1;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* Essential for iOS smooth scrolling */
+  -webkit-overflow-scrolling: touch;
   height: 100%;
   padding: 0;
   margin: 0;
 }
 
-/* Page styling with plenty of bottom padding */
 .page {
   display: none;
   padding: 16px;
-  padding-bottom: 150px; /* Space to see all buttons */
+  padding-bottom: 150px;
   min-height: 100%;
   animation: fadeIn 0.3s ease;
   box-sizing: border-box;
@@ -169,42 +161,36 @@ body {
   display: block;
 }
 
-/* iOS Safari specific fixes */
 @supports (-webkit-touch-callout: none) {
-  /* iOS devices only */
   .main-content {
-    height: -webkit-fill-available; /* Better height handling on iOS */
+    height: -webkit-fill-available;
   }
   
   .page {
-    padding-bottom: 170px; /* Extra padding for iOS home indicator */
+    padding-bottom: 170px;
   }
   
-  /* Ensure bottom nav doesn't interfere */
   .bottom-nav {
     padding-bottom: env(safe-area-inset-bottom, 0px);
     height: calc(60px + env(safe-area-inset-bottom, 0px));
   }
 }
 
-/* Calculator page specific */
 #page-calc .calculator-container {
   margin-bottom: 20px;
 }
 
 #page-calc {
-  padding-bottom: 180px; /* Extra space for calculator buttons */
+  padding-bottom: 180px;
 }
 
-/* Product grid spacing */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  padding-bottom: 80px; /* Space for last row */
+  padding-bottom: 80px;
 }
 
-/* Ensure all calculator buttons are visible */
 .calc-keypad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -220,7 +206,6 @@ body {
   margin-bottom: 30px;
 }
 
-/* Bottom navigation - iOS friendly */
 .bottom-nav {
   position: sticky;
   bottom: 0;
@@ -234,39 +219,8 @@ body {
   z-index: 1000;
   flex-shrink: 0;
   margin-top: auto;
-  /* Safe area for iOS */
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-sizing: content-box;
-}
-
-/* For devices with home indicator (iPhone X and newer) */
-@media (max-width: 480px) {
-  .page {
-    padding-bottom: 160px;
-  }
-  
-  #page-calc {
-    padding-bottom: 190px;
-  }
-  
-  .product-grid {
-    padding-bottom: 90px;
-  }
-}
-
-/* For very small screens */
-@media (max-width: 380px) {
-  .page {
-    padding-bottom: 170px;
-  }
-  
-  #page-calc {
-    padding-bottom: 200px;
-  }
-  
-  .product-grid {
-    padding-bottom: 100px;
-  }
 }
 
 /* ========== SEARCH & CATEGORIES ========== */
@@ -477,7 +431,7 @@ body {
   margin-top: 20px;
 }
 
-/* ========== BOTTOM NAVIGATION - FIXED ========== */
+/* ========== BOTTOM NAVIGATION ========== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -493,7 +447,6 @@ body {
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
-  /* Safe area padding for notched phones */
   padding-bottom: var(--safe-bottom);
   box-sizing: content-box;
 }
@@ -530,10 +483,10 @@ body {
   stroke-linejoin: round;
 }
 
-/* ========== CART SHEET - FIXED POSITIONING ========== */
+/* ========== CART SHEET ========== */
 .cart-sheet {
   position: fixed;
-  bottom: 60px; /* Exactly above navbar */
+  bottom: 60px;
   bottom: calc(60px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%) translateY(calc(100% - 60px));
@@ -718,7 +671,6 @@ body {
   margin-bottom: 8px;
 }
 
-/* Payment Method Buttons */
 .payment-toggle {
   display: flex;
   gap: 8px;
@@ -744,7 +696,6 @@ body {
   border: 1px solid var(--primary);
 }
 
-/* Money Presets Styles */
 .money-presets {
   margin-bottom: 16px;
   padding: 12px;
@@ -786,7 +737,6 @@ body {
   background: var(--primary-hover);
 }
 
-/* Manual Payment Input Styles */
 .manual-payment {
   margin-bottom: 16px;
   padding: 12px;
@@ -845,7 +795,6 @@ body {
   transform: translateY(2px);
 }
 
-/* Cart Remarks Input */
 .cart-remarks {
   margin-bottom: 16px;
   padding: 0 4px;
@@ -1204,103 +1153,6 @@ body.dark-mode .money-preset-btn {
   box-shadow: 0 2px 0 #555;
 }
 
-/* ========== RESPONSIVE ADJUSTMENTS ========== */
-@media (max-width: 380px) {
-  .menu-item-image {
-    width: 70px;
-    height: 70px;
-  }
-  
-  .bottom-nav {
-    height: 55px;
-  }
-  
-  .nav-btn {
-    font-size: 0.7rem;
-  }
-  
-  .nav-btn svg {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .cart-sheet {
-    bottom: 55px;
-    bottom: calc(55px + var(--safe-bottom));
-  }
-  
-  .cart-body {
-    max-height: 30vh;
-  }
-  
-  .order-item {
-    padding: 6px 0;
-    font-size: 0.85rem;
-  }
-  
-  .item-name {
-    font-size: 0.85rem;
-  }
-  
-  .item-price {
-    font-size: 0.85rem;
-  }
-  
-  .money-preset-btn {
-    padding: 10px 12px;
-    font-size: 0.9rem;
-    min-width: 55px;
-  }
-}
-
-@media (max-width: 320px) {
-  .menu-item-image {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .money-preset-btn {
-    padding: 8px 10px;
-    font-size: 0.8rem;
-    min-width: 50px;
-  }
-}
-
-/* Hide dark mode toggle button */
-#darkModeToggle {
-  display: none;
-}
-
-/* Hide cart remarks (if you want them hidden) */
-.cart-remarks {
-  display: none;
-}
-
-/* Custom Popup Styles */
-.popup-icon {
-  font-size: 3rem;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-#customAlertModal .modal-content,
-#customConfirmModal .modal-content {
-  animation: popIn 0.2s ease;
-}
-
-@keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-#customAlertModal .popup-icon {
-  color: var(--danger);
-}
-
-#customConfirmModal .popup-icon {
-  color: var(--primary);
-}
-
 /* ========== CASH DRAWER STYLES ========== */
 .cash-drawer-section {
   background: var(--bg-surface);
@@ -1321,7 +1173,22 @@ body.dark-mode .money-preset-btn {
 .float-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
+}
+
+.float-row span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.float-row .input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .float-input {
@@ -1331,7 +1198,14 @@ body.dark-mode .money-preset-btn {
   background: var(--bg-surface);
   color: var(--text-main);
   width: 100px;
-  margin-right: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.float-input:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 .float-save-btn {
@@ -1342,6 +1216,7 @@ body.dark-mode .money-preset-btn {
   padding: 8px 16px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .drawer-summary {
@@ -1357,11 +1232,13 @@ body.dark-mode .money-preset-btn {
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px dashed var(--border);
-  gap: 10px;
+}
+
+.drawer-row:last-child {
+  border-bottom: none;
 }
 
 .drawer-row span:first-child {
-  flex: 0 0 80px;
   color: var(--text-muted);
 }
 
@@ -1390,6 +1267,7 @@ body.dark-mode .money-preset-btn {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
 .cash-action-btn.primary {
@@ -1403,22 +1281,13 @@ body.dark-mode .money-preset-btn {
   border: 1px solid var(--border);
 }
 
-/* Update float section for always-visible input */
-.float-section {
-  background: var(--bg-base);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 16px;
+#expectedCash {
+  white-space: nowrap !important;
+  display: inline-block !important;
 }
 
-.float-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.float-input {
+/* ========== PRODUCTION SUMMARY STYLES ========== */
+.production-input {
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -1427,32 +1296,33 @@ body.dark-mode .money-preset-btn {
   width: 100px;
   font-size: 1rem;
   font-weight: 600;
+  text-align: right;
 }
 
-.float-input:focus {
+.production-input:focus {
   outline: none;
   border-color: var(--primary);
 }
 
-.float-save-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-weight: 600;
-  cursor: pointer;
+/* Production Summary rows */
+.cash-drawer-section .float-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.float-save-btn:active {
-  background: var(--primary-hover);
-  transform: scale(0.98);
+.cash-drawer-section .float-row span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-main);
+  white-space: nowrap;
 }
 
-/* Simple fix - just add this */
-#expectedCash {
-  white-space: nowrap !important;
-  display: inline-block !important;
+.cash-drawer-section .float-row div {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 /* ========== SETTINGS PAGE STYLES ========== */
@@ -1485,12 +1355,6 @@ body.dark-mode .money-preset-btn {
   flex: 1;
 }
 
-.settings-icon {
-  font-size: 2rem;
-  min-width: 48px;
-  text-align: center;
-}
-
 .settings-info h3 {
   font-size: 1.1rem;
   font-weight: 600;
@@ -1516,11 +1380,6 @@ body.dark-mode .money-preset-btn {
   font-size: 0.85rem;
 }
 
-.settings-footer p {
-  margin: 4px 0;
-}
-
-/* Toggle Switch */
 .toggle-switch {
   position: relative;
   display: inline-block;
@@ -1567,7 +1426,7 @@ input:checked + .toggle-slider:before {
   transform: translateX(26px);
 }
 
-/* Tablet/Laptop Layout */
+/* ========== TABLET/ LAPTOP LAYOUT ========== */
 body.tablet-layout .app-container {
   max-width: 900px;
 }
@@ -1588,11 +1447,554 @@ body.tablet-layout .settings-container {
   max-width: 800px;
 }
 
-/* Dark mode adjustments */
+body.tablet-layout .daily-container {
+  max-width: 800px;
+}
+
 body.dark-mode .settings-card {
   background: var(--bg-surface);
 }
 
 body.dark-mode .settings-description {
   color: var(--text-muted);
+}
+
+/* ========== DAILY UPDATE PAGE STYLES ========== */
+.daily-container {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.daily-card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+.restock-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.restock-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background: var(--bg-base);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.restock-item span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.restock-input {
+  width: 70px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+/* ========== EXPENSES & REQUEST FIXES ========== */
+.expense-grid, .request-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.expense-row, .request-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.expense-desc, .request-desc {
+  flex: 2;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.expense-amount, .request-qty {
+  width: 100px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  text-align: right;
+  height: 42px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Section headers */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.section-header h3 {
+  font-size: 1.1rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+.section-header .header-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: left;
+  flex: 2;
+}
+
+.section-header .header-qty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  width: 100px;
+  text-align: right;
+}
+
+.pic-row {
+  display: flex;
+  gap: 16px;
+}
+
+.daily-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.daily-input, .daily-select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+.daily-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.daily-actions .btn {
+  flex: 1;
+  height: 48px;
+}
+
+.updates-list {
+  background: var(--bg-base);
+  border-radius: 12px;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.update-item {
+  padding: 10px;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.9rem;
+}
+
+.update-item:last-child {
+  border-bottom: none;
+}
+
+.update-time {
+  color: var(--primary);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.update-desc {
+  color: var(--text-muted);
+}
+
+/* ========== HIDE ELEMENTS ========== */
+#darkModeToggle {
+  display: none;
+}
+
+.cart-remarks {
+  display: none;
+}
+
+/* ========== CUSTOM POPUP STYLES ========== */
+.popup-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#customAlertModal .modal-content,
+#customConfirmModal .modal-content {
+  animation: popIn 0.2s ease;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+#customAlertModal .popup-icon {
+  color: var(--danger);
+}
+
+#customConfirmModal .popup-icon {
+  color: var(--primary);
+}
+
+/* ========== RESPONSIVE MEDIA QUERIES ========== */
+@media (max-width: 480px) {
+  /* General adjustments */
+  .menu-item-image {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .bottom-nav {
+    height: 55px;
+  }
+  
+  .nav-btn {
+    font-size: 0.7rem;
+  }
+  
+  .nav-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .cart-sheet {
+    bottom: 55px;
+    bottom: calc(55px + var(--safe-bottom));
+  }
+  
+  .cart-body {
+    max-height: 30vh;
+  }
+  
+  .order-item {
+    padding: 6px 0;
+    font-size: 0.85rem;
+  }
+  
+  .item-name {
+    font-size: 0.85rem;
+  }
+  
+  .item-price {
+    font-size: 0.85rem;
+  }
+  
+  .money-preset-btn {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    min-width: 55px;
+  }
+  
+  /* Daily page mobile */
+  .restock-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .restock-item {
+    padding: 6px;
+  }
+  
+  .restock-item span {
+    font-size: 0.85rem;
+  }
+  
+  .restock-input {
+    width: 60px;
+    padding: 4px;
+  }
+  
+  /* Expenses & Request mobile */
+  .expense-row, .request-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+  
+  .expense-desc, .request-desc {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 8px;
+    font-size: 0.85rem;
+    height: 38px;
+  }
+  
+  .expense-amount, .request-qty {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    padding: 8px 6px;
+    font-size: 0.85rem;
+    height: 38px;
+    text-align: right;
+  }
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    margin-bottom: 8px;
+  }
+  
+  .section-header h3 {
+    font-size: 0.95rem;
+    margin-right: auto;
+  }
+  
+  .section-header .header-desc {
+    font-size: 0.75rem;
+    text-align: left;
+    flex: 1;
+    margin-right: 6px;
+  }
+  
+  .section-header .header-qty {
+    font-size: 0.75rem;
+    text-align: right;
+    width: 70px;
+    min-width: 70px;
+  }
+  
+  .expense-desc::placeholder, .request-desc::placeholder {
+    font-size: 0.75rem;
+  }
+  
+  .pic-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .daily-actions {
+    flex-direction: column;
+  }
+  
+  /* Cash drawer mobile */
+  .float-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .float-row span {
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  
+  .float-row .input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  
+  .float-input {
+    width: 80px;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+  
+  .float-save-btn {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+  
+  .drawer-row {
+    flex-wrap: wrap;
+  }
+  
+  .drawer-row span:first-child {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  
+  .drawer-row span:last-child {
+    width: 100%;
+    text-align: right;
+  }
+  
+  .drawer-total {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+  }
+  
+  .drawer-total span:first-child {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+  
+  .drawer-total span:last-child {
+    font-size: 1.1rem;
+    align-self: flex-end;
+  }
+  
+  .cash-actions {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .cash-action-btn {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  /* Production Summary mobile */
+  .cash-drawer-section .float-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  
+  .cash-drawer-section .float-row span {
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  
+  .production-input {
+    width: 90px;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+  
+  .cash-drawer-section p {
+    font-size: 0.75rem;
+    margin-top: 4px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .expense-desc::placeholder, .request-desc::placeholder {
+    font-size: 0.7rem;
+  }
+  
+  .float-input {
+    width: 70px;
+    padding: 5px 6px;
+  }
+  
+  .float-save-btn {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+  }
+  
+  .production-input {
+    width: 80px;
+    padding: 5px 6px;
+    font-size: 0.85rem;
+  }
+  
+  .expense-amount, .request-qty {
+    width: 65px;
+    min-width: 65px;
+    max-width: 65px;
+    padding: 6px 4px;
+  }
+  
+  .section-header .header-qty {
+    width: 65px;
+    min-width: 65px;
+  }
+}
+
+@media (max-width: 360px) {
+  .expense-row, .request-row {
+    gap: 4px;
+  }
+  
+  .expense-desc, .request-desc {
+    padding: 6px 6px;
+    font-size: 0.8rem;
+    height: 36px;
+  }
+  
+  .expense-amount, .request-qty {
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+    padding: 6px 4px;
+    font-size: 0.8rem;
+    height: 36px;
+  }
+  
+  .section-header .header-qty {
+    width: 60px;
+    min-width: 60px;
+  }
+  
+  .expense-desc::placeholder, .request-desc::placeholder {
+    font-size: 0.7rem;
+  }
+  
+  .production-input {
+    width: 70px;
+    padding: 4px 5px;
+    font-size: 0.8rem;
+  }
+  
+  .float-input {
+    width: 60px;
+    padding: 4px 5px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .menu-item-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .money-preset-btn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    min-width: 50px;
+  }
 }
