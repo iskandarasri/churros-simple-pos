@@ -1704,13 +1704,13 @@ async function exportToExcel() {
         { name: "TEPUNG", value: update.restock.tepung },
         { name: "PASTE", value: update.restock.paste },
         { name: "DIPPING CUP", value: update.restock.dippingCup },
-        { name: "FAMILYBOX", value: update.restock.familybox },
+        { name: "FAMILY BOX", value: update.restock.familybox },
         { name: "PAPER BAG", value: update.restock.paperBag },
         { name: "MILK CHOC", value: update.restock.milkChoc },
         { name: "DARK CHOC", value: update.restock.darkChoc },
         { name: "CARAMEL", value: update.restock.caramel },
         { name: "MINYAK", value: update.restock.minyak },
-        { name: "CINAMON SUGAR", value: update.restock.cinamon },
+        { name: "CINNAMON SUGAR", value: update.restock.cinamon },
         { name: "TISU KERING", value: update.restock.tisuKering },
         { name: "TISU BASAH", value: update.restock.tisuBasah },
         { name: "PLASTIK KECIL", value: update.restock.plastikKecil },
@@ -2135,3 +2135,4 @@ function initEasterEgg() {
     }
   });
 }
+
