@@ -161,18 +161,27 @@ const menuItems = [
 
 // ========== LOAD STORED DATA ==========
 function loadStoredData() {
+  console.log("Loading stored data...");
   try {
     // Load sales
     const saved = localStorage.getItem("churrosSales");
-    if (saved) allSales = JSON.parse(saved);
+    if (saved) {
+      allSales = JSON.parse(saved);
+      console.log("Loaded", allSales.length, "sales");
+    } else {
+      console.log("No sales found");
+      allSales = [];
+    }
     
     // Load cash drawer
     const savedStartingCash = localStorage.getItem("startingCash");
     if (savedStartingCash) startingCash = parseFloat(savedStartingCash);
     
   } catch (e) {
-    console.log("No saved data or error loading:", e);
+    console.log("Error loading stored data:", e);
+    allSales = [];
   }
+  return allSales;
 }
 
 // ========== INITIALIZATION ==========
@@ -212,9 +221,15 @@ window.onload = () => {
       const pageId = btn.dataset.page;
       switchView(pageId);
       
-      // Refresh daily list when switching to daily page
+      // Refresh data when switching to specific pages
+      if (pageId === 'reports') {
+        setTimeout(() => {
+          loadStoredData();
+          updateReports();
+        }, 50);
+      }
+      
       if (pageId === 'daily') {
-        // Small delay to ensure DOM is ready
         setTimeout(() => {
           loadDailyUpdates();
           updateDailyUpdatesList();
@@ -1554,6 +1569,7 @@ async function clearOrder() {
   }
 }
 
+// ========== SAVE SALE ==========
 async function saveSale() {
   if (currentOrder.length === 0) {
     await showCustomAlert("Order is empty!", "No Order", "🛒");
@@ -1578,7 +1594,7 @@ async function saveSale() {
   const staff = document.getElementById("staffName").value || "Staff";
   const remarks = document.getElementById("saleRemarks")?.value || "";
 
-  // Use consistent date format
+  // Use consistent date format (dd/mm/yyyy, hh:mm:ss)
   const formattedDate = getCurrentFormattedDate();
 
   const newSale = {
@@ -1614,12 +1630,17 @@ async function saveSale() {
     document.getElementById("saleRemarks").value = "";
   }
 
+  // Force reload data and update all displays
+  loadStoredData(); // Reload from localStorage to ensure sync
   updateOrderList();
   updateReports();
   updateCalcDisplay();
   updatePaymentDisplay();
+  updateCashDrawerDisplay();
 
   if (cartOpen) toggleCart();
+  
+  console.log("Sale saved successfully:", newSale);
 }
 
 // ========== RECEIPT FUNCTION - FIXED GROUPING ==========
@@ -1728,42 +1749,81 @@ function generateReceipt(sale) {
 
 // ========== REPORTS ==========
 function updateReports() {
-  const today = new Date().toLocaleDateString();
-  const todaysSales = allSales.filter((sale) => sale.date.includes(today));
-
+  console.log("Updating reports...");
+  
+  // Force reload sales data from localStorage
+  loadStoredData();
+  
+  // Get today's date in the format used in sales data (dd/mm/yyyy)
+  const today = new Date();
+  const todayDay = String(today.getDate()).padStart(2, '0');
+  const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+  const todayYear = today.getFullYear();
+  const todayDateStr = `${todayDay}/${todayMonth}/${todayYear}`;
+  
+  console.log("Today's date:", todayDateStr);
+  console.log("All sales:", allSales);
+  
+  // Filter today's sales by comparing date strings
+  const todaysSales = allSales.filter(sale => {
+    if (!sale || !sale.date) return false;
+    
+    try {
+      // Extract date part from sale.date (format: "dd/mm/yyyy, hh:mm:ss")
+      const saleDatePart = sale.date.split(',')[0].trim();
+      return saleDatePart === todayDateStr;
+    } catch (e) {
+      console.log("Error parsing sale date:", e);
+      return false;
+    }
+  });
+  
+  console.log("Today's sales:", todaysSales);
+  
   const totalAmount = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
-
-  document.getElementById("reportTotalSales").textContent =
-    `RM ${totalAmount.toFixed(2)}`;
-  document.getElementById("reportOrderCount").textContent = todaysSales.length;
-
+  const orderCount = todaysSales.length;
+  
+  // Update the UI
+  document.getElementById("reportTotalSales").textContent = `RM ${totalAmount.toFixed(2)}`;
+  document.getElementById("reportOrderCount").textContent = orderCount;
+  
   // Update cash drawer display
   updateCashDrawerDisplay();
-
+  
+  // Update recent transactions list
   const listEl = document.getElementById("reportSalesList");
+  if (!listEl) return;
+  
   listEl.innerHTML = "";
-
+  
   if (todaysSales.length === 0) {
-    listEl.innerHTML = `<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem;">No sales yet today.</li>`;
+    listEl.innerHTML = '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem;">No sales yet today.</li>';
     return;
   }
-
+  
+  // Show most recent sales first
   [...todaysSales].reverse().forEach((sale) => {
+    // Extract time from sale.date
+    let timeStr = "--:--";
+    try {
+      const timeParts = sale.date.split(',')[1]?.trim() || "";
+      timeStr = timeParts.substring(0, 5); // Get HH:MM only
+    } catch (e) {}
+    
     const li = document.createElement("li");
-    li.style.cssText =
-      "display:flex; justify-content:space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size:0.9rem;";
-
-    let time = sale.date.split(", ")[1] || sale.date;
-
+    li.style.cssText = "display:flex; justify-content:space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size:0.9rem;";
+    
     li.innerHTML = `
       <div>
-        <strong style="color:var(--text-main);">${time}</strong><br>
+        <strong style="color:var(--text-main);">${timeStr}</strong><br>
         <span style="color:var(--text-muted); font-size:0.8rem;">${sale.items.length} items</span>
       </div>
       <strong style="color:var(--primary);">RM ${sale.total.toFixed(2)}</strong>
     `;
     listEl.appendChild(li);
   });
+  
+  console.log("Reports updated successfully");
 }
 
 // ========== CALCULATOR FUNCTIONS ==========
