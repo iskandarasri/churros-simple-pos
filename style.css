@@ -1988,3 +1988,9 @@ body.dark-mode .settings-description {
     min-width: 50px;
   }
 }
+
+/* Hide reset button */
+#reset-btn {
+  display: none;
+}
+
