@@ -18,7 +18,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=2.2.5" />
+    <link rel="stylesheet" href="style.css?v=2.2.6" />
   </head>
   <body>
     <div class="app-container">
@@ -407,7 +407,23 @@
                 Reset Drawer
               </button>
             </div>
+            <div
+            style="
+              margin-top: 24px;
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            "
+          >
+            <button id="export-btn" class="btn btn-outline">
+              📥 Export CSV
+            </button>
+            <button id="reset-btn" class="btn btn-danger">
+              ⚠️ Reset All Data
+            </button>
           </div>
+          </div>
+
 
           <!-- Production Summary Section -->
           <div class="cash-drawer-section">
@@ -482,21 +498,6 @@
             </li>
           </ul>
 
-          <div
-            style="
-              margin-top: 24px;
-              display: flex;
-              flex-direction: column;
-              gap: 12px;
-            "
-          >
-            <button id="export-btn" class="btn btn-outline">
-              📥 Export CSV
-            </button>
-            <button id="reset-btn" class="btn btn-danger">
-              ⚠️ Reset All Data
-            </button>
-          </div>
         </div>
 
         <!-- SETTINGS PAGE -->
@@ -554,7 +555,7 @@
             <!-- App Info Footer -->
             <div class="settings-footer">
               <p>Mr. Churros Dungun POS</p>
-              <p>Version 2.2.5</p>
+              <p>Version 2.2.6</p>
             </div>
           </div>
         </div>
@@ -574,7 +575,7 @@
               </div>
               <div class="dev-row">
                 <span class="dev-label">Version:</span>
-                <span class="dev-value">2.2.5</span>
+                <span class="dev-value">2.2.6</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Developer:</span>
@@ -881,10 +882,10 @@
       </div>
     </div>
 
-    <script src="script.js?v=2.2.5"></script>
+    <script src="script.js?v=2.2.6"></script>
     <script>
     (function() {
-      const VERSION = '2.2.5';
+      const VERSION = '2.2.6';
       if (localStorage.getItem('appVersion') !== VERSION) {
         console.log('App updated to version ' + VERSION);
         localStorage.setItem('appVersion', VERSION);
@@ -893,10 +894,5 @@
   </script>
   </body>
 </html>
-
-
-
-
-
 
 
