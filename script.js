@@ -30,6 +30,9 @@ let startingCash = 200.00; // Default starting cash RM200
 // ========== DAILY UPDATE STATE ==========
 let dailyUpdates = [];
 
+// ========== SHIFT STATE ==========
+let isShiftOpened = false;
+
 // ========== CONSISTENT DATE FORMATTING ==========
 function getCurrentFormattedDate() {
   const d = new Date();
@@ -167,6 +170,124 @@ const menuItems = [
   },
 ];
 
+// ========== OPEN SHIFT FUNCTIONS ==========
+function initializeOpenShift() {
+  console.log("Initializing open shift page...");
+  
+  // Set default values
+  const outletSelect = document.getElementById("open-shift-outlet");
+  const cashInput = document.getElementById("open-shift-cash");
+  const staffInput = document.getElementById("open-shift-staff");
+  
+  // Load saved preferences if any
+  const savedOutlet = localStorage.getItem("selectedOutlet");
+  const savedStaff = localStorage.getItem("currentStaff");
+  
+  if (savedOutlet && outletSelect) {
+    outletSelect.value = savedOutlet;
+  }
+  
+  if (savedStaff && staffInput) {
+    staffInput.value = savedStaff;
+  }
+  
+  // Set starting cash from current value
+  if (cashInput) {
+    cashInput.value = startingCash.toFixed(2);
+  }
+  
+  // Open Shift button click handler
+  document.getElementById("open-shift-btn")?.addEventListener("click", () => {
+    openShift();
+  });
+  
+  // Settings link click handler
+  document.getElementById("open-shift-settings")?.addEventListener("click", () => {
+    sessionStorage.setItem("fromOpenShift", "true");
+    switchView("settings");
+  });
+
+  // Enter key press on inputs
+  const inputs = [cashInput, staffInput].filter(Boolean);
+  inputs.forEach(input => {
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        openShift();
+      }
+    });
+  });
+}
+
+function openShift() {
+  console.log("Opening shift...");
+  
+  // Get values from form
+  const outlet = document.getElementById("open-shift-outlet")?.value || "DUNGUN";
+  const cash = parseFloat(document.getElementById("open-shift-cash")?.value) || 200;
+  const staff = document.getElementById("open-shift-staff")?.value || "Staff 1";
+  
+  // Validate inputs
+  if (cash < 0) {
+    showCustomAlert("Starting cash cannot be negative", "Invalid Input", "⚠️");
+    return;
+  }
+  
+  if (!staff.trim()) {
+    showCustomAlert("Please enter staff name", "Invalid Input", "⚠️");
+    return;
+  }
+  
+  // Save to localStorage
+  localStorage.setItem("selectedOutlet", outlet);
+  localStorage.setItem("currentStaff", staff);
+  
+  // Update app state
+  startingCash = cash;
+  currentStaff = staff;
+  isShiftOpened = true; // Set shift as opened
+  
+  // Update staff input in header
+  const staffInput = document.getElementById("staffName");
+  if (staffInput) {
+    staffInput.value = staff;
+  }
+  
+  // Update outlet in daily page if exists
+  const outletInput = document.getElementById("daily-outlet");
+  if (outletInput) {
+    outletInput.value = outlet;
+  }
+  
+  // Save starting cash
+  localStorage.setItem("startingCash", startingCash.toString());
+  
+  // Update cash drawer display
+  updateCashDrawerDisplay();
+  
+  // Show success message
+  showCustomAlert(`Shift opened at ${outlet}`, "Welcome!", "🔓").then(() => {
+    // Switch to POS page
+    switchView("pos");
+  });
+}
+
+// Check if there's an existing shift
+function checkExistingShift() {
+  // Check if there's any sales or daily updates
+  const hasSales = allSales.length > 0;
+  const hasDailyUpdates = dailyUpdates.length > 0;
+  const hasProductionData = productionData.length > 0;
+  
+  // If there's any data, consider shift as opened
+  if (hasSales || hasDailyUpdates || hasProductionData) {
+    isShiftOpened = true;
+    console.log("Existing shift detected");
+    return true;
+  }
+  
+  return false;
+}
+
 // ========== LOAD STORED DATA ==========
 function loadStoredData() {
   console.log("Loading stored data...");
@@ -192,21 +313,60 @@ function loadStoredData() {
   return allSales;
 }
 
-// ========== INITIALIZATION ==========
+//========== INITIALIZATION ==========
 window.onload = () => {
+  // Load data first
   loadStoredData();
+  loadDailyUpdates();
+  loadProductionData();
 
   if (darkMode) document.body.classList.add("dark-mode");
 
+  // Initialize Open Shift page
+  initializeOpenShift();
+
+  // Render menu and update displays
   renderMenu();
   updateOrderList();
   updateReports();
   updateCalcDisplay();
   updatePaymentDisplay();
   updateCashDrawerDisplay();
-  loadDailyUpdates();
-  loadProductionData();
 
+  // Check if there's an existing shift
+  const hasExistingShift = checkExistingShift();
+  
+  if (hasExistingShift) {
+    // If there's existing data, go to POS page
+    console.log("Existing shift found, going to POS page");
+    switchView("pos");
+  } else {
+    // Otherwise show open shift page
+    console.log("No existing shift, showing open shift page");
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById("page-open-shift").classList.add("active");
+    
+    // Hide header, navbar, cart on open shift
+    const header = document.querySelector('.header');
+    const bottomNav = document.querySelector('.bottom-nav');
+    const cartSheet = document.getElementById('cartSheet');
+    
+    if (header) header.style.display = 'none';
+    if (bottomNav) bottomNav.style.display = 'none';
+    if (cartSheet) cartSheet.style.display = 'none';
+  }
+
+  // Handle back button from settings
+  const settingsBackBtn = document.getElementById("settings-back-btn");
+  if (settingsBackBtn) {
+    settingsBackBtn.addEventListener("click", () => {
+      console.log("Back button clicked");
+      sessionStorage.removeItem("fromOpenShift");
+      switchView("open-shift");
+    });
+  }
+
+  // Staff name input
   document.getElementById("staffName").addEventListener("input", (e) => {
     currentStaff = e.target.value || "Staff 1";
   });
@@ -223,10 +383,17 @@ window.onload = () => {
     defectInput.addEventListener("input", debouncedAutoSave);
   }
 
-  // Navigation - KEEP THIS ONE (with refresh logic)
+  // Navigation - with shift check
   document.querySelectorAll(".nav-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const pageId = btn.dataset.page;
+      
+      // Don't allow navigation if shift not opened
+      if (!isShiftOpened && pageId !== "open-shift" && pageId !== "settings") {
+        showCustomAlert("Please open shift first", "Shift Required", "🔓");
+        return;
+      }
+      
       switchView(pageId);
       
       // Refresh data when switching to specific pages
@@ -272,7 +439,6 @@ window.onload = () => {
   // Tablet/Laptop layout toggle
   const tabletLayoutToggle = document.getElementById("tabletLayoutToggle");
   if (tabletLayoutToggle) {
-    // Load saved preference
     const tabletMode = localStorage.getItem("tabletMode") === "true";
     tabletLayoutToggle.checked = tabletMode;
     if (tabletMode) document.body.classList.add("tablet-layout");
@@ -291,8 +457,12 @@ window.onload = () => {
   // Update daily list
   updateDailyUpdatesList();
 
-  // Developer info link
+  // Developer info link (settings in header)
   document.getElementById("settingsDevInfo")?.addEventListener("click", () => {
+    if (!isShiftOpened) {
+      showCustomAlert("Please open shift first", "Shift Required", "🔓");
+      return;
+    }
     switchView("dev");
   });
 
@@ -333,15 +503,14 @@ window.onload = () => {
 
   // Dark mode toggle (header)
   document.getElementById("darkModeToggle").addEventListener("click", () => {
-  darkMode = !darkMode;
-  localStorage.setItem("darkMode", darkMode);
-  document.body.classList.toggle("dark-mode", darkMode);
-  
-  // Sync settings toggle if exists
-  if (settingsDarkModeToggle) {
-    settingsDarkModeToggle.checked = darkMode;
-  }
-});
+    darkMode = !darkMode;
+    localStorage.setItem("darkMode", darkMode);
+    document.body.classList.toggle("dark-mode", darkMode);
+    
+    if (settingsDarkModeToggle) {
+      settingsDarkModeToggle.checked = darkMode;
+    }
+  });
 
   // Cash Drawer event listeners
   document.getElementById("updateFloatBtn")?.addEventListener("click", updateStartingCash);
@@ -353,18 +522,14 @@ window.onload = () => {
   document.getElementById("void-last").addEventListener("click", voidLastItem);
   document.getElementById("clear-order").addEventListener("click", clearOrder);
   document.getElementById("save-sale").addEventListener("click", saveSale);
-  document
-    .getElementById("export-btn")
-    .addEventListener("click", exportToExcel);
+  document.getElementById("export-btn").addEventListener("click", exportToExcel);
 
   // Calculator event listeners
   document.querySelectorAll("[data-calc]").forEach((btn) => {
     btn.addEventListener("click", () => handleCalcInput(btn.dataset.calc));
   });
 
-  document
-    .getElementById("calc-add-to-cart")
-    .addEventListener("click", addCalcToOrder);
+  document.getElementById("calc-add-to-cart").addEventListener("click", addCalcToOrder);
   document.getElementById("calc-clear").addEventListener("click", () => {
     calcInput = "0";
     calcPrev = null;
@@ -1234,6 +1399,9 @@ function resetAllData() {
   totalKgSold = 0;
   unsoldDefect = 0;
   
+  // Reset starting cash to default
+  startingCash = 200.00;
+  
   // Clear localStorage
   localStorage.removeItem("churrosSales");
   localStorage.removeItem("dailyUpdates");
@@ -1250,8 +1418,17 @@ function resetAllData() {
   if (kgInput) kgInput.value = "0";
   if (defectInput) defectInput.value = "0";
   
-  // Optional: Show confirmation
-  showCustomAlert("All data has been reset for the new shift.", "Shift Ended", "✅");
+  // Reset shift state
+  isShiftOpened = false;
+  
+  // Clear session storage
+  sessionStorage.removeItem("fromOpenShift");
+  
+  // Show confirmation and go back to open shift
+  showCustomAlert("All data has been reset for the new shift.", "Shift Ended", "✅").then(() => {
+    // Go back to open shift page
+    switchView("open-shift");
+  });
   
   console.log("All data reset successfully");
 }
@@ -2193,6 +2370,7 @@ function closeModal(id) {
   if (modal) modal.classList.remove("active");
 }
 
+// ========== UPDATED SWITCH VIEW FUNCTION ==========
 function switchView(pageId) {
   document
     .querySelectorAll(".page")
@@ -2202,18 +2380,87 @@ function switchView(pageId) {
     .forEach((b) => b.classList.remove("active"));
 
   document.getElementById("page-" + pageId).classList.add("active");
-  document
-    .querySelector(`.nav-btn[data-page="${pageId}"]`)
-    .classList.add("active");
+  
+  // Check if we're coming from open shift
+  const fromOpenShift = sessionStorage.getItem("fromOpenShift") === "true";
+  
+  // Get elements
+  const header = document.querySelector('.header');
+  const bottomNav = document.querySelector('.bottom-nav');
+  const cartSheet = document.getElementById('cartSheet');
+  const settingsBackBtn = document.getElementById("settings-back-btn");
+  
+  // Handle visibility based on page and state
+  if (pageId === "open-shift") {
+    // Hide everything on open shift page
+    if (header) header.style.display = 'none';
+    if (bottomNav) bottomNav.style.display = 'none';
+    if (cartSheet) cartSheet.style.display = 'none';
+    if (settingsBackBtn) settingsBackBtn.style.display = 'none';
+    
+    // Clear session storage
+    sessionStorage.removeItem("fromOpenShift");
+    isShiftOpened = false;
+  } 
+  else if (pageId === "settings" && fromOpenShift) {
+    // Settings from open shift - hide navbar, show back button
+    if (header) header.style.display = 'none';
+    if (bottomNav) bottomNav.style.display = 'none';
+    if (cartSheet) cartSheet.style.display = 'none';
+    if (settingsBackBtn) settingsBackBtn.style.display = 'inline-flex';
+  } 
+  else if (isShiftOpened) {
+    // Normal operation with shift opened
+    if (header) header.style.display = 'flex';
+    if (bottomNav) bottomNav.style.display = 'flex';
+    if (cartSheet) cartSheet.style.display = 'flex';
+    if (settingsBackBtn) settingsBackBtn.style.display = 'none';
+  } 
+  else {
+    // No shift opened - hide everything
+    if (header) header.style.display = 'none';
+    if (bottomNav) bottomNav.style.display = 'none';
+    if (cartSheet) cartSheet.style.display = 'none';
+    if (settingsBackBtn) settingsBackBtn.style.display = 'none';
+    
+    // If trying to access any page without shift, redirect to open shift
+    if (pageId !== "open-shift" && pageId !== "settings") {
+      document.getElementById("page-open-shift").classList.add("active");
+      document.getElementById("page-" + pageId).classList.remove("active");
+      showCustomAlert("Please open shift first", "Shift Required", "🔓");
+    }
+  }
 
+  // Only highlight nav button if not on open-shift or pre-shift settings
+  if (pageId !== "open-shift" && !fromOpenShift) {
+    const navBtn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
+    if (navBtn) navBtn.classList.add("active");
+  }
+
+  // Handle cart sheet visibility for POS and CALC pages
   const sheet = document.getElementById("cartSheet");
   if (sheet) {
-    if (pageId === "pos" || pageId === "calc") {
+    if ((pageId === "pos" || pageId === "calc") && isShiftOpened) {
       sheet.style.display = "flex";
     } else {
       sheet.style.display = "none";
       if (cartOpen) toggleCart();
     }
+  }
+  
+  // Refresh data when switching to specific pages
+  if (pageId === 'reports') {
+    setTimeout(() => {
+      loadStoredData();
+      updateReports();
+    }, 50);
+  }
+  
+  if (pageId === 'daily') {
+    setTimeout(() => {
+      loadDailyUpdates();
+      updateDailyUpdatesList();
+    }, 50);
   }
 }
 
