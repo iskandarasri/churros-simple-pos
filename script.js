@@ -223,7 +223,7 @@ window.onload = () => {
     defectInput.addEventListener("input", debouncedAutoSave);
   }
 
-  // Navigation
+  // Navigation - KEEP THIS ONE (with refresh logic)
   document.querySelectorAll(".nav-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const pageId = btn.dataset.page;
@@ -288,7 +288,7 @@ window.onload = () => {
   document.getElementById("save-daily-update")?.addEventListener("click", saveDailyUpdate);
   document.getElementById("clear-daily")?.addEventListener("click", clearDailyForm);
   
-  // Update daily list when switching to daily page
+  // Update daily list
   updateDailyUpdatesList();
 
   // Developer info link
@@ -357,34 +357,6 @@ window.onload = () => {
     .getElementById("export-btn")
     .addEventListener("click", exportToExcel);
 
-  document.getElementById("reset-btn").addEventListener("click", async () => {
-    const confirmed = await showCustomConfirm(
-      "Are you sure you want to delete all sales data? This cannot be undone.",
-      "Reset All Data",
-      "⚠️"
-    );
-    if (confirmed) {
-      allSales = [];
-      dailyUpdates = [];
-      productionData = [];
-      localStorage.removeItem("churrosSales");
-      localStorage.removeItem("dailyUpdates");
-      localStorage.removeItem("productionData");
-      updateReports();
-      updateDailyUpdatesList();
-      
-      // Reset production input fields
-      const kgInput = document.getElementById("totalKgSold");
-      const defectInput = document.getElementById("unsoldDefect");
-      if (kgInput) kgInput.value = "0";
-      if (defectInput) defectInput.value = "0";
-      totalKgSold = 0;
-      unsoldDefect = 0;
-      
-      await showCustomAlert("Data reset successful.", "Success", "✅");
-    }
-  });
-
   // Calculator event listeners
   document.querySelectorAll("[data-calc]").forEach((btn) => {
     btn.addEventListener("click", () => handleCalcInput(btn.dataset.calc));
@@ -401,14 +373,6 @@ window.onload = () => {
     cashAmount = null;
     updateCalcDisplay();
     updatePaymentDisplay();
-  });
-
-  // Navigation
-  document.querySelectorAll(".nav-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const pageId = btn.dataset.page;
-      switchView(pageId);
-    });
   });
 
   // Expose functions globally
@@ -489,7 +453,7 @@ window.onload = () => {
 // ========== EXPORT TO CSV WITH PROPER GROUPING ==========
 async function exportToExcel() {
   if (allSales.length === 0 && dailyUpdates.length === 0) {
-    await showCustomAlert("No data to export", "Export Error", "📊");
+    await showCustomAlert("No sales or daily updates to export", "Export Error", "📊");
     return;
   }
 
@@ -1187,15 +1151,26 @@ function updateStartingCash() {
   }
 }
 
-// Close Shift
+// ========== CLOSE SHIFT ==========
 function closeShift() {
+  console.log("Closing shift...");
+  
+  // Get today's date in the format used in sales data (dd/mm/yyyy)
   const todayDateStr = getTodayDateString();
-  const todaysSales = allSales.filter((sale) => {
+  
+  // Force reload sales data to ensure we have latest
+  loadStoredData();
+  
+  // Filter today's sales by comparing date strings
+  const todaysSales = allSales.filter(sale => {
     if (!sale || !sale.date) return false;
+    
     try {
+      // Extract date part from sale.date (format: "dd/mm/yyyy, hh:mm:ss")
       const saleDatePart = sale.date.split(',')[0].trim();
       return saleDatePart === todayDateStr;
     } catch (e) {
+      console.log("Error parsing sale date:", e);
       return false;
     }
   });
@@ -1230,13 +1205,61 @@ EXPECTED CASH: RM ${expectedCash.toFixed(2)}
 Take out RM ${cashSales.toFixed(2)} (cash sales) to bank,
 leaving RM ${startingCash.toFixed(2)} for next shift.`;
 
-  showCustomAlert(shiftReport, "Shift Closed", "✅");
+  // Show confirmation dialog with warning
+  showCustomConfirm(
+    "⚠️ Are you sure you want to close shift?\n\nMake sure you have exported your data (CSV) first!\n\nThis will reset all sales and daily data.",
+    "Close Shift Confirmation",
+    "💰"
+  ).then((confirmed) => {
+    if (confirmed) {
+      // Show the shift report
+      showCustomAlert(shiftReport, "Shift Closed", "✅").then(() => {
+        // Auto-reset all data after closing shift
+        resetAllData();
+      });
+    }
+  });
 }
 
-// Reset Drawer
+// ========== RESET ALL DATA ==========
+function resetAllData() {
+  console.log("Resetting all data...");
+  
+  // Clear all data arrays
+  allSales = [];
+  dailyUpdates = [];
+  productionData = [];
+  
+  // Reset production values
+  totalKgSold = 0;
+  unsoldDefect = 0;
+  
+  // Clear localStorage
+  localStorage.removeItem("churrosSales");
+  localStorage.removeItem("dailyUpdates");
+  localStorage.removeItem("productionData");
+  
+  // Update all displays
+  updateReports();
+  updateDailyUpdatesList();
+  updateCashDrawerDisplay();
+  
+  // Reset production input fields
+  const kgInput = document.getElementById("totalKgSold");
+  const defectInput = document.getElementById("unsoldDefect");
+  if (kgInput) kgInput.value = "0";
+  if (defectInput) defectInput.value = "0";
+  
+  // Optional: Show confirmation
+  showCustomAlert("All data has been reset for the new shift.", "Shift Ended", "✅");
+  
+  console.log("All data reset successfully");
+}
+
+// ========== RESET DRAWER ==========
 function resetDrawer() {
   showCustomConfirm(
-    "Reset cash drawer?",
+    "Reset cash drawer? This will refresh the display without clearing sales data.",
     "Reset Drawer",
     "⚠️"
   ).then((confirmed) => {
@@ -1806,7 +1829,7 @@ function updateReports() {
   const totalAmount = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
   const orderCount = todaysSales.length;
   
-  // Update the UI
+  // Update the UI stats cards
   document.getElementById("reportTotalSales").textContent = `RM ${totalAmount.toFixed(2)}`;
   document.getElementById("reportOrderCount").textContent = orderCount;
   
