@@ -18,11 +18,11 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=2.2.6" />
+    <link rel="stylesheet" href="style.css?v=2.2.7" />
   </head>
   <body>
     <div class="app-container">
-      <!-- HEADER -->
+      <!-- HEADER - will be hidden on open-shift page via CSS -->
       <header class="header">
         <div class="logo-wrapper" id="devEasterEgg" style="cursor: pointer">
           <img src="logo-new.png" alt="Mr. Churros" class="header-logo" />
@@ -43,8 +43,78 @@
 
       <!-- MAIN CONTENT -->
       <main class="main-content">
+        <!-- OPEN SHIFT PAGE (Front Page) -->
+        <div id="page-open-shift" class="page active">
+          <div class="open-shift-container">
+            <!-- Header dengan logo -->
+            <div class="open-shift-header">
+              <img src="logo-new.png" alt="Mr. Churros" class="open-shift-logo" />
+              <h1 class="open-shift-title">Mr. Churros</h1>
+              <p class="open-shift-subtitle">The Most Addictive Churros in Town™</p>
+            </div>
+
+            <!-- Card Utama -->
+            <div class="open-shift-card">
+              <h2 class="open-shift-card-title">Open Shift</h2>
+              
+              <!-- Pilih Outlet -->
+              <div class="open-shift-field">
+                <label class="open-shift-label">Select Outlet</label>
+                <select id="open-shift-outlet" class="open-shift-select">
+                  <option value="DUNGUN">DUNGUN</option>
+                  <option value="BALAI BESAR">BALAI BESAR</option>
+                </select>
+              </div>
+
+              <!-- Starting Cash (Optional) -->
+              <div class="open-shift-field">
+                <label class="open-shift-label">Starting Cash (RM)</label>
+                <input 
+                  type="number" 
+                  id="open-shift-cash" 
+                  class="open-shift-input" 
+                  value="200.00" 
+                  step="0.01" 
+                  min="0"
+                  placeholder="200.00"
+                />
+              </div>
+
+              <!-- Staff Name -->
+              <div class="open-shift-field">
+                <label class="open-shift-label">Staff Name</label>
+                <input 
+                  type="text" 
+                  id="open-shift-staff" 
+                  class="open-shift-input" 
+                  value="Staff 1" 
+                  placeholder="Enter staff name"
+                />
+              </div>
+
+              <!-- Open Shift Button -->
+              <button id="open-shift-btn" class="open-shift-btn">
+                <span class="btn-icon">🔓</span>
+                Open Shift
+              </button>
+
+              <!-- Settings Link -->
+              <div class="open-shift-settings" id="open-shift-settings">
+                <span class="settings-icon">⚙️</span>
+                <span>Settings</span>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="open-shift-footer">
+              <p>© 2026 Mr. Churros Dungun</p>
+              <p>Version 2.2.7</p>
+            </div>
+          </div>
+        </div>
+
         <!-- POS PAGE (Menu) -->
-        <div id="page-pos" class="page active">
+        <div id="page-pos" class="page">
           <input
             type="text"
             class="search-bar"
@@ -295,7 +365,6 @@
                 <div style="flex: 1;">
                   <label class="daily-label">OUTLET</label>
                   <input type="text" id="daily-outlet" class="daily-input" placeholder="Location" value="Dungun">
-                  </select>
                 </div>
               </div>
             </div>
@@ -409,16 +478,16 @@
             </div>
             <div
             style="
-              margin-top: 24px;
+              margin-top: 7px;
               display: flex;
               flex-direction: column;
               gap: 12px;
             "
           >
-            <button id="export-btn" class="btn btn-outline">
+            <button id="export-btn" class="btn btn-success">
               📥 Export CSV
             </button>
-            <button id="reset-btn" class="btn btn-danger">
+            <button id="reset-btn" class="btn btn-danger" style="display: none;">
               ⚠️ Reset All Data
             </button>
           </div>
@@ -503,6 +572,10 @@
         <!-- SETTINGS PAGE -->
         <div id="page-settings" class="page">
           <div class="settings-container">
+            <!-- Back button for open shift mode -->
+            <div id="settings-back-btn" class="settings-back-btn" style="display: none;">
+              ← Back to Open Shift
+            </div>
             <h2 style="margin-bottom: 20px; font-size: 1.5rem; color: var(--primary);">
               Settings
             </h2>
@@ -555,7 +628,7 @@
             <!-- App Info Footer -->
             <div class="settings-footer">
               <p>Mr. Churros Dungun POS</p>
-              <p>Version 2.2.6</p>
+              <p>Version 2.2.7</p>
             </div>
           </div>
         </div>
@@ -575,7 +648,7 @@
               </div>
               <div class="dev-row">
                 <span class="dev-label">Version:</span>
-                <span class="dev-value">2.2.6</span>
+                <span class="dev-value">2.2.7</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Developer:</span>
@@ -612,7 +685,7 @@
       </main>
       <!-- End of main-content -->
 
-      <!-- STICKY CART -->
+      <!-- STICKY CART - will be hidden on open-shift page via CSS -->
       <div id="cartSheet" class="cart-sheet">
         <div class="cart-header" id="cartHeaderToggle">
           <div class="cart-summary">
@@ -705,7 +778,7 @@
         </div>
       </div>
 
-      <!-- BOTTOM NAV -->
+      <!-- BOTTOM NAV - will be hidden on open-shift page via CSS -->
       <nav class="bottom-nav">
         <button class="nav-btn" data-page="pos">
           <svg viewBox="0 0 24 24" width="22" height="22">
@@ -882,10 +955,10 @@
       </div>
     </div>
 
-    <script src="script.js?v=2.2.6"></script>
+    <script src="script.js?v=2.2.7"></script>
     <script>
     (function() {
-      const VERSION = '2.2.6';
+      const VERSION = '2.2.7';
       if (localStorage.getItem('appVersion') !== VERSION) {
         console.log('App updated to version ' + VERSION);
         localStorage.setItem('appVersion', VERSION);
@@ -894,5 +967,3 @@
   </script>
   </body>
 </html>
-
-
