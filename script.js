@@ -2389,6 +2389,7 @@ function switchView(pageId) {
   const bottomNav = document.querySelector('.bottom-nav');
   const cartSheet = document.getElementById('cartSheet');
   const settingsBackBtn = document.getElementById("settings-back-btn");
+  const settingsContainer = document.querySelector('#page-settings .settings-container');
   
   // Handle visibility based on page and state
   if (pageId === "open-shift") {
@@ -2401,6 +2402,9 @@ function switchView(pageId) {
     // Clear session storage
     sessionStorage.removeItem("fromOpenShift");
     isShiftOpened = false;
+    
+    // Remove any special classes
+    document.body.classList.remove('from-open-shift');
   } 
   else if (pageId === "settings" && fromOpenShift) {
     // Settings from open shift - hide navbar, show back button
@@ -2408,6 +2412,14 @@ function switchView(pageId) {
     if (bottomNav) bottomNav.style.display = 'none';
     if (cartSheet) cartSheet.style.display = 'none';
     if (settingsBackBtn) settingsBackBtn.style.display = 'inline-flex';
+    
+    // ADD THIS - Add class to body for styling
+    document.body.classList.add('from-open-shift');
+    
+    // OPTIONAL: Direct styling for settings container
+    if (settingsContainer) {
+      settingsContainer.style.paddingTop = '60px';
+    }
   } 
   else if (isShiftOpened) {
     // Normal operation with shift opened
@@ -2415,6 +2427,14 @@ function switchView(pageId) {
     if (bottomNav) bottomNav.style.display = 'flex';
     if (cartSheet) cartSheet.style.display = 'flex';
     if (settingsBackBtn) settingsBackBtn.style.display = 'none';
+    
+    // Remove any special classes
+    document.body.classList.remove('from-open-shift');
+    
+    // Reset settings container padding
+    if (settingsContainer) {
+      settingsContainer.style.paddingTop = '';
+    }
   } 
   else {
     // No shift opened - hide everything
@@ -2422,6 +2442,9 @@ function switchView(pageId) {
     if (bottomNav) bottomNav.style.display = 'none';
     if (cartSheet) cartSheet.style.display = 'none';
     if (settingsBackBtn) settingsBackBtn.style.display = 'none';
+    
+    // Remove any special classes
+    document.body.classList.remove('from-open-shift');
     
     // If trying to access any page without shift, redirect to open shift
     if (pageId !== "open-shift" && pageId !== "settings") {
