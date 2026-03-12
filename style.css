@@ -2486,3 +2486,15 @@ body.dark-mode .settings-back-btn {
     height: 20px; /* Adjust this value to move content down */
   }
 }
+
+/* Settings page when coming from Open Shift - move content lower */
+body.from-open-shift #page-settings .settings-container {
+  padding-top: 40px; /* Adjust this value to move content down */
+}
+
+/* For mobile */
+@media (max-width: 480px) {
+  body.from-open-shift #page-settings .settings-container {
+    padding-top: 60px; /* More padding on mobile */
+  }
+}
