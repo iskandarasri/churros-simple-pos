@@ -18,7 +18,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=2.2.7" />
+    <link rel="stylesheet" href="style.css?v=2.2.0" />
   </head>
   <body>
     <div class="app-container">
@@ -46,6 +46,8 @@
         <!-- OPEN SHIFT PAGE (Front Page) -->
         <div id="page-open-shift" class="page active">
           <div class="open-shift-container">
+            <!-- Optional spacer for mobile -->
+            <div class="mobile-spacer"></div>
             <!-- Header dengan logo -->
             <div class="open-shift-header">
               <img src="logo-new.png" alt="Mr. Churros" class="open-shift-logo" />
@@ -59,11 +61,14 @@
               
               <!-- Pilih Outlet -->
               <div class="open-shift-field">
-                <label class="open-shift-label">Select Outlet</label>
-                <select id="open-shift-outlet" class="open-shift-select">
-                  <option value="DUNGUN">DUNGUN</option>
-                  <option value="BALAI BESAR">BALAI BESAR</option>
-                </select>
+                <label class="open-shift-label">Outlet Location</label>
+                <input 
+                  type="text" 
+                  id="open-shift-outlet" 
+                  class="open-shift-input" 
+                  value="Dungun" 
+                  placeholder="Enter Location"
+                />
               </div>
 
               <!-- Starting Cash (Optional) -->
@@ -108,7 +113,7 @@
             <!-- Footer -->
             <div class="open-shift-footer">
               <p>© 2026 Mr. Churros Dungun</p>
-              <p>Version 2.2.7</p>
+              <p>Version 2.2.0</p>
             </div>
           </div>
         </div>
@@ -628,7 +633,7 @@
             <!-- App Info Footer -->
             <div class="settings-footer">
               <p>Mr. Churros Dungun POS</p>
-              <p>Version 2.2.7</p>
+              <p>Version 2.2.0</p>
             </div>
           </div>
         </div>
@@ -648,7 +653,7 @@
               </div>
               <div class="dev-row">
                 <span class="dev-label">Version:</span>
-                <span class="dev-value">2.2.7</span>
+                <span class="dev-value">2.2.0</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Developer:</span>
@@ -955,10 +960,10 @@
       </div>
     </div>
 
-    <script src="script.js?v=2.2.7"></script>
+    <script src="script.js?v=2.2.0"></script>
     <script>
     (function() {
-      const VERSION = '2.2.7';
+      const VERSION = '2.2.0';
       if (localStorage.getItem('appVersion') !== VERSION) {
         console.log('App updated to version ' + VERSION);
         localStorage.setItem('appVersion', VERSION);
