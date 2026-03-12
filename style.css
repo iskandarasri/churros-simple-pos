@@ -2475,3 +2475,14 @@ body.dark-mode .btn-success:active {
 body.dark-mode .settings-back-btn {
   color: var(--text-main);
 }
+
+.mobile-spacer {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .mobile-spacer {
+    display: block;
+    height: 20px; /* Adjust this value to move content down */
+  }
+}
