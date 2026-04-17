@@ -615,13 +615,36 @@ window.onload = () => {
   }
 };
 
-// ========== EXPORT TO CSV WITH PROPER GROUPING ==========
+// ========== EXPORT TO CSV ==========
 async function exportToExcel() {
-  if (allSales.length === 0 && dailyUpdates.length === 0) {
-    await showCustomAlert("No sales or daily updates to export", "Export Error", "📊");
+  // Check if production summary values are still 0
+  const kgInput = document.getElementById("totalKgSold");
+  const defectInput = document.getElementById("unsoldDefect");
+  
+  const kgValue = kgInput ? parseFloat(kgInput.value) || 0 : 0;
+  const defectValue = defectInput ? parseInt(defectInput.value) || 0 : 0;
+  
+  // If production summary is empty (both 0), show warning
+  if (kgValue === 0 && defectValue === 0) {
+    const confirmed = await showCustomConfirm(
+      "Production summary is empty. Continue export?",
+      "Warning",
+      "⚠️"
+    );
+    
+    if (!confirmed) {
+      return; // Go back to app
+    }
+  }
+  
+  if (allSales.length === 0 && dailyUpdates.length === 0 && kgValue === 0 && defectValue === 0) {
+    await showCustomAlert("No data to export", "Export Error", "📊");
     return;
   }
 
+  // Rest of your existing exportToExcel code continues here...
+  // (keep your existing export code below)
+  
   // Format today's date as dd/mm/yyyy for filtering
   const today = new Date();
   const todayDay = String(today.getDate()).padStart(2, '0');
