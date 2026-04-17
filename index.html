@@ -18,7 +18,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=2.2.11" />
+    <link rel="stylesheet" href="style.css?v=2.2.0" />
   </head>
   <body>
     <div class="app-container">
@@ -52,7 +52,7 @@
             <div class="open-shift-header">
               <img src="logo-new.png" alt="Mr. Churros" class="open-shift-logo" />
               <h1 class="open-shift-title">Mr. Churros</h1>
-              <p class="open-shift-subtitle">The Most Addictive Churros in Town™</p>
+              <p class="open-shift-subtitle">The Most Addictive Churros in Town</p>
             </div>
 
             <!-- Card Utama -->
@@ -113,7 +113,7 @@
             <!-- Footer -->
             <div class="open-shift-footer">
               <p>© 2026 Mr. Churros Dungun</p>
-              <p>Version 2.2.11</p>
+              <p>Version 2.2.0</p>
             </div>
           </div>
         </div>
@@ -440,7 +440,51 @@
               </div>
             </div>
 
+            
+          <!-- Production Summary Section -->
+            <h3 style="margin-top: 12px; margin-bottom: 12px; font-size: 1.2rem; color: var(--primary);">
+              Production Summary
+            </h3>
+
+            <!-- Total KG Sold -->
+            <div class="float-section">
+              <div class="drawer-row">
+                <span>Total KG Sold (KG):</span>
+                <div>
+                  <input
+                    type="number"
+                    id="totalKgSold"
+                    class="production-input"
+                    value="0"
+                    step="0.1"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+
+            <!-- Unsold / Defect -->
+              <div class="drawer-row">
+                <span>Unsold/Defect (PCS):</span>
+                <div>
+                  <input
+                    type="number"
+                    id="unsoldDefect"
+                    class="production-input"
+                    value="0"
+                    step="1"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
             <!-- Cash Drawer Summary -->
+             <h3 style="margin-top: 12px; margin-bottom: 12px; font-size: 1.2rem; color: var(--primary);">
+              Sales
+            </h3>
             <div class="drawer-summary">
               <div class="drawer-row">
                 <span>Cash Sales:</span>
@@ -474,8 +518,8 @@
 
             <!-- Cash Actions -->
             <div class="cash-actions">
-              <button id="closeShiftBtn" class="cash-action-btn primary">
-                Close Shift
+              <button id="export-btn" class="cash-action-btn primary">
+                📥 Export CSV
               </button>
               <button id="resetDrawerBtn" class="cash-action-btn secondary">
                 Reset Drawer
@@ -489,8 +533,8 @@
               gap: 12px;
             "
           >
-            <button id="export-btn" class="btn btn-success">
-              📥 Export CSV
+            <button id="closeShiftBtn" class="btn btn-success">
+              Close Shift
             </button>
             <button id="reset-btn" class="btn btn-danger" style="display: none;">
               ⚠️ Reset All Data
@@ -498,50 +542,7 @@
           </div>
           </div>
 
-
-          <!-- Production Summary Section -->
-          <div class="cash-drawer-section">
-            <h3 style="margin-bottom: 12px; font-size: 1.2rem; color: var(--primary);">
-              Production Summary
-            </h3>
-
-            <!-- Total KG Sold -->
-            <div class="float-section">
-              <div class="float-row">
-                <span>Total KG Sold (KG):</span>
-                <div>
-                  <input
-                    type="number"
-                    id="totalKgSold"
-                    class="production-input"
-                    value="0"
-                    step="0.1"
-                    min="0"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- Unsold / Defect -->
-            <div class="float-section">
-              <div class="float-row">
-                <span>Unsold/Defect (PCS):</span>
-                <div>
-                  <input
-                    type="number"
-                    id="unsoldDefect"
-                    class="production-input"
-                    value="0"
-                    step="1"
-                    min="0"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
+          <!-- ========== RECENT TRANSACTIONS ========== -->
           <h3
             style="
               margin-bottom: 12px;
@@ -633,7 +634,7 @@
             <!-- App Info Footer -->
             <div class="settings-footer">
               <p>Mr. Churros Dungun POS</p>
-              <p>Version 2.2.11</p>
+              <p>Version 2.2.0</p>
             </div>
           </div>
         </div>
@@ -653,19 +654,15 @@
               </div>
               <div class="dev-row">
                 <span class="dev-label">Version:</span>
-                <span class="dev-value">2.2.11</span>
+                <span class="dev-value">2.2.0</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Developer:</span>
                 <span class="dev-value">Nazurah and Is</span>
               </div>
               <div class="dev-row">
-                <span class="dev-label">GitHub:</span>
-                <span class="dev-value">@iskandarasri</span>
-              </div>
-              <div class="dev-row">
                 <span class="dev-label">Last Updated:</span>
-                <span class="dev-value">10 March 2026</span>
+                <span class="dev-value">17 April 2026</span>
               </div>
             </div>
 
@@ -960,10 +957,10 @@
       </div>
     </div>
 
-    <script src="script.js?v=2.2.11"></script>
+    <script src="script.js?v=2.2.0"></script>
     <script>
     (function() {
-      const VERSION = '2.2.11';
+      const VERSION = '2.2.0';
       if (localStorage.getItem('appVersion') !== VERSION) {
         console.log('App updated to version ' + VERSION);
         localStorage.setItem('appVersion', VERSION);
@@ -972,4 +969,3 @@
   </script>
   </body>
 </html>
-
