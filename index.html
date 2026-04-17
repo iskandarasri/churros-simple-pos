@@ -18,7 +18,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=2.2.0" />
+    <link rel="stylesheet" href="style.css?v=2.2.01" />
   </head>
   <body>
     <div class="app-container">
@@ -113,7 +113,7 @@
             <!-- Footer -->
             <div class="open-shift-footer">
               <p>© 2026 Mr. Churros Dungun</p>
-              <p>Version 2.2.0</p>
+              <p>Version 2.2.01</p>
             </div>
           </div>
         </div>
@@ -479,6 +479,22 @@
                   />
                 </div>
               </div>
+
+              <!-- Manual Cash Sale-->
+              <div class="drawer-row">
+                <span>Cash Sale (Manual): RM</span>
+                <div>
+                  <input
+                    type="number"
+                    id="manualCashSale"
+                    class="production-input"
+                    value="0"
+                    step="0.1"
+                    min="0"
+                    placeholder="RM 0.00"
+                  />
+                </div>
+              </div>
             </div>
 
             <!-- Cash Drawer Summary -->
@@ -502,6 +518,17 @@
                   >RM 0.00</span
                 >
               </div>
+
+              <div class="drawer-row">
+                <span>Manual Cash Count:</span>
+                <span id="manualCashDisplay" style="font-weight: 700; color: var(--primary);">RM 0.00</span>
+              </div>
+
+              <div class="drawer-row">
+                <span>Not Tally:</span>
+                <span id="discrepancyDisplay" style="font-weight: 700;">RM 0.00</span>
+              </div>
+
               <div class="drawer-total">
                 <span>Expected Cash Amount:</span>
                 <span
@@ -634,7 +661,7 @@
             <!-- App Info Footer -->
             <div class="settings-footer">
               <p>Mr. Churros Dungun POS</p>
-              <p>Version 2.2.0</p>
+              <p>Version 2.2.01</p>
             </div>
           </div>
         </div>
@@ -654,7 +681,7 @@
               </div>
               <div class="dev-row">
                 <span class="dev-label">Version:</span>
-                <span class="dev-value">2.2.0</span>
+                <span class="dev-value">2.2.01</span>
               </div>
               <div class="dev-row">
                 <span class="dev-label">Developer:</span>
@@ -957,10 +984,10 @@
       </div>
     </div>
 
-    <script src="script.js?v=2.2.0"></script>
+    <script src="script.js?v=2.2.01"></script>
     <script>
     (function() {
-      const VERSION = '2.2.0';
+      const VERSION = '2.2.01';
       if (localStorage.getItem('appVersion') !== VERSION) {
         console.log('App updated to version ' + VERSION);
         localStorage.setItem('appVersion', VERSION);
