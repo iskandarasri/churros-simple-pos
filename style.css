@@ -1167,7 +1167,7 @@ body.dark-mode .money-preset-btn {
   background: var(--bg-base);
   border-radius: 12px;
   padding: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 5px;
 }
 
 .float-row {
@@ -1294,7 +1294,7 @@ body.dark-mode .money-preset-btn {
 }
 
 .cash-action-btn.primary {
-  background: var(--primary);
+  background: #10b981;
   color: white;
 }
 
@@ -2423,7 +2423,7 @@ body.dark-mode .open-shift-select {
 
 /* ========== SUCCESS BUTTON ========== */
 .btn-success {
-  background: #10b981; /* Green color */
+  background: var(--primary); 
   color: white;
   border: none;
   padding: 14px 16px;
