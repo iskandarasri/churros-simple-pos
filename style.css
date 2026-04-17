@@ -2498,3 +2498,20 @@ body.from-open-shift #page-settings .settings-container {
     padding-top: 60px; /* More padding on mobile */
   }
 }
+
+/* Discrepancy styles */
+#discrepancyDisplay {
+  font-weight: 700;
+}
+
+#discrepancyDisplay[style*="danger"] {
+  color: var(--danger);
+}
+
+#discrepancyDisplay[style*="success"] {
+  color: var(--success);
+}
+
+#customConfirmModal .modal-content p {
+  white-space: pre-line;
+}
