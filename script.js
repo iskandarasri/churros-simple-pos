@@ -30,6 +30,9 @@ let startingCash = 200.00; // Default starting cash RM200
 // ========== DAILY UPDATE STATE ==========
 let dailyUpdates = [];
 
+// ========== MANUAL CASH SALE STATE ==========
+let manualCashCount = 0; // Physical cash counted by worker
+
 // ========== SHIFT STATE ==========
 let isShiftOpened = false;
 
@@ -246,6 +249,15 @@ function openShift() {
   currentStaff = staff;
   isShiftOpened = true; // Set shift as opened
   
+  // Clear manual cash count for new shift
+  manualCashCount = 0;
+  
+  // Clear manual cash input field
+  const manualCashInput = document.getElementById("manualCashSale");
+  if (manualCashInput) {
+    manualCashInput.value = "0";
+  }
+  
   // Update staff input in header
   const staffInput = document.getElementById("staffName");
   if (staffInput) {
@@ -374,6 +386,7 @@ window.onload = () => {
   // Add auto-save listeners for production inputs
   const kgInput = document.getElementById("totalKgSold");
   const defectInput = document.getElementById("unsoldDefect");
+  const manualCashInput = document.getElementById("manualCashSale");
 
   if (kgInput) {
     kgInput.addEventListener("input", debouncedAutoSave);
@@ -381,6 +394,11 @@ window.onload = () => {
 
   if (defectInput) {
     defectInput.addEventListener("input", debouncedAutoSave);
+  }
+
+  // Add listener for manual cash input
+  if (manualCashInput) {
+    manualCashInput.addEventListener("input", debouncedAutoSave);
   }
 
   // Navigation - with shift check
@@ -617,15 +635,37 @@ window.onload = () => {
 
 // ========== EXPORT TO CSV ==========
 async function exportToExcel() {
-  // Check if production summary values are still 0
+  // Get current values
   const kgInput = document.getElementById("totalKgSold");
   const defectInput = document.getElementById("unsoldDefect");
+  const manualCashInput = document.getElementById("manualCashSale");
   
   const kgValue = kgInput ? parseFloat(kgInput.value) || 0 : 0;
   const defectValue = defectInput ? parseInt(defectInput.value) || 0 : 0;
+  const manualCashValue = manualCashInput ? parseFloat(manualCashInput.value) || 0 : 0;
+  
+  // Check if manual cash count is entered but POS cash sales exist
+  const posCashSales = allSales
+    .filter(s => s.paymentMethod === "Cash")
+    .reduce((sum, s) => sum + s.total, 0);
+  
+  if (manualCashValue > 0 && Math.abs(manualCashValue - posCashSales) > 0.01) {
+    const discrepancy = manualCashValue - posCashSales;
+    const discrepancyMessage = `Cash mismatch detected!\n\nPOS Cash Sales: RM ${posCashSales.toFixed(2)}\nManual Cash Count: RM ${manualCashValue.toFixed(2)}\nNot Tally: RM ${discrepancy.toFixed(2)}\n\nDo you want to continue with the export?`;
+
+const confirmed = await showCustomConfirm(
+  discrepancyMessage,
+  "Cash Mismatch",
+  "💰"
+);
+    
+    if (!confirmed) {
+      return; // Go back to app
+    }
+  }
   
   // If production summary is empty (both 0), show warning
-  if (kgValue === 0 && defectValue === 0) {
+  if (kgValue === 0 && defectValue === 0 && manualCashValue === 0) {
     const confirmed = await showCustomConfirm(
       "Production summary is empty. Continue export?",
       "Warning",
@@ -637,14 +677,11 @@ async function exportToExcel() {
     }
   }
   
-  if (allSales.length === 0 && dailyUpdates.length === 0 && kgValue === 0 && defectValue === 0) {
+  if (allSales.length === 0 && dailyUpdates.length === 0 && kgValue === 0 && defectValue === 0 && manualCashValue === 0) {
     await showCustomAlert("No data to export", "Export Error", "📊");
     return;
   }
 
-  // Rest of your existing exportToExcel code continues here...
-  // (keep your existing export code below)
-  
   // Format today's date as dd/mm/yyyy for filtering
   const today = new Date();
   const todayDay = String(today.getDate()).padStart(2, '0');
@@ -662,12 +699,16 @@ async function exportToExcel() {
   const todayTotal = todaysSales.reduce((sum, sale) => sum + sale.total, 0);
   const todayCount = todaysSales.length;
 
-  const cashToday = todaysSales
+  const posCashToday = todaysSales
     .filter((s) => s.paymentMethod === "Cash")
     .reduce((sum, s) => sum + s.total, 0);
   const qrToday = todaysSales
     .filter((s) => s.paymentMethod === "QR")
     .reduce((sum, s) => sum + s.total, 0);
+  
+  // Get manual cash count
+  const manualCashCount = manualCashValue;
+  const cashDiscrepancy = manualCashCount - posCashToday;
 
   const grandTotal = allSales.reduce((sum, sale) => sum + sale.total, 0);
   const totalPaid = allSales.reduce((sum, sale) => sum + sale.paid, 0);
@@ -753,13 +794,16 @@ async function exportToExcel() {
   csvContent += `Date,${escapeCSV(todayFormatted)}\n`;
   csvContent += `Total Sales,${todayCount}\n`;
   csvContent += `Total Revenue,${formatNumber(todayTotal)}\n`;
-  csvContent += `Cash Payments,${formatNumber(cashToday)}\n`;
+  csvContent += `POS Cash Sales,${formatNumber(posCashToday)}\n`;
+  csvContent += `Manual Cash Count,${formatNumber(manualCashCount)}\n`;
+  csvContent += `Not Tally,${formatNumber(cashDiscrepancy)}\n`;
   csvContent += `QR Payments,${formatNumber(qrToday)}\n\n`;
 
   // ========== PRODUCTION SUMMARY ==========
   csvContent += "TODAY PRODUCTION SUMMARY\n";
   csvContent += `Total KG Sold,${totalKgSold.toFixed(2)}\n`;
-  csvContent += `Unsold/Defect (PCS),${unsoldDefect}\n\n`;
+  csvContent += `Unsold/Defect (PCS),${unsoldDefect}\n`;
+  csvContent += `Manual Cash Count (RM),${formatNumber(manualCashCount)}\n\n`;
 
   // TODAY'S TRANSACTIONS
   csvContent += "TODAY'S TRANSACTIONS\n";
@@ -840,8 +884,10 @@ async function exportToExcel() {
 
   csvContent += "CASH DRAWER\n";
   csvContent += `Starting Cash,${formatNumber(startingCash)}\n`;
-  csvContent += `Cash Sales,${formatNumber(cashToday)}\n`;
-  const expectedCash = startingCash + cashToday;
+  csvContent += `POS Cash Sales,${formatNumber(posCashToday)}\n`;
+  csvContent += `Manual Cash Count,${formatNumber(manualCashCount)}\n`;
+  csvContent += `Not Tally,${formatNumber(cashDiscrepancy)}\n`;
+  const expectedCash = startingCash + posCashToday;
   csvContent += `Expected Cash,${formatNumber(expectedCash)}\n\n`;
 
   csvContent += "ALL TRANSACTIONS HISTORY\n";
@@ -884,18 +930,14 @@ async function exportToExcel() {
     csvContent += `${escapeCSV(sale.remarks || '')}\n`;
   });
 
-  // ========== DAILY UPDATES - Dalam bentuk list (vertical) ==========
+  // ========== DAILY UPDATES ==========
   csvContent += "\nDAILY UPDATES\n";
   
-  // Filter daily updates by comparing date strings directly
   const todaysUpdates = dailyUpdates.filter((update) => {
     if (!update || !update.date) return false;
     
     try {
-      // Extract the date part from update.date (format: "dd/mm/yyyy, hh:mm:ss")
       const updateDatePart = update.date.split(',')[0].trim();
-      
-      // Compare with today's formatted date
       return updateDatePart === todayFormatted;
     } catch (e) {
       console.log("Error filtering daily update:", e);
@@ -907,11 +949,10 @@ async function exportToExcel() {
     csvContent += "No daily updates today.\n\n";
   } else {
     todaysUpdates.forEach((update, index) => {
-      // Extract time from update.date
       let timeStr = "";
       try {
         const timeParts = update.date.split(',')[1]?.trim() || "";
-        timeStr = timeParts.substring(0, 5); // Get HH:MM only
+        timeStr = timeParts.substring(0, 5);
       } catch (e) {
         timeStr = "--:--";
       }
@@ -920,7 +961,6 @@ async function exportToExcel() {
       csvContent += `PIC: ${update.pic || 'Staff'}\n`;
       csvContent += `Outlet: ${update.outlet || 'DUNGUN'}\n`;
       
-      // Restock items
       csvContent += `\n>> RESTOCK CHECKLIST:\n`;
       if (update.restock) {
         const restockItems = [
@@ -950,30 +990,20 @@ async function exportToExcel() {
           }
         });
         
-        if (!hasRestock) {
-          csvContent += `  No restock items\n`;
-        }
-      } else {
-        csvContent += `  No restock data\n`;
+        if (!hasRestock) csvContent += `  No restock items\n`;
       }
 
-      // Expenses
       if (update.expenses && update.expenses.length > 0) {
         csvContent += `\n>> EXPENSES:\n`;
         update.expenses.forEach(exp => {
-          if (exp.desc && exp.amount > 0) {
-            csvContent += `  ${exp.desc}: RM ${exp.amount.toFixed(2)}\n`;
-          }
+          csvContent += `  ${exp.desc}: RM ${exp.amount.toFixed(2)}\n`;
         });
       }
 
-      // Requests
       if (update.requests && update.requests.length > 0) {
         csvContent += `\n>> REQUESTS:\n`;
         update.requests.forEach(req => {
-          if (req.desc && req.qty > 0) {
-            csvContent += `  ${req.desc}: ${req.qty} PCS\n`;
-          }
+          csvContent += `  ${req.desc}: ${req.qty} PCS\n`;
         });
       }
       
@@ -1014,13 +1044,20 @@ function loadProductionData() {
     if (todayData) {
       totalKgSold = todayData.totalKg || 0;
       unsoldDefect = todayData.unsoldDefect || 0;
+      manualCashCount = todayData.manualCashCount || 0;
       
       // Update input fields
       const kgInput = document.getElementById("totalKgSold");
       const defectInput = document.getElementById("unsoldDefect");
+      const manualCashInput = document.getElementById("manualCashSale");
       
       if (kgInput) kgInput.value = totalKgSold;
       if (defectInput) defectInput.value = unsoldDefect;
+      if (manualCashInput) manualCashInput.value = manualCashCount;
+    } else {
+      // No data for today, ensure manual cash is cleared
+      const manualCashInput = document.getElementById("manualCashSale");
+      if (manualCashInput) manualCashInput.value = "0";
     }
   } catch (e) {
     console.log("No production data");
@@ -1031,11 +1068,13 @@ function loadProductionData() {
 function autoSaveProduction() {
   const kgInput = document.getElementById("totalKgSold");
   const defectInput = document.getElementById("unsoldDefect");
+  const manualCashInput = document.getElementById("manualCashSale");
   
   if (!kgInput || !defectInput) return;
   
   totalKgSold = parseFloat(kgInput.value) || 0;
   unsoldDefect = parseInt(defectInput.value) || 0;
+  manualCashCount = parseFloat(manualCashInput?.value) || 0;
   
   const todayDateStr = getTodayDateString();
   
@@ -1045,7 +1084,8 @@ function autoSaveProduction() {
   const todayData = {
     date: todayDateStr,
     totalKg: totalKgSold,
-    unsoldDefect: unsoldDefect
+    unsoldDefect: unsoldDefect,
+    manualCashCount: manualCashCount
   };
   
   if (existingIndex >= 0) {
@@ -1056,12 +1096,17 @@ function autoSaveProduction() {
   
   localStorage.setItem("productionData", JSON.stringify(productionData));
   
+  // Update cash drawer display to show comparison
+  updateCashDrawerDisplay();
+  
   // Optional visual feedback
   kgInput.style.borderColor = "var(--success)";
   defectInput.style.borderColor = "var(--success)";
+  if (manualCashInput) manualCashInput.style.borderColor = "var(--success)";
   setTimeout(() => {
     kgInput.style.borderColor = "";
     defectInput.style.borderColor = "";
+    if (manualCashInput) manualCashInput.style.borderColor = "";
   }, 300);
 }
 
@@ -1273,6 +1318,7 @@ function updateCashDrawerDisplay() {
   
   // Force reload sales data to ensure we have latest
   loadStoredData();
+  loadProductionData(); // Also load production data for manual cash count
   
   // Filter today's sales by comparing date strings
   const todaysSales = allSales.filter(sale => {
@@ -1290,27 +1336,48 @@ function updateCashDrawerDisplay() {
   
   console.log("Today's sales for cash drawer:", todaysSales);
 
-  // Calculate cash sales and card sales
-  let cashSales = 0;
+  // Calculate POS cash sales from transactions
+  let posCashSales = 0;
   let cardSales = 0;
 
   todaysSales.forEach((sale) => {
     if (sale.paymentMethod === "Cash") {
-      cashSales += sale.total;
+      posCashSales += sale.total;
     } else {
       cardSales += sale.total;
     }
   });
+  
+  // Get manual cash count from production summary
+  const manualCashInput = document.getElementById("manualCashSale");
+  const manualCashValue = manualCashInput ? parseFloat(manualCashInput.value) || 0 : manualCashCount;
+  
+  // Calculate discrepancy
+  const cashDiscrepancy = manualCashValue - posCashSales;
 
-  console.log("Cash sales:", cashSales, "QR sales:", cardSales);
+  console.log("POS Cash sales:", posCashSales);
+  console.log("Manual Cash Count:", manualCashValue);
+  console.log("Not Tally:", cashDiscrepancy);
 
   // Update display
   document.getElementById("startingCashInput").value = startingCash.toFixed(2);
-  document.getElementById("cashSalesTotal").textContent = `RM ${cashSales.toFixed(2)}`;
+  document.getElementById("cashSalesTotal").textContent = `RM ${posCashSales.toFixed(2)}`;
   document.getElementById("cardSalesTotal").textContent = `RM ${cardSales.toFixed(2)}`;
+  
+  // Show manual cash count and discrepancy
+  const manualCashDisplay = document.getElementById("manualCashDisplay");
+  if (manualCashDisplay) {
+    manualCashDisplay.textContent = `RM ${manualCashValue.toFixed(2)}`;
+  }
+  
+  const discrepancyDisplay = document.getElementById("discrepancyDisplay");
+  if (discrepancyDisplay) {
+    discrepancyDisplay.textContent = cashDiscrepancy.toFixed(2);
+    discrepancyDisplay.style.color = cashDiscrepancy === 0 ? "var(--success)" : cashDiscrepancy > 0 ? "var(--danger)" : "var(--warning)";
+  }
 
-  // Calculate expected cash: startingCash + cashSales
-  const expectedCash = startingCash + cashSales;
+  // Calculate expected cash: startingCash + posCashSales
+  const expectedCash = startingCash + posCashSales;
   document.getElementById("expectedCash").textContent = `RM ${expectedCash.toFixed(2)}`;
 
   // Save to localStorage
@@ -1421,6 +1488,7 @@ function resetAllData() {
   // Reset production values
   totalKgSold = 0;
   unsoldDefect = 0;
+  manualCashCount = 0; // Reset manual cash count
   
   // Reset starting cash to default
   startingCash = 200.00;
@@ -1438,8 +1506,11 @@ function resetAllData() {
   // Reset production input fields
   const kgInput = document.getElementById("totalKgSold");
   const defectInput = document.getElementById("unsoldDefect");
+  const manualCashInput = document.getElementById("manualCashSale");
+  
   if (kgInput) kgInput.value = "0";
   if (defectInput) defectInput.value = "0";
+  if (manualCashInput) manualCashInput.value = "0"; // Clear manual cash input
   
   // Reset shift state
   isShiftOpened = false;
