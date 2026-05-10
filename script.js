@@ -2153,7 +2153,6 @@ function updateCalcDisplay() {
 
 async function handleCalcInput(val) {
   if (val === "C") {
-    // Clear everything
     calcInput = "0";
     calcPrev = null;
     calcOp = null;
@@ -2161,15 +2160,44 @@ async function handleCalcInput(val) {
     cashAmount = null;
     updatePaymentDisplay();
   } else if (val === "backspace") {
-    // Delete one digit at a time
-    if (calcInput.length > 1) {
+    // Delete one digit at a time - works continuously through everything
+    if (calcReset && calcPrev !== null && calcOp !== null) {
+      // We're after an operator, but haven't typed the second number yet
+      // Delete the operator and go back to editing the first number
+      calcInput = calcPrev.toString();
+      calcPrev = null;
+      calcOp = null;
+      calcReset = false;
+    } else if (calcInput.length > 1) {
+      // Normal backspace - delete last character
       calcInput = calcInput.slice(0, -1);
-    } else {
-      calcInput = "0";
+      // If we just deleted everything back to the operator, restore the first number
+      if (calcInput === "" || calcInput === "-") {
+        if (calcPrev !== null) {
+          calcInput = calcPrev.toString();
+          calcPrev = null;
+          calcOp = null;
+          calcReset = false;
+        } else {
+          calcInput = "0";
+        }
+      }
+    } else if (calcInput.length === 1) {
+      // Only one digit left
+      if (calcPrev !== null && calcOp !== null) {
+        // We were typing the second number, now deleted all of it
+        // Go back to just after the operator (show hint only)
+        calcInput = "0";
+        calcReset = true;
+      } else {
+        // We're on the first number, reset to 0
+        calcInput = "0";
+      }
     }
-    calcReset = false;
-    cashAmount = parseFloat(calcInput);
+    cashAmount = parseFloat(calcInput) || 0;
     updatePaymentDisplay();
+    updateCalcDisplay();
+    return;
   } else if (val === "=") {
     if (calcPrev !== null && calcOp !== null) {
       const current = parseFloat(calcInput);
@@ -2204,10 +2232,12 @@ async function handleCalcInput(val) {
   } else if (["+", "-", "*", "/"].includes(val)) {
     const current = parseFloat(calcInput);
     if (calcPrev === null) {
+      // First operator press - store the number and operator
       calcPrev = current;
       calcOp = val;
       calcReset = true;
-    } else if (calcOp !== null) {
+    } else if (calcOp !== null && !calcReset) {
+      // We already have a number stored, and user typed a second number then pressed operator
       let result;
       switch (calcOp) {
         case "+":
@@ -2226,15 +2256,18 @@ async function handleCalcInput(val) {
           }
           result = calcPrev / current;
           break;
-        default:
-          return;
       }
       calcInput = result.toString();
       calcPrev = parseFloat(calcInput);
       calcOp = val;
       calcReset = true;
+    } else if (calcOp !== null && calcReset) {
+      // User pressed operator, then pressed another operator (change mind)
+      // Just update the operator
+      calcOp = val;
     }
   } else {
+    // Number or decimal pressed
     if (calcReset) {
       calcInput = val;
       calcReset = false;
