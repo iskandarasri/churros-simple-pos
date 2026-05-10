@@ -2153,11 +2153,22 @@ function updateCalcDisplay() {
 
 async function handleCalcInput(val) {
   if (val === "C") {
+    // Clear everything
     calcInput = "0";
     calcPrev = null;
     calcOp = null;
     calcReset = false;
     cashAmount = null;
+    updatePaymentDisplay();
+  } else if (val === "backspace") {
+    // Delete one digit at a time
+    if (calcInput.length > 1) {
+      calcInput = calcInput.slice(0, -1);
+    } else {
+      calcInput = "0";
+    }
+    calcReset = false;
+    cashAmount = parseFloat(calcInput);
     updatePaymentDisplay();
   } else if (val === "=") {
     if (calcPrev !== null && calcOp !== null) {
