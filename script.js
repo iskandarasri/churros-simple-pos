@@ -2152,137 +2152,105 @@ function updateCalcDisplay() {
 }
 
 async function handleCalcInput(val) {
+  // 1. CLEAR ALL
   if (val === "C") {
     calcInput = "0";
-    calcPrev = null;
-    calcOp = null;
-    calcReset = false;
-    cashAmount = null;
-    updatePaymentDisplay();
-  } else if (val === "backspace") {
-    // Delete one digit at a time - works continuously through everything
-    if (calcReset && calcPrev !== null && calcOp !== null) {
-      // We're after an operator, but haven't typed the second number yet
-      // Delete the operator and go back to editing the first number
-      calcInput = calcPrev.toString();
-      calcPrev = null;
-      calcOp = null;
-      calcReset = false;
-    } else if (calcInput.length > 1) {
-      // Normal backspace - delete last character
-      calcInput = calcInput.slice(0, -1);
-      // If we just deleted everything back to the operator, restore the first number
-      if (calcInput === "" || calcInput === "-") {
-        if (calcPrev !== null) {
-          calcInput = calcPrev.toString();
-          calcPrev = null;
-          calcOp = null;
-          calcReset = false;
-        } else {
-          calcInput = "0";
-        }
-      }
-    } else if (calcInput.length === 1) {
-      // Only one digit left
-      if (calcPrev !== null && calcOp !== null) {
-        // We were typing the second number, now deleted all of it
-        // Go back to just after the operator (show hint only)
-        calcInput = "0";
-        calcReset = true;
-      } else {
-        // We're on the first number, reset to 0
-        calcInput = "0";
-      }
-    }
-    cashAmount = parseFloat(calcInput) || 0;
+    cashAmount = 0;
     updatePaymentDisplay();
     updateCalcDisplay();
     return;
-  } else if (val === "=") {
-    if (calcPrev !== null && calcOp !== null) {
-      const current = parseFloat(calcInput);
-      let result;
-      switch (calcOp) {
-        case "+":
-          result = calcPrev + current;
-          break;
-        case "-":
-          result = calcPrev - current;
-          break;
-        case "*":
-          result = calcPrev * current;
-          break;
-        case "/":
-          if (current === 0) {
-            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
-            return;
-          }
-          result = calcPrev / current;
-          break;
-        default:
-          return;
-      }
-      calcInput = result.toString();
-      cashAmount = parseFloat(calcInput);
-      calcPrev = null;
-      calcOp = null;
-      calcReset = true;
-      updatePaymentDisplay();
-    }
-  } else if (["+", "-", "*", "/"].includes(val)) {
-    const current = parseFloat(calcInput);
-    if (calcPrev === null) {
-      // First operator press - store the number and operator
-      calcPrev = current;
-      calcOp = val;
-      calcReset = true;
-    } else if (calcOp !== null && !calcReset) {
-      // We already have a number stored, and user typed a second number then pressed operator
-      let result;
-      switch (calcOp) {
-        case "+":
-          result = calcPrev + current;
-          break;
-        case "-":
-          result = calcPrev - current;
-          break;
-        case "*":
-          result = calcPrev * current;
-          break;
-        case "/":
-          if (current === 0) {
-            await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
-            return;
-          }
-          result = calcPrev / current;
-          break;
-      }
-      calcInput = result.toString();
-      calcPrev = parseFloat(calcInput);
-      calcOp = val;
-      calcReset = true;
-    } else if (calcOp !== null && calcReset) {
-      // User pressed operator, then pressed another operator (change mind)
-      // Just update the operator
-      calcOp = val;
-    }
-  } else {
-    // Number or decimal pressed
-    if (calcReset) {
-      calcInput = val;
-      calcReset = false;
-    } else {
-      if (val === ".") {
-        if (calcInput.includes(".")) return;
-        calcInput += ".";
-      } else {
-        calcInput = calcInput === "0" ? val : calcInput + val;
-      }
-    }
-    cashAmount = parseFloat(calcInput);
-    updatePaymentDisplay();
   }
+
+  // 2. BACKSPACE
+  if (val === "backspace") {
+    // Simply delete the last character of the string
+    if (calcInput.length > 1) {
+      calcInput = calcInput.slice(0, -1);
+    } else {
+      calcInput = "0";
+    }
+    
+    // Update the live cash amount with whatever the current equation equals
+    cashAmount = evaluateMath(calcInput);
+    updatePaymentDisplay();
+    updateCalcDisplay();
+    return;
+  }
+
+  // 3. EQUALS
+  if (val === "=") {
+    let result = evaluateMath(calcInput);
+    
+    // Handle Divide by Zero
+    if (result === Infinity || result === -Infinity) {
+      await showCustomAlert("Cannot divide by zero", "Math Error", "➗");
+      return;
+    }
+
+    // Clean up floating point math errors (e.g., 0.1 + 0.2 = 0.30000000000000004)
+    result = parseFloat(result.toFixed(10));
+
+    // Lock in the result
+    calcInput = result.toString();
+    cashAmount = result;
+    updatePaymentDisplay();
+    updateCalcDisplay();
+    return;
+  }
+
+  // 4. OPERATORS (+, -, *, /)
+  if (["+", "-", "*", "/"].includes(val)) {
+    const lastChar = calcInput.slice(-1);
+    
+    if (["+", "-", "*", "/"].includes(lastChar)) {
+      // If the user typed "45+" and then hits "-", change it to "45-"
+      calcInput = calcInput.slice(0, -1) + val;
+    } else {
+      // Otherwise, just add the operator to the equation
+      calcInput += val;
+    }
+    
+    updateCalcDisplay();
+    return;
+  }
+
+  // 5. NUMBERS AND DECIMALS
+  if (val === ".") {
+    // Prevent multiple decimals in the *current* number being typed
+    // Split the equation by operators to check just the last number typed
+    const parts = calcInput.split(/[\+\-\*\/]/);
+    const currentNum = parts[parts.length - 1];
+    
+    if (currentNum.includes(".")) return;
+    calcInput += ".";
+  } else {
+    // Replace initial "0" or append the number to the equation
+    if (calcInput === "0") {
+      calcInput = val;
+    } else {
+      calcInput += val;
+    }
+  }
+
+  // Update the live preview of the math
+  cashAmount = evaluateMath(calcInput);
+  updatePaymentDisplay();
   updateCalcDisplay();
+}
+
+function evaluateMath(expression) {
+  try {
+    // Remove any operators hanging off the end before doing math
+    // (e.g., so "45+55+" safely evaluates as "45+55" instead of crashing)
+    const cleanExpr = expression.replace(/[\+\-\*\/]+$/, '');
+    if (!cleanExpr) return 0;
+    
+    // Safely evaluate the string as math
+    const result = new Function('return ' + cleanExpr)();
+    return isNaN(result) ? 0 : result;
+  } catch (error) {
+    return 0;
+  }
 }
 
 // Quick cash buttons - SETS the cash amount (bukan ADD)
